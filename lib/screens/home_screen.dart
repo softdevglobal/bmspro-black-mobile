@@ -30,11 +30,11 @@ class AppColors {
   static const primary = Color(0xFF1A1A1A);
   static const primaryDark = Color(0xFF000000);
   static const accent = Color(0xFF333333);
-  static const background = Color(0xFFF5F5F5);
+  static const background = Color(0xFFF8F9FA);
   static const card = Colors.white;
   static const text = Color(0xFF1A1A1A);
-  static const muted = Color(0xFF9E9E9E);
-  static const border = Color(0xFFE0E0E0);
+  static const muted = Color(0xFF6B7280);
+  static const border = Color(0xFFE5E7EB);
 }
 
 // Default bottom navigation icons (staff / branch admin)
@@ -1754,7 +1754,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin, 
             : null,
         color: isClockedIn ? null : Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: Colors.white.withOpacity(0.05)),
+        border: Border.all(color: const Color(0xFFE5E7EB).withOpacity(0.5)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(isClockedIn ? 0.2 : 0.1),
@@ -1938,7 +1938,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin, 
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: Colors.white.withOpacity(0.05)),
+        border: Border.all(color: const Color(0xFFE5E7EB).withOpacity(0.5)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.1),
@@ -2323,7 +2323,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin, 
         decoration: BoxDecoration(
           color: Theme.of(context).colorScheme.surface,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Colors.white.withOpacity(0.05)),
+          border: Border.all(color: const Color(0xFFE5E7EB).withOpacity(0.5)),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withOpacity(0.1),

@@ -19,27 +19,34 @@ class AppBottomNav extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    const Color activeColor = Color(0xFF1A1A1A);
+    const Color inactiveColor = Color(0xFFB0B0B0);
+
     return SafeArea(
       top: false,
       child: Padding(
         padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
         child: Container(
-          height: 78,
+          height: 72,
           decoration: BoxDecoration(
-            color: const Color(0xFF1A1A1A),
+            color: Colors.white,
             borderRadius: BorderRadius.circular(24),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.25),
-                blurRadius: 30,
+                color: Colors.black.withOpacity(0.06),
+                blurRadius: 20,
                 offset: const Offset(0, -4),
               ),
               BoxShadow(
-                color: Colors.black.withOpacity(0.1),
-                blurRadius: 60,
-                offset: const Offset(0, -10),
+                color: Colors.black.withOpacity(0.03),
+                blurRadius: 40,
+                offset: const Offset(0, -8),
               ),
             ],
+            border: Border.all(
+              color: const Color(0xFFE8E8E8).withOpacity(0.6),
+              width: 1,
+            ),
           ),
           child: LayoutBuilder(builder: (context, constraints) {
             final double barWidth = constraints.maxWidth;
@@ -48,7 +55,7 @@ class AppBottomNav extends StatelessWidget {
             return Stack(
               alignment: Alignment.center,
               children: [
-                // ── Glowing dot under selected ──
+                // ── Small dot under selected icon ──
                 AnimatedPositioned(
                   duration: const Duration(milliseconds: 280),
                   curve: Curves.easeOutCubic,
@@ -59,16 +66,9 @@ class AppBottomNav extends StatelessWidget {
                   child: Container(
                     width: 6,
                     height: 6,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
+                    decoration: const BoxDecoration(
+                      color: activeColor,
                       shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.white.withOpacity(0.5),
-                          blurRadius: 6,
-                          spreadRadius: 1,
-                        ),
-                      ],
                     ),
                   ),
                 ),
@@ -80,7 +80,7 @@ class AppBottomNav extends StatelessWidget {
                     final bool selected = i == currentIndex;
                     return SizedBox(
                       width: slotWidth,
-                      height: 78,
+                      height: 72,
                       child: Material(
                         color: Colors.transparent,
                         child: InkWell(
@@ -91,15 +91,12 @@ class AppBottomNav extends StatelessWidget {
                               duration:
                                   const Duration(milliseconds: 200),
                               scale: selected ? 1.1 : 1.0,
-                              child: AnimatedOpacity(
-                                duration:
-                                    const Duration(milliseconds: 200),
-                                opacity: selected ? 1.0 : 0.45,
-                                child: Icon(
-                                  icons[i],
-                                  size: 26,
-                                  color: Colors.white,
-                                ),
+                              child: Icon(
+                                icons[i],
+                                size: 26,
+                                color: selected
+                                    ? activeColor
+                                    : inactiveColor,
                               ),
                             ),
                           ),

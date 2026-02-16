@@ -11,11 +11,11 @@ class AppColors {
   static const primary = Color(0xFF1A1A1A);
   static const primaryDark = Color(0xFF000000);
   static const accent = Color(0xFF333333);
-  static const background = Color(0xFFF5F5F5);
+  static const background = Color(0xFFF8F9FA);
   static const card = Colors.white;
   static const text = Color(0xFF1A1A1A);
-  static const muted = Color(0xFF9E9E9E);
-  static const border = Color(0xFFE0E0E0);
+  static const muted = Color(0xFF6B7280);
+  static const border = Color(0xFFE5E7EB);
 }
 
 // ============================================================================
@@ -2232,7 +2232,7 @@ class _BranchPreviewSheetState extends State<_BranchPreviewSheet> {
                 _buildSectionCard(
                   title: 'Services (${branchServices.length})',
                   icon: FontAwesomeIcons.scissors,
-                  iconColor: const Color(0xFFEC4899),
+                  iconColor: const Color(0xFF1A1A1A),
                   child: branchServices.isEmpty
                       ? const Text('No services assigned', style: TextStyle(color: AppColors.muted))
                       : Wrap(
@@ -2241,14 +2241,14 @@ class _BranchPreviewSheetState extends State<_BranchPreviewSheet> {
                           children: branchServices.map((s) => Container(
                             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                             decoration: BoxDecoration(
-                              color: const Color(0xFFEC4899).withOpacity(0.1),
+                              color: const Color(0xFF1A1A1A).withOpacity(0.1),
                               borderRadius: BorderRadius.circular(20),
                             ),
                             child: Text(
                               s.name,
                               style: const TextStyle(
                                 fontSize: 12,
-                                color: Color(0xFFEC4899),
+                                color: Color(0xFF1A1A1A),
                                 fontWeight: FontWeight.w500,
                               ),
                             ),
@@ -2976,7 +2976,7 @@ class _BranchPreviewSheetState extends State<_BranchPreviewSheet> {
                                   style: TextStyle(
                                     fontSize: 14,
                                     fontWeight: FontWeight.bold,
-                                    color: isAdmin ? Colors.white : const Color(0xFFEC4899),
+                                    color: isAdmin ? Colors.white : const Color(0xFF1A1A1A),
                                   ),
                                 ),
                               ),
@@ -2988,7 +2988,7 @@ class _BranchPreviewSheetState extends State<_BranchPreviewSheet> {
                               style: TextStyle(
                                 fontSize: 14,
                                 fontWeight: FontWeight.bold,
-                                color: isAdmin ? Colors.white : const Color(0xFFEC4899),
+                                color: isAdmin ? Colors.white : const Color(0xFF1A1A1A),
                               ),
                             ),
                           ),

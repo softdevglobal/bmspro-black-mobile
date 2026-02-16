@@ -11,11 +11,11 @@ class AppColors {
   static const primary = Color(0xFF1A1A1A);
   static const primaryDark = Color(0xFF000000);
   static const accent = Color(0xFF333333);
-  static const background = Color(0xFFF5F5F5);
+  static const background = Color(0xFFF8F9FA);
   static const card = Colors.white;
   static const text = Color(0xFF1A1A1A);
-  static const muted = Color(0xFF9E9E9E);
-  static const border = Color(0xFFE0E0E0);
+  static const muted = Color(0xFF6B7280);
+  static const border = Color(0xFFE5E7EB);
 }
 
 // ============================================================================
@@ -352,12 +352,12 @@ class _ServicesPageState extends State<ServicesPage> {
                   padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                   decoration: BoxDecoration(
                     gradient: const LinearGradient(
-                      colors: [Color(0xFFEC4899), Color(0xFFF472B6)],
+                      colors: [Color(0xFF1A1A1A), Color(0xFF333333)],
                     ),
                     borderRadius: BorderRadius.circular(20),
                     boxShadow: [
                       BoxShadow(
-                        color: const Color(0xFFEC4899).withOpacity(0.3),
+                        color: const Color(0xFF1A1A1A).withOpacity(0.25),
                         blurRadius: 8,
                         offset: const Offset(0, 3),
                       ),
@@ -401,7 +401,7 @@ class _ServicesPageState extends State<ServicesPage> {
             height: 100,
             decoration: BoxDecoration(
               gradient: const LinearGradient(
-                colors: [Color(0xFFEC4899), Color(0xFFF472B6)],
+                colors: [Color(0xFF1A1A1A), Color(0xFF333333)],
               ),
               borderRadius: BorderRadius.circular(25),
             ),
@@ -464,11 +464,12 @@ class _ServicesPageState extends State<ServicesPage> {
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.card,
         borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: const Color(0xFFE5E7EB).withOpacity(0.5)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.08),
+            color: Colors.black.withOpacity(0.12),
             blurRadius: 16,
             offset: const Offset(0, 4),
           ),
@@ -521,7 +522,7 @@ class _ServicesPageState extends State<ServicesPage> {
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
                     gradient: const LinearGradient(
-                      colors: [Color(0xFFEC4899), Color(0xFFA855F7)],
+                      colors: [Color(0xFF1A1A1A), Color(0xFFA855F7)],
                     ),
                     borderRadius: BorderRadius.circular(20),
                     boxShadow: [
@@ -769,7 +770,7 @@ class _ServicesPageState extends State<ServicesPage> {
       builder: (context) => Container(
         height: MediaQuery.of(context).size.height * 0.9,
         decoration: const BoxDecoration(
-          color: Colors.white,
+          color: AppColors.card,
           borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
         ),
         child: Column(
@@ -779,7 +780,7 @@ class _ServicesPageState extends State<ServicesPage> {
               padding: const EdgeInsets.all(20),
               decoration: const BoxDecoration(
                 gradient: LinearGradient(
-                  colors: [Color(0xFFEC4899), Color(0xFFF472B6)],
+                  colors: [Color(0xFF1A1A1A), Color(0xFF333333)],
                 ),
                 borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
               ),
@@ -850,7 +851,7 @@ class _ServicesPageState extends State<ServicesPage> {
                           child: Container(
                             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
                             decoration: BoxDecoration(
-                              gradient: const LinearGradient(colors: [Color(0xFFEC4899), Color(0xFFA855F7)]),
+                              gradient: const LinearGradient(colors: [Color(0xFF1A1A1A), Color(0xFFA855F7)]),
                               borderRadius: BorderRadius.circular(20),
                             ),
                             child: Text(
@@ -872,7 +873,7 @@ class _ServicesPageState extends State<ServicesPage> {
                   _buildPreviewSectionCard(
                     title: 'Service Details',
                     icon: FontAwesomeIcons.wandMagicSparkles,
-                    iconColor: const Color(0xFFEC4899),
+                    iconColor: const Color(0xFF1A1A1A),
                     child: Column(
                       children: [
                         _buildDetailRow('Service Name', service.name),
@@ -955,7 +956,7 @@ class _ServicesPageState extends State<ServicesPage> {
               Container(
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: AppColors.background,
                   boxShadow: [
                     BoxShadow(
                       color: Colors.black.withOpacity(0.05),
@@ -988,7 +989,7 @@ class _ServicesPageState extends State<ServicesPage> {
               Container(
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: AppColors.background,
                   boxShadow: [
                     BoxShadow(
                       color: Colors.black.withOpacity(0.05),
@@ -1356,7 +1357,7 @@ class _ServiceFormSheetState extends State<ServiceFormSheet> {
             padding: const EdgeInsets.all(20),
             decoration: const BoxDecoration(
               gradient: LinearGradient(
-                colors: [Color(0xFFEC4899), Color(0xFFF472B6)],
+                colors: [Color(0xFF1A1A1A), Color(0xFF333333)],
               ),
               borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
             ),
@@ -1400,7 +1401,7 @@ class _ServiceFormSheetState extends State<ServiceFormSheet> {
                   _buildSectionCard(
                     title: 'Service Details',
                     icon: FontAwesomeIcons.wandMagicSparkles,
-                    iconColor: const Color(0xFFEC4899),
+                    iconColor: const Color(0xFF1A1A1A),
                     children: [
                       TextFormField(
                         controller: _nameController,
@@ -1581,10 +1582,10 @@ class _ServiceFormSheetState extends State<ServiceFormSheet> {
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: AppColors.card,
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
+                  color: Colors.black.withOpacity(0.1),
                   blurRadius: 10,
                   offset: const Offset(0, -5),
                 ),

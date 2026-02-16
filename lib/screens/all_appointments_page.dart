@@ -7,11 +7,11 @@ import 'appointment_details_page.dart';
 class AppColors {
   static const primary = Color(0xFF1A1A1A);
   static const accent = Color(0xFF333333);
-  static const background = Color(0xFFF5F5F5);
+  static const background = Color(0xFFF8F9FA);
   static const card = Colors.white;
   static const text = Color(0xFF1A1A1A);
-  static const muted = Color(0xFF9E9E9E);
-  static const border = Color(0xFFE0E0E0);
+  static const muted = Color(0xFF6B7280);
+  static const border = Color(0xFFE5E7EB);
 }
 
 class AllAppointmentsPage extends StatefulWidget {
@@ -221,7 +221,7 @@ class _AllAppointmentsPageState extends State<AllAppointmentsPage> {
   List<Color> _getServiceColors(int index) {
     final colorSets = [
       [const Color(0xFF8B5CF6), const Color(0xFF7C3AED)],
-      [const Color(0xFFEC4899), const Color(0xFFDB2777)],
+      [const Color(0xFF1A1A1A), const Color(0xFF111111)],
       [const Color(0xFF333333), const Color(0xFF1A1A1A)],
       [const Color(0xFF60A5FA), const Color(0xFF3B82F6)],
       [const Color(0xFF34D399), const Color(0xFF10B981)],

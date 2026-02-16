@@ -78,11 +78,12 @@ class BranchTheme {
 class AppConfig {
   static const primary = Color(0xFF1A1A1A);
   static const accent = Color(0xFF333333);
-  static const background = Color(0xFFF5F5F5);
+  static const background = Color(0xFFF8F9FA);
   static const card = Colors.white;
   static const text = Color(0xFF1A1A1A);
-  static const muted = Color(0xFF9E9E9E);
-  static const border = Color(0xFFE0E0E0);
+  static const muted = Color(0xFF6B7280);
+  static const border = Color(0xFFE5E7EB);
+  static const surface = Color(0xFFF1F3F5);
   static final Map<String, BranchTheme> branches = {
     'Main St': BranchTheme(
       color: Color(0xFF1A1A1A),
@@ -189,7 +190,7 @@ class _CalenderScreenState extends State<CalenderScreen> {
     const Color(0xFFF59E0B), // Amber
     const Color(0xFFEF4444), // Red
     const Color(0xFF06B6D4), // Cyan
-    const Color(0xFFEC4899), // Rose-500
+    const Color(0xFF1A1A1A), // Rose-500
     const Color(0xFF6366F1), // Indigo
     const Color(0xFF14B8A6), // Teal
   ];
@@ -763,7 +764,7 @@ class _CalenderScreenState extends State<CalenderScreen> {
     return SizedBox(
       width: 300,
       child: AnimatedToggle(
-        backgroundColor: Colors.white,
+        backgroundColor: AppConfig.card,
         values: const ['My Schedule', 'Branch Schedule'],
         selectedIndex: _isBranchView ? 1 : 0,
         onChanged: (index) => setState(() => _isBranchView = index == 1),
@@ -918,7 +919,7 @@ class _CalenderScreenState extends State<CalenderScreen> {
                     border: isSelected && !isPastDate
                         ? Border.all(
                             color: primaryBranchColor ?? AppConfig.primary, width: 2)
-                        : Border.all(color: Colors.grey.shade100),
+                        : Border.all(color: Colors.grey.shade300),
                     boxShadow: isSelected && !isPastDate
                         ? [
                             BoxShadow(
@@ -1293,7 +1294,7 @@ class _CalenderScreenState extends State<CalenderScreen> {
         } else {
           statusBgColor = Colors.grey.shade50;
           statusTextColor = Colors.grey.shade700;
-          statusBorderColor = Colors.grey.shade200;
+          statusBorderColor = Colors.grey.shade700;
         }
         
         return Container(
@@ -1301,10 +1302,10 @@ class _CalenderScreenState extends State<CalenderScreen> {
           decoration: BoxDecoration(
             color: AppConfig.card,
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: Colors.grey.shade100),
+            border: Border.all(color: const Color(0xFFE5E7EB).withOpacity(0.5)),
             boxShadow: [
               BoxShadow(
-                color: theme.color.withOpacity(0.15),
+                color: Colors.black.withOpacity(0.15),
                 blurRadius: 20,
                 spreadRadius: -5,
                 offset: const Offset(0, 10),
@@ -1504,7 +1505,7 @@ class _CalenderScreenState extends State<CalenderScreen> {
                                   decoration: BoxDecoration(
                                     color: Colors.white,
                                     borderRadius: BorderRadius.circular(10),
-                                    border: Border.all(color: Colors.grey.shade200),
+                                    border: Border.all(color: Colors.grey.shade300),
                                   ),
                                   child: Column(
                                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -1635,7 +1636,7 @@ class _CalenderScreenState extends State<CalenderScreen> {
                                   decoration: BoxDecoration(
                                     color: Colors.white,
                                     borderRadius: BorderRadius.circular(8),
-                                    border: Border.all(color: Colors.grey.shade200),
+                                    border: Border.all(color: Colors.grey.shade300),
                                   ),
                                   child: Row(
                                     mainAxisSize: MainAxisSize.min,
@@ -1758,11 +1759,12 @@ class _CalenderScreenState extends State<CalenderScreen> {
     
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppConfig.card,
         borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: const Color(0xFFE5E7EB).withOpacity(0.5)),
         boxShadow: [
           BoxShadow(
-            color: AppConfig.primary.withOpacity(0.08),
+            color: Colors.black.withOpacity(0.15),
             blurRadius: 20,
             offset: const Offset(0, 8),
           ),
@@ -1838,7 +1840,7 @@ class _CalenderScreenState extends State<CalenderScreen> {
                 decoration: BoxDecoration(
                   border: Border(
                     bottom: BorderSide(
-                      color: isHourMark ? Colors.grey.shade200 : Colors.grey.shade100,
+                      color: isHourMark ? Colors.grey.shade300 : Colors.grey.shade200,
                       width: isHourMark ? 1 : 0.5,
                     ),
                   ),
@@ -1876,7 +1878,7 @@ class _CalenderScreenState extends State<CalenderScreen> {
                                     color: Colors.grey.shade50,
                                     borderRadius: BorderRadius.circular(8),
                                     border: Border.all(
-                                      color: Colors.grey.shade200,
+                                      color: Colors.grey.shade700,
                                       style: BorderStyle.solid,
                                     ),
                                   ),
@@ -2070,9 +2072,10 @@ class _CalenderScreenState extends State<CalenderScreen> {
     return BoxDecoration(
       color: AppConfig.card,
       borderRadius: BorderRadius.circular(20),
+      border: Border.all(color: const Color(0xFFE5E7EB).withOpacity(0.5)),
       boxShadow: [
         BoxShadow(
-          color: Colors.black.withOpacity(0.05),
+          color: Colors.black.withOpacity(0.15),
           blurRadius: 25,
           offset: const Offset(0, 8),
         ),

@@ -14,11 +14,11 @@ import '../services/fcm_push_service.dart';
 class AppColors {
   static const primary = Color(0xFF1A1A1A);
   static const accent = Color(0xFF333333);
-  static const background = Color(0xFFF5F5F5);
+  static const background = Color(0xFFF8F9FA);
   static const card = Colors.white;
   static const text = Color(0xFF1A1A1A);
-  static const muted = Color(0xFF9E9E9E);
-  static const border = Color(0xFFE0E0E0);
+  static const muted = Color(0xFF6B7280);
+  static const border = Color(0xFFE5E7EB);
   static const green = Color(0xFF10B981);
   static const purple = Color(0xFF9333EA); // Purple-600
   static const blue = Color(0xFF2563EB); // Blue-600

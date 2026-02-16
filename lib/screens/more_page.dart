@@ -59,11 +59,11 @@ class AppColors {
   static const primary = Color(0xFF1A1A1A);
   static const primaryDark = Color(0xFF000000);
   static const accent = Color(0xFF333333);
-  static const background = Color(0xFFF5F5F5);
+  static const background = Color(0xFFF8F9FA);
   static const card = Colors.white;
   static const text = Color(0xFF1A1A1A);
-  static const muted = Color(0xFF9E9E9E);
-  static const border = Color(0xFFE0E0E0);
+  static const muted = Color(0xFF6B7280);
+  static const border = Color(0xFFE5E7EB);
 }
 
 class MorePage extends StatefulWidget {
@@ -155,7 +155,7 @@ class _MorePageState extends State<MorePage> {
               icon: FontAwesomeIcons.scissors,
               title: 'Services',
               subtitle: _isBranchAdmin ? 'View available services' : 'Manage your salon services',
-              gradientColors: [const Color(0xFFEC4899), const Color(0xFFF472B6)],
+              gradientColors: [const Color(0xFF1A1A1A), const Color(0xFF333333)],
               onTap: () {
                 Navigator.push(
                   context,
@@ -326,11 +326,12 @@ class _MorePageState extends State<MorePage> {
         child: Container(
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: AppColors.card,
             borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: const Color(0xFFE5E7EB).withOpacity(0.5)),
             boxShadow: [
               BoxShadow(
-                color: AppColors.primary.withOpacity(0.08),
+                color: Colors.black.withOpacity(0.12),
                 blurRadius: 20,
                 offset: const Offset(0, 8),
               ),
@@ -416,11 +417,12 @@ class _MorePageState extends State<MorePage> {
   }) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.card,
         borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: const Color(0xFFE5E7EB).withOpacity(0.5)),
         boxShadow: [
           BoxShadow(
-            color: AppColors.primary.withOpacity(0.08),
+            color: Colors.black.withOpacity(0.12),
             blurRadius: 20,
             offset: const Offset(0, 8),
           ),
@@ -491,7 +493,7 @@ class _MorePageState extends State<MorePage> {
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
           margin: const EdgeInsets.only(bottom: 8),
           decoration: BoxDecoration(
-            color: AppColors.background,
+            color: const Color(0xFFF3F4F6),
             borderRadius: BorderRadius.circular(12),
           ),
           child: Row(
@@ -500,11 +502,11 @@ class _MorePageState extends State<MorePage> {
                 width: 40,
                 height: 40,
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: const Color(0xFFE8E8E8),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Center(
-                  child: Icon(icon, color: AppColors.primary, size: 18),
+                  child: Icon(icon, color: AppColors.text, size: 18),
                 ),
               ),
               const SizedBox(width: 12),
@@ -518,7 +520,7 @@ class _MorePageState extends State<MorePage> {
                   ),
                 ),
               ),
-              const Icon(
+              Icon(
                 FontAwesomeIcons.chevronRight,
                 color: AppColors.muted,
                 size: 12,
@@ -798,9 +800,9 @@ class _MySummaryPageState extends State<MySummaryPage> {
                     Container(
                       padding: const EdgeInsets.all(4),
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: AppColors.card,
                         borderRadius: BorderRadius.circular(16),
-                        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10)],
+                        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 10)],
                       ),
                       child: Row(
                         children: [
@@ -872,9 +874,9 @@ class _MySummaryPageState extends State<MySummaryPage> {
                       width: double.infinity,
                       padding: const EdgeInsets.all(20),
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: AppColors.card,
                         borderRadius: BorderRadius.circular(20),
-                        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10)],
+                        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 10)],
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -923,13 +925,14 @@ class _MySummaryPageState extends State<MySummaryPage> {
   }
 
   Widget _buildStatCard(IconData icon, String value, String label, [Color? iconColor]) {
-    final color = iconColor ?? const Color(0xFF1A1A1A);
+    final color = iconColor ?? const Color(0xFFE0E0E0);
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.card,
         borderRadius: BorderRadius.circular(20),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10)],
+        border: Border.all(color: const Color(0xFFE5E7EB).withOpacity(0.5)),
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 10)],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -965,9 +968,10 @@ class _MySummaryPageState extends State<MySummaryPage> {
       width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.card,
         borderRadius: BorderRadius.circular(20),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10)],
+        border: Border.all(color: const Color(0xFFE5E7EB).withOpacity(0.5)),
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 10)],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1201,7 +1205,7 @@ class _MySummaryPageState extends State<MySummaryPage> {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.card,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: color.withOpacity(0.2)),
       ),
@@ -2201,11 +2205,12 @@ class _BranchAdminSummaryPageState extends State<BranchAdminSummaryPage> {
           width: double.infinity,
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: AppColors.card,
             borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: const Color(0xFFE5E7EB).withOpacity(0.5)),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.05),
+                color: Colors.black.withOpacity(0.1),
                 blurRadius: 10,
               ),
             ],
@@ -2289,11 +2294,12 @@ class _BranchAdminSummaryPageState extends State<BranchAdminSummaryPage> {
           width: double.infinity,
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: AppColors.card,
             borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: const Color(0xFFE5E7EB).withOpacity(0.5)),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.05),
+                color: Colors.black.withOpacity(0.1),
                 blurRadius: 10,
               ),
             ],
@@ -2471,7 +2477,7 @@ class _BranchAdminSummaryPageState extends State<BranchAdminSummaryPage> {
                     ? '${((_branchCompletedBookings / _branchBookings) * 100).toStringAsFixed(0)}%'
                     : '—',
                 'Completion Rate',
-                const Color(0xFFEC4899),
+                const Color(0xFF1A1A1A),
               ),
             ),
           ],
@@ -2482,11 +2488,12 @@ class _BranchAdminSummaryPageState extends State<BranchAdminSummaryPage> {
           width: double.infinity,
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: AppColors.card,
             borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: const Color(0xFFE5E7EB).withOpacity(0.5)),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.05),
+                color: Colors.black.withOpacity(0.1),
                 blurRadius: 10,
               ),
             ],
@@ -2542,8 +2549,9 @@ class _BranchAdminSummaryPageState extends State<BranchAdminSummaryPage> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.card,
         borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFE5E7EB).withOpacity(0.5)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.05),

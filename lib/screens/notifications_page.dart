@@ -11,11 +11,11 @@ import 'owner_bookings_page.dart';
 class _NotifTheme {
   static const Color primary = Color(0xFF1A1A1A);
   static const Color accent = Color(0xFF333333);
-  static const Color background = Color(0xFFF5F5F5);
+  static const Color background = Color(0xFFF8F9FA);
   static const Color card = Colors.white;
   static const Color text = Color(0xFF1A1A1A);
-  static const Color muted = Color(0xFF9E9E9E);
-  static const Color unreadBg = Color(0xFFFFF1F7);
+  static const Color muted = Color(0xFF6B7280);
+  static const Color unreadBg = Color(0xFFF0F4FF);
 }
 
 class NotificationItem {

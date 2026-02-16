@@ -24,11 +24,11 @@ class AppColors {
   static const primary = Color(0xFF1A1A1A);
   static const primaryDark = Color(0xFF000000);
   static const accent = Color(0xFF333333);
-  static const background = Color(0xFFF5F5F5);
+  static const background = Color(0xFFF8F9FA);
   static const card = Colors.white;
   static const text = Color(0xFF1A1A1A);
-  static const muted = Color(0xFF9E9E9E);
-  static const border = Color(0xFFE0E0E0);
+  static const muted = Color(0xFF6B7280);
+  static const border = Color(0xFFE5E7EB);
   static const green = Color(0xFF10B981);
   static const blue = Color(0xFF3B82F6);
   static const purple = Color(0xFF8B5CF6);
@@ -2438,7 +2438,7 @@ class _BranchAdminDashboardState extends State<BranchAdminDashboard> with Ticker
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white.withOpacity(0.05)),
+        border: Border.all(color: const Color(0xFFE5E7EB).withOpacity(0.5)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.02),
@@ -2559,7 +2559,7 @@ class _BranchAdminDashboardState extends State<BranchAdminDashboard> with Ticker
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white.withOpacity(0.05)),
+        border: Border.all(color: const Color(0xFFE5E7EB).withOpacity(0.5)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.02),
@@ -2688,7 +2688,7 @@ class _BranchAdminDashboardState extends State<BranchAdminDashboard> with Ticker
     final topServices = sortedServices.take(4).toList();
 
     final colors = [
-      const Color(0xFFEC4899),
+      const Color(0xFF1A1A1A),
       const Color(0xFF8B5CF6),
       const Color(0xFF10B981),
       const Color(0xFFF59E0B),
@@ -2715,7 +2715,7 @@ class _BranchAdminDashboardState extends State<BranchAdminDashboard> with Ticker
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white.withOpacity(0.05)),
+        border: Border.all(color: const Color(0xFFE5E7EB).withOpacity(0.5)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.02),
@@ -2788,7 +2788,7 @@ class _BranchAdminDashboardState extends State<BranchAdminDashboard> with Ticker
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white.withOpacity(0.05)),
+        border: Border.all(color: const Color(0xFFE5E7EB).withOpacity(0.5)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.02),
@@ -2854,7 +2854,7 @@ class _BranchAdminDashboardState extends State<BranchAdminDashboard> with Ticker
             children: [
               CircleAvatar(
                 radius: 20,
-                backgroundColor: Colors.grey.shade800,
+                backgroundColor: Colors.grey.shade200,
                 child: Text(name.isNotEmpty ? name[0].toUpperCase() : '?', style: const TextStyle(color: AppColors.text)),
               ),
               const SizedBox(width: 12),
@@ -2972,7 +2972,7 @@ class _BranchAdminDashboardState extends State<BranchAdminDashboard> with Ticker
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white.withOpacity(0.05)),
+        border: Border.all(color: const Color(0xFFE5E7EB).withOpacity(0.5)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.02),

@@ -11,11 +11,11 @@ class AppColors {
   static const primary = Color(0xFF1A1A1A);
   static const primaryDark = Color(0xFF000000);
   static const accent = Color(0xFF333333);
-  static const background = Color(0xFFF5F5F5);
+  static const background = Color(0xFFF8F9FA);
   static const card = Colors.white;
   static const text = Color(0xFF1A1A1A);
-  static const muted = Color(0xFF9E9E9E);
-  static const border = Color(0xFFE0E0E0);
+  static const muted = Color(0xFF6B7280);
+  static const border = Color(0xFFE5E7EB);
   static const green = Color(0xFF10B981);
   static const yellow = Color(0xFFFFD700);
   static const red = Color(0xFFEF4444);
@@ -345,7 +345,7 @@ class _ClientsScreenState extends State<ClientsScreen> with TickerProviderStateM
           final phone = (data['phone'] as String?) ?? '';
 
           final avatarUrl =
-              'https://ui-avatars.com/api/?background=FF2D8F&color=fff&name=${Uri.encodeComponent(name)}';
+              'https://ui-avatars.com/api/?background=1A1A1A&color=fff&name=${Uri.encodeComponent(name)}';
 
           return Client(
             id: entry.key,
@@ -869,7 +869,7 @@ class _ClientsScreenState extends State<ClientsScreen> with TickerProviderStateM
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: AnimatedToggle(
-                backgroundColor: Colors.white,
+                backgroundColor: AppColors.card,
                 values: const ['My Clients', 'Branch Clients'],
                 selectedIndex: _showBranchClients ? 1 : 0,
                 onChanged: _onToggleChanged,
@@ -1137,17 +1137,18 @@ class _ClientCard extends StatelessWidget {
         decoration: BoxDecoration(
           color: AppColors.card,
           borderRadius: BorderRadius.circular(16),
-          boxShadow: [BoxShadow(color: AppColors.primary.withOpacity(0.08), blurRadius: 25, offset: const Offset(0, 8))],
+          border: Border.all(color: const Color(0xFFE5E7EB).withOpacity(0.5)),
+          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.12), blurRadius: 25, offset: const Offset(0, 8))],
         ),
         child: Row(
           children: [
             CircleAvatar(
               radius: 28,
-              backgroundColor: AppColors.primary.withOpacity(0.15),
+              backgroundColor: Colors.white.withOpacity(0.1),
               child: Text(
                 initials,
                 style: const TextStyle(
-                  color: AppColors.primary,
+                  color: AppColors.text,
                   fontWeight: FontWeight.bold,
                   fontSize: 18,
                 ),

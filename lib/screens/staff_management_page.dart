@@ -11,11 +11,11 @@ class AppColors {
   static const primary = Color(0xFF1A1A1A);
   static const primaryDark = Color(0xFF000000);
   static const accent = Color(0xFF333333);
-  static const background = Color(0xFFF5F5F5);
+  static const background = Color(0xFFF8F9FA);
   static const card = Colors.white;
   static const text = Color(0xFF1A1A1A);
-  static const muted = Color(0xFF9E9E9E);
-  static const border = Color(0xFFE0E0E0);
+  static const muted = Color(0xFF6B7280);
+  static const border = Color(0xFFE5E7EB);
 }
 
 // ============================================================================
@@ -710,7 +710,7 @@ class _StaffManagementPageState extends State<StaffManagementPage> {
       margin: const EdgeInsets.all(16),
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.card,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10),
@@ -827,7 +827,7 @@ class _StaffManagementPageState extends State<StaffManagementPage> {
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.card,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
@@ -852,7 +852,7 @@ class _StaffManagementPageState extends State<StaffManagementPage> {
                     gradient: LinearGradient(
                       colors: [
                         const Color(0xFF8B5CF6).withOpacity(0.8),
-                        const Color(0xFFEC4899).withOpacity(0.8),
+                        const Color(0xFF1A1A1A).withOpacity(0.8),
                       ],
                     ),
                     borderRadius: BorderRadius.circular(16),
@@ -1171,7 +1171,7 @@ class _StaffPreviewSheet extends StatelessWidget {
     return Container(
       height: MediaQuery.of(context).size.height * 0.9,
       decoration: const BoxDecoration(
-        color: Colors.white,
+        color: AppColors.card,
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       child: Column(
@@ -1233,7 +1233,7 @@ class _StaffPreviewSheet extends StatelessWidget {
                           height: 80,
                           decoration: BoxDecoration(
                             gradient: const LinearGradient(
-                              colors: [Color(0xFF8B5CF6), Color(0xFFEC4899)],
+                              colors: [Color(0xFF8B5CF6), Color(0xFF1A1A1A)],
                             ),
                             borderRadius: BorderRadius.circular(20),
                           ),
@@ -1338,10 +1338,10 @@ class _StaffPreviewSheet extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: AppColors.card,
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
+                  color: Colors.black.withOpacity(0.1),
                   blurRadius: 10,
                   offset: const Offset(0, -5),
                 ),
@@ -1802,7 +1802,7 @@ class _OnboardStaffSheetState extends State<_OnboardStaffSheet> {
     return Container(
       height: MediaQuery.of(context).size.height * 0.9,
       decoration: const BoxDecoration(
-        color: Colors.white,
+        color: AppColors.card,
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       child: Column(
@@ -1931,7 +1931,7 @@ class _OnboardStaffSheetState extends State<_OnboardStaffSheet> {
                   _buildSectionCard(
                     title: 'System Role',
                     icon: FontAwesomeIcons.userShield,
-                    iconColor: const Color(0xFFEC4899),
+                    iconColor: const Color(0xFF1A1A1A),
                     children: [
                       _buildRoleOption(
                         'staff',
@@ -2021,10 +2021,10 @@ class _OnboardStaffSheetState extends State<_OnboardStaffSheet> {
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: AppColors.card,
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
+                  color: Colors.black.withOpacity(0.1),
                   blurRadius: 10,
                   offset: const Offset(0, -5),
                 ),
@@ -2112,10 +2112,10 @@ class _OnboardStaffSheetState extends State<_OnboardStaffSheet> {
       child: Container(
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFFEC4899).withOpacity(0.1) : Colors.white,
+          color: isSelected ? const Color(0xFF1A1A1A).withOpacity(0.1) : Colors.white,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: isSelected ? const Color(0xFFEC4899) : Colors.grey.shade300,
+            color: isSelected ? const Color(0xFF1A1A1A) : Colors.grey.shade300,
             width: isSelected ? 2 : 1,
           ),
         ),
@@ -2125,10 +2125,10 @@ class _OnboardStaffSheetState extends State<_OnboardStaffSheet> {
               width: 40,
               height: 40,
               decoration: BoxDecoration(
-                color: isSelected ? const Color(0xFFEC4899).withOpacity(0.2) : Colors.grey.shade100,
+                color: isSelected ? const Color(0xFF1A1A1A).withOpacity(0.2) : Colors.grey.shade100,
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: Icon(icon, size: 16, color: isSelected ? const Color(0xFFEC4899) : Colors.grey),
+              child: Icon(icon, size: 16, color: isSelected ? const Color(0xFF1A1A1A) : Colors.grey),
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -2140,7 +2140,7 @@ class _OnboardStaffSheetState extends State<_OnboardStaffSheet> {
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
-                      color: isSelected ? const Color(0xFFEC4899) : AppColors.text,
+                      color: isSelected ? const Color(0xFF1A1A1A) : AppColors.text,
                     ),
                   ),
                   const SizedBox(height: 2),
@@ -2152,7 +2152,7 @@ class _OnboardStaffSheetState extends State<_OnboardStaffSheet> {
               ),
             ),
             if (isSelected)
-              const Icon(FontAwesomeIcons.circleCheck, size: 18, color: Color(0xFFEC4899)),
+              const Icon(FontAwesomeIcons.circleCheck, size: 18, color: Color(0xFF1A1A1A)),
           ],
         ),
       ),
@@ -2164,9 +2164,9 @@ class _OnboardStaffSheetState extends State<_OnboardStaffSheet> {
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.card,
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: Colors.grey.shade200),
+        border: Border.all(color: const Color(0xFFE5E7EB).withOpacity(0.5)),
       ),
       child: Row(
         children: [
@@ -2415,7 +2415,7 @@ class _EditStaffSheetState extends State<_EditStaffSheet> {
     return Container(
       height: MediaQuery.of(context).size.height * 0.9,
       decoration: const BoxDecoration(
-        color: Colors.white,
+        color: AppColors.card,
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       child: Column(
@@ -2562,10 +2562,10 @@ class _EditStaffSheetState extends State<_EditStaffSheet> {
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: AppColors.card,
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
+                  color: Colors.black.withOpacity(0.1),
                   blurRadius: 10,
                   offset: const Offset(0, -5),
                 ),
@@ -2688,9 +2688,9 @@ class _EditStaffSheetState extends State<_EditStaffSheet> {
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.card,
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: Colors.grey.shade200),
+        border: Border.all(color: const Color(0xFFE5E7EB).withOpacity(0.5)),
       ),
       child: Row(
         children: [
