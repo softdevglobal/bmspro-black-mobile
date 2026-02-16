@@ -1,0 +1,37 @@
+buildscript {
+    repositories {
+        google()
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'com.google.gms:google-services:4.3.15'
+    }
+}
+
+allprojects {
+    repositories {
+        google()
+        mavenCentral()
+    }
+
+    // Workaround: some new plugins pull in androidx.activity:activity:1.11.0
+    // which requires a newer Android Gradle Plugin than this project uses.
+    // Force a compatible version so the build can succeed without upgrading AGP.
+    configurations.all { config ->
+        config.resolutionStrategy {
+            force "androidx.activity:activity:1.9.3"
+        }
+    }
+}
+
+rootProject.buildDir = "../build"
+subprojects {
+    project.buildDir = "${rootProject.buildDir}/${project.name}"
+}
+subprojects {
+    project.evaluationDependsOn(":app")
+}
+
+tasks.register("clean", Delete) {
+    delete rootProject.buildDir
+}

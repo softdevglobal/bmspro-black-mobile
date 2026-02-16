@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "960634304944",
+    "project_id": "bmspro-pink",
+    "storage_bucket": "bmspro-pink.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:960634304944:android:fbfb092f36221831b73e75",
+        "android_client_info": {
+          "package_name": "com.softdev.bmspro_pink"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD2q67hCjMyxb0N79zouXW1tzXDwAIwNFM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
+
