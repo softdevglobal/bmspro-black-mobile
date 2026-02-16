@@ -51,18 +51,22 @@ class BmsproBlackApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Design palette to match the provided mockup
-    const Color primaryPink = Color(0xFFFF2D8F); // #FF2D8F
-    const Color accentPink = Color(0xFFFF6FB5); // #FF6FB5
-    const Color backgroundPink = Color(0xFFFFF5FA); // #FFF5FA
+    // Design palette - premium black theme
+    const Color primaryBlack = Color(0xFF1A1A1A); // Deep black
+    const Color accentGray = Color(0xFF333333); // Dark gray
+    const Color backgroundLight = Color(0xFFF7F7F8); // Slightly warm off-white
+    const Color surfaceWhite = Color(0xFFFFFFFF);
+    const Color borderColor = Color(0xFFE8E8E8);
 
     final ColorScheme colorScheme = ColorScheme.fromSeed(
-      seedColor: primaryPink,
+      seedColor: primaryBlack,
       brightness: Brightness.light,
-      primary: primaryPink,
-      secondary: accentPink,
-      background: backgroundPink,
-      surface: Colors.white,
+      primary: primaryBlack,
+      secondary: accentGray,
+      background: backgroundLight,
+      surface: surfaceWhite,
+      onPrimary: Colors.white,
+      onSecondary: Colors.white,
     );
 
     return MaterialApp(
@@ -70,7 +74,6 @@ class BmsproBlackApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       navigatorKey: AppInitializer().navigatorKey,
       builder: (context, child) {
-        // Set root context for notification handling when app builds
         WidgetsBinding.instance.addPostFrameCallback((_) {
           AppInitializer().setRootContext(context);
         });
@@ -79,65 +82,107 @@ class BmsproBlackApp extends StatelessWidget {
       theme: ThemeData(
         colorScheme: colorScheme,
         useMaterial3: true,
-        scaffoldBackgroundColor: backgroundPink,
-        // Use DM Sans app-wide
+        scaffoldBackgroundColor: backgroundLight,
         fontFamily: GoogleFonts.dmSans().fontFamily,
+        // ── Snackbar theme ──
+        snackBarTheme: SnackBarThemeData(
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        ),
+        // ── Text button ──
         textButtonTheme: TextButtonThemeData(
           style: TextButton.styleFrom(
-            foregroundColor: primaryPink,
+            foregroundColor: primaryBlack,
             textStyle: const TextStyle(fontWeight: FontWeight.w600),
           ),
         ),
+        // ── Text theme ──
         textTheme: const TextTheme(
-          headlineLarge: TextStyle(fontWeight: FontWeight.w700),
-          headlineMedium: TextStyle(fontWeight: FontWeight.w700),
+          headlineLarge: TextStyle(fontWeight: FontWeight.w800, letterSpacing: -0.5),
+          headlineMedium: TextStyle(fontWeight: FontWeight.w700, letterSpacing: -0.3),
           titleLarge: TextStyle(fontWeight: FontWeight.w600),
-          bodyLarge: TextStyle(height: 1.4),
-          bodyMedium: TextStyle(height: 1.4),
+          bodyLarge: TextStyle(height: 1.5),
+          bodyMedium: TextStyle(height: 1.5),
         ),
+        // ── Input decoration ──
         inputDecorationTheme: InputDecorationTheme(
           filled: true,
-          fillColor: Colors.white,
+          fillColor: const Color(0xFFF8F8F8),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(14),
-            borderSide: BorderSide(color: const Color(0xFFF2D2E9)),
+            borderSide: const BorderSide(color: borderColor),
           ),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(14),
-            borderSide: const BorderSide(color: Color(0xFFF2D2E9)),
+            borderSide: const BorderSide(color: borderColor),
           ),
-          focusedBorder: const OutlineInputBorder(
-            borderRadius: BorderRadius.all(Radius.circular(14)),
-            borderSide: BorderSide(color: primaryPink, width: 1.5),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(14),
+            borderSide: const BorderSide(color: primaryBlack, width: 1.5),
           ),
           contentPadding:
-              const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
         ),
+        // ── Elevated button (dark fill) ──
         elevatedButtonTheme: ElevatedButtonThemeData(
           style: ElevatedButton.styleFrom(
-            backgroundColor: primaryPink,
+            backgroundColor: primaryBlack,
             foregroundColor: Colors.white,
+            elevation: 0,
             shape:
                 RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-            textStyle: const TextStyle(fontWeight: FontWeight.w600),
-            padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+            textStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
+            padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
           ),
         ),
+        // ── Outlined button ──
         outlinedButtonTheme: OutlinedButtonThemeData(
           style: OutlinedButton.styleFrom(
-            foregroundColor: primaryPink,
-            side: BorderSide(color: primaryPink.withOpacity(0.5)),
+            foregroundColor: primaryBlack,
+            side: const BorderSide(color: borderColor, width: 1.5),
             shape:
                 RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-            textStyle: const TextStyle(fontWeight: FontWeight.w600),
-            padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+            textStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
+            padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
           ),
         ),
-        appBarTheme: const AppBarTheme(
-          backgroundColor: Colors.white,
-          foregroundColor: Colors.black,
+        // ── App bar ──
+        appBarTheme: AppBarTheme(
+          backgroundColor: backgroundLight,
+          foregroundColor: primaryBlack,
           elevation: 0,
+          scrolledUnderElevation: 0,
           centerTitle: true,
+          titleTextStyle: TextStyle(
+            color: primaryBlack,
+            fontSize: 18,
+            fontWeight: FontWeight.w700,
+            fontFamily: GoogleFonts.dmSans().fontFamily,
+          ),
+        ),
+        // ── Card theme ──
+        cardTheme: CardThemeData(
+          color: surfaceWhite,
+          elevation: 0,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        ),
+        // ── Divider ──
+        dividerTheme: const DividerThemeData(
+          color: borderColor,
+          thickness: 1,
+        ),
+        // ── Dialog ──
+        dialogTheme: DialogThemeData(
+          backgroundColor: surfaceWhite,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+          elevation: 10,
+        ),
+        // ── Bottom sheet ──
+        bottomSheetTheme: const BottomSheetThemeData(
+          backgroundColor: surfaceWhite,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+          ),
         ),
       ),
       onGenerateRoute: AppRoutes.onGenerateRoute,

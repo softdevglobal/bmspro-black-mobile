@@ -8,14 +8,14 @@ import 'package:image_picker/image_picker.dart';
 import '../utils/timezone_helper.dart';
 
 class AppColors {
-  static const primary = Color(0xFFFF2D8F);
-  static const primaryDark = Color(0xFFD81F75);
-  static const accent = Color(0xFFFF6FB5);
-  static const background = Color(0xFFFFF5FA);
+  static const primary = Color(0xFF1A1A1A);
+  static const primaryDark = Color(0xFF000000);
+  static const accent = Color(0xFF333333);
+  static const background = Color(0xFFF5F5F5);
   static const card = Colors.white;
   static const text = Color(0xFF1A1A1A);
   static const muted = Color(0xFF9E9E9E);
-  static const border = Color(0xFFF2D2E9);
+  static const border = Color(0xFFE0E0E0);
 }
 
 class SalonSettingsPage extends StatefulWidget {
@@ -623,7 +623,7 @@ class _SalonSettingsPageState extends State<SalonSettingsPage> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-                _buildStatItem('Role', 'Salon Owner'),
+                _buildStatItem('Role', 'Workshop Owner'),
                 if (_plan.isNotEmpty) _buildStatItem('Plan', _plan),
                 _buildStatItem('GST', _gstRegistered ? 'Yes' : 'No'),
               ],

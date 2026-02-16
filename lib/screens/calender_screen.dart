@@ -76,18 +76,18 @@ class BranchTheme {
 }
 
 class AppConfig {
-  static const primary = Color(0xFFFF2D8F);
-  static const accent = Color(0xFFFF6FB5);
-  static const background = Color(0xFFFFF5FA);
+  static const primary = Color(0xFF1A1A1A);
+  static const accent = Color(0xFF333333);
+  static const background = Color(0xFFF5F5F5);
   static const card = Colors.white;
   static const text = Color(0xFF1A1A1A);
   static const muted = Color(0xFF9E9E9E);
-  static const border = Color(0xFFF2D2E9);
+  static const border = Color(0xFFE0E0E0);
   static final Map<String, BranchTheme> branches = {
     'Main St': BranchTheme(
-      color: Color(0xFFFF2D8F),
-      lightBg: Color(0xFFFFF5FA),
-      gradient: [Color(0xFFFF2D8F), Color(0xFFFF6FB5)],
+      color: Color(0xFF1A1A1A),
+      lightBg: Color(0xFFF5F5F5),
+      gradient: [Color(0xFF1A1A1A), Color(0xFF333333)],
     ),
     'Downtown': BranchTheme(
       color: Color(0xFF3B82F6),
@@ -182,14 +182,14 @@ class _CalenderScreenState extends State<CalenderScreen> {
   
   // Predefined color palette for branches
   static final List<Color> _branchColorPalette = [
-    const Color(0xFFFF2D8F), // Pink
+    const Color(0xFF1A1A1A), // Black
     const Color(0xFF3B82F6), // Blue
     const Color(0xFF10B981), // Green
     const Color(0xFF8B5CF6), // Purple
     const Color(0xFFF59E0B), // Amber
     const Color(0xFFEF4444), // Red
     const Color(0xFF06B6D4), // Cyan
-    const Color(0xFFEC4899), // Pink-500
+    const Color(0xFFEC4899), // Rose-500
     const Color(0xFF6366F1), // Indigo
     const Color(0xFF14B8A6), // Teal
   ];

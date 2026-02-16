@@ -1259,7 +1259,7 @@ class _NotificationOverlayState extends State<_NotificationOverlay>
                     ),
                   ],
                   border: Border.all(
-                    color: const Color(0xFFFF2D8F).withOpacity(0.3),
+                    color: const Color(0xFF1A1A1A).withOpacity(0.3),
                     width: 1,
                   ),
                 ),
@@ -1269,12 +1269,12 @@ class _NotificationOverlayState extends State<_NotificationOverlay>
                       width: 48,
                       height: 48,
                       decoration: BoxDecoration(
-                        color: const Color(0xFFFF2D8F).withOpacity(0.1),
+                        color: const Color(0xFF1A1A1A).withOpacity(0.1),
                         shape: BoxShape.circle,
                       ),
                       child: const Icon(
                         Icons.notifications_active,
-                        color: Color(0xFFFF2D8F),
+                        color: Color(0xFF1A1A1A),
                         size: 24,
                       ),
                     ),

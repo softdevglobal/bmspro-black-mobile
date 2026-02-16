@@ -11,7 +11,7 @@ class AppBottomNav extends StatelessWidget {
     this.icons = const <IconData>[
       Icons.home_rounded,
       Icons.calendar_month_rounded,
-      Icons.groups_rounded, // Clients (3rd)
+      Icons.groups_rounded,
       Icons.bar_chart_rounded,
       Icons.person_rounded,
     ],
@@ -19,8 +19,6 @@ class AppBottomNav extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final Color primary = Theme.of(context).colorScheme.primary;
-
     return SafeArea(
       top: false,
       child: Padding(
@@ -28,13 +26,18 @@ class AppBottomNav extends StatelessWidget {
         child: Container(
           height: 78,
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: const Color(0xFF1A1A1A),
             borderRadius: BorderRadius.circular(24),
             boxShadow: [
               BoxShadow(
-                color: primary.withOpacity(0.18),
-                blurRadius: 24,
-                offset: const Offset(0, -8),
+                color: Colors.black.withOpacity(0.25),
+                blurRadius: 30,
+                offset: const Offset(0, -4),
+              ),
+              BoxShadow(
+                color: Colors.black.withOpacity(0.1),
+                blurRadius: 60,
+                offset: const Offset(0, -10),
               ),
             ],
           ),
@@ -43,8 +46,34 @@ class AppBottomNav extends StatelessWidget {
             final double slotWidth = barWidth / icons.length;
 
             return Stack(
+              alignment: Alignment.center,
               children: [
-                // Icons row
+                // ── Glowing dot under selected ──
+                AnimatedPositioned(
+                  duration: const Duration(milliseconds: 280),
+                  curve: Curves.easeOutCubic,
+                  left: (currentIndex * slotWidth) +
+                      (slotWidth / 2) -
+                      3,
+                  bottom: 10,
+                  child: Container(
+                    width: 6,
+                    height: 6,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.white.withOpacity(0.5),
+                          blurRadius: 6,
+                          spreadRadius: 1,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+
+                // ── Icons row ──
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: List.generate(icons.length, (i) {
@@ -59,14 +88,18 @@ class AppBottomNav extends StatelessWidget {
                           onTap: () => onChanged(i),
                           child: Center(
                             child: AnimatedScale(
-                              duration: const Duration(milliseconds: 160),
-                              scale: selected ? 1.12 : 1.0,
-                              child: Icon(
-                                icons[i],
-                                size: 30,
-                                color: selected
-                                    ? primary
-                                    : const Color(0xFF9E9E9E),
+                              duration:
+                                  const Duration(milliseconds: 200),
+                              scale: selected ? 1.1 : 1.0,
+                              child: AnimatedOpacity(
+                                duration:
+                                    const Duration(milliseconds: 200),
+                                opacity: selected ? 1.0 : 0.45,
+                                child: Icon(
+                                  icons[i],
+                                  size: 26,
+                                  color: Colors.white,
+                                ),
                               ),
                             ),
                           ),

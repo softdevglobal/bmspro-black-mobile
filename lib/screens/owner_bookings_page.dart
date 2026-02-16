@@ -1072,12 +1072,12 @@ class _OwnerBookingsPageState extends State<OwnerBookingsPage> {
                       Container(
                         padding: const EdgeInsets.all(10),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFFFF5FA),
+                          color: const Color(0xFFF5F5F5),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: const Icon(
                           FontAwesomeIcons.calendarCheck,
-                          color: Color(0xFFFF2D8F),
+                          color: Color(0xFF1A1A1A),
                           size: 20,
                         ),
                       ),
@@ -1365,9 +1365,9 @@ class _OwnerBookingsPageState extends State<OwnerBookingsPage> {
                                 }
                               : null,
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFFFF2D8F),
+                            backgroundColor: const Color(0xFF1A1A1A),
                             disabledBackgroundColor:
-                                const Color(0xFFFF2D8F).withOpacity(0.5),
+                                const Color(0xFF1A1A1A).withOpacity(0.5),
                             elevation: 0,
                             padding: const EdgeInsets.symmetric(vertical: 16),
                             shape: RoundedRectangleBorder(
@@ -2595,7 +2595,7 @@ class _OwnerBookingsPageState extends State<OwnerBookingsPage> {
             },
             child: const Text('Yes',
                 style: TextStyle(
-                    color: Color(0xFFFF2D8F), fontWeight: FontWeight.bold)),
+                    color: Color(0xFF1A1A1A), fontWeight: FontWeight.bold)),
           ),
         ],
       ),
@@ -2622,8 +2622,8 @@ class _OwnerBookingsPageState extends State<OwnerBookingsPage> {
 
   @override
   Widget build(BuildContext context) {
-    const Color primary = Color(0xFFFF2D8F);
-    const Color background = Color(0xFFFFF5FA);
+    const Color primary = Color(0xFF1A1A1A);
+    const Color background = Color(0xFFF5F5F5);
 
     // Aggregate stats from all bookings (not filtered by search)
     final totalCount = _bookings.length;
@@ -2698,7 +2698,7 @@ class _OwnerBookingsPageState extends State<OwnerBookingsPage> {
                       style: TextButton.styleFrom(
                         padding: const EdgeInsets.symmetric(
                             horizontal: 14, vertical: 8),
-                        backgroundColor: const Color(0xFFFF2D8F),
+                        backgroundColor: const Color(0xFF1A1A1A),
                         foregroundColor: Colors.white,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(999),
@@ -3626,11 +3626,11 @@ class _BookingCard extends StatelessWidget {
             children: [
               CircleAvatar(
                 radius: 22,
-                backgroundColor: const Color(0xFFFF2D8F).withOpacity(0.15),
+                backgroundColor: const Color(0xFF1A1A1A).withOpacity(0.15),
                 child: Text(
                   _getInitials(booking.customerName),
                   style: const TextStyle(
-                    color: Color(0xFFFF2D8F),
+                    color: Color(0xFF1A1A1A),
                     fontWeight: FontWeight.bold,
                     fontSize: 14,
                   ),
@@ -3718,7 +3718,7 @@ class _BookingCard extends StatelessWidget {
                   fontWeight: FontWeight.bold,
                   color: booking.status == 'cancelled'
                       ? const Color(0xFF9CA3AF)
-                      : const Color(0xFFFF2D8F),
+                      : const Color(0xFF1A1A1A),
                   decoration: booking.status == 'cancelled'
                       ? TextDecoration.lineThrough
                       : TextDecoration.none,
@@ -3843,7 +3843,7 @@ class _BookingCard extends StatelessWidget {
       builder: (context) => Container(
         height: MediaQuery.of(context).size.height * 0.75,
         decoration: const BoxDecoration(
-          color: Color(0xFFFFF5FA),
+          color: Color(0xFFF5F5F5),
           borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
         ),
         child: Column(
@@ -3872,11 +3872,11 @@ class _BookingCard extends StatelessWidget {
                         children: [
                           CircleAvatar(
                             radius: 40,
-                            backgroundColor: const Color(0xFFFF2D8F).withOpacity(0.15),
+                            backgroundColor: const Color(0xFF1A1A1A).withOpacity(0.15),
                             child: Text(
                               _getInitials(booking.customerName),
                               style: const TextStyle(
-                                color: Color(0xFFFF2D8F),
+                                color: Color(0xFF1A1A1A),
                                 fontWeight: FontWeight.bold,
                                 fontSize: 28,
                               ),
@@ -4000,7 +4000,7 @@ class _BookingCard extends StatelessWidget {
                                 style: const TextStyle(
                                   fontSize: 20,
                                   fontWeight: FontWeight.bold,
-                                  color: Color(0xFFFF2D8F),
+                                  color: Color(0xFF1A1A1A),
                                 ),
                               ),
                             ],
@@ -4019,7 +4019,7 @@ class _BookingCard extends StatelessWidget {
               child: ElevatedButton(
                 onPressed: () => Navigator.pop(context),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFFF2D8F),
+                  backgroundColor: const Color(0xFF1A1A1A),
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(
@@ -4075,7 +4075,7 @@ class _BookingCard extends StatelessWidget {
                 style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
-                  color: Color(0xFFFF2D8F),
+                  color: Color(0xFF1A1A1A),
                 ),
               ),
             ],

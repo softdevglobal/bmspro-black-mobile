@@ -21,14 +21,14 @@ import 'package:geolocator/geolocator.dart';
 enum ClockStatus { out, clockedIn, onBreak }
 
 class AppColors {
-  static const primary = Color(0xFFFF2D8F);
-  static const primaryDark = Color(0xFFD81F75);
-  static const accent = Color(0xFFFF6FB5);
-  static const background = Color(0xFFFFF5FA);
+  static const primary = Color(0xFF1A1A1A);
+  static const primaryDark = Color(0xFF000000);
+  static const accent = Color(0xFF333333);
+  static const background = Color(0xFFF5F5F5);
   static const card = Colors.white;
   static const text = Color(0xFF1A1A1A);
   static const muted = Color(0xFF9E9E9E);
-  static const border = Color(0xFFF2D2E9);
+  static const border = Color(0xFFE0E0E0);
   static const green = Color(0xFF10B981);
   static const blue = Color(0xFF3B82F6);
   static const purple = Color(0xFF8B5CF6);
@@ -1501,147 +1501,160 @@ class _BranchAdminDashboardState extends State<BranchAdminDashboard> with Ticker
   }
 
   Widget _buildHeader(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const SizedBox(height: 12),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            // Profile button + Dashboard title
-            Expanded(
-              child: Row(
-                children: [
-                  GestureDetector(
-                    onTap: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (_) => Scaffold(
-                            backgroundColor: AppColors.background,
-                            body: const profile_screen.ProfileScreen(
-                              showBackButton: true,
-                            ),
-                          ),
-                        ),
-                      );
-                    },
-                    child: Container(
-                      width: 44,
-                      height: 44,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: AppColors.primary.withOpacity(0.15),
-                        border: Border.all(
-                          color: AppColors.primary.withOpacity(0.3),
-                          width: 2,
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: AppColors.primary.withOpacity(0.2),
-                            blurRadius: 12,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
-                      ),
-                      child: const Center(
-                        child: Icon(
-                          FontAwesomeIcons.user,
-                          size: 18,
-                          color: AppColors.primary,
-                        ),
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFF1A1A1A), Color(0xFF2D2D2D), Color(0xFF333333)],
+        ),
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.2),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          // Profile button
+          Material(
+            color: Colors.transparent,
+            shape: const CircleBorder(),
+            child: InkWell(
+              customBorder: const CircleBorder(),
+              onTap: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => Scaffold(
+                      backgroundColor: AppColors.background,
+                      body: const profile_screen.ProfileScreen(
+                        showBackButton: true,
                       ),
                     ),
                   ),
-                  const SizedBox(width: 12),
-                  Flexible(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: const [
-                        Text(
-                          'Dashboard',
-                          style: TextStyle(
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
-                            color: AppColors.text,
-                          ),
-                        ),
-                        Text(
-                          'Analytics & insights',
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: AppColors.muted,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // Notification bell icon with badge
-                InkWell(
-                  onTap: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(builder: (_) => const NotificationsPage()),
-                    );
-                  },
-                  borderRadius: BorderRadius.circular(20),
-                  child: Stack(
-                    clipBehavior: Clip.none,
-                    children: [
-                      const Padding(
-                        padding: EdgeInsets.all(4.0),
-                        child: Icon(FontAwesomeIcons.bell,
-                            color: AppColors.muted, size: 22),
-                      ),
-                      if (_unreadNotificationCount > 0)
-                        Positioned(
-                          top: -2,
-                          right: -2,
-                          child: Container(
-                            width: 10,
-                            height: 10,
-                            decoration: const BoxDecoration(
-                              color: AppColors.primary,
-                              shape: BoxShape.circle,
-                            ),
-                          ),
-                        ),
-                    ],
+                );
+              },
+              child: Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.white.withOpacity(0.1),
+                  border: Border.all(
+                    color: Colors.white.withOpacity(0.15),
+                    width: 1.5,
                   ),
                 ),
-                const SizedBox(width: 8),
-                // Logged in admin name
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: AppColors.primary.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(20),
+                child: const Center(
+                  child: Icon(
+                    FontAwesomeIcons.user,
+                    size: 18,
+                    color: Colors.white,
                   ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(FontAwesomeIcons.userTie, size: 12, color: AppColors.primary),
-                      const SizedBox(width: 6),
-                      Text(
-                        widget.branchName.isNotEmpty ? '${widget.branchName} Admin' : 'Branch Admin',
-                        style: const TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.primary,
-                        ),
-                      ),
-                    ],
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 14),
+          // Dashboard title
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Dashboard',
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.w800,
+                    color: Colors.white,
+                    letterSpacing: -0.3,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  'Analytics & insights',
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: Colors.white.withOpacity(0.5),
                   ),
                 ),
               ],
             ),
-          ],
-        ),
-      ],
+          ),
+          // Notification bell
+          InkWell(
+            onTap: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const NotificationsPage()),
+              );
+            },
+            borderRadius: BorderRadius.circular(20),
+            child: Stack(
+              clipBehavior: Clip.none,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(4.0),
+                  child: Icon(FontAwesomeIcons.bell,
+                      color: Colors.white.withOpacity(0.6), size: 20),
+                ),
+                if (_unreadNotificationCount > 0)
+                  Positioned(
+                    top: -2,
+                    right: -2,
+                    child: Container(
+                      width: 10,
+                      height: 10,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.white.withOpacity(0.4),
+                            blurRadius: 6,
+                            spreadRadius: 1,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 10),
+          // Admin role pill
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: Colors.white.withOpacity(0.15),
+                width: 1,
+              ),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(FontAwesomeIcons.crown,
+                    size: 10, color: Colors.white.withOpacity(0.8)),
+                const SizedBox(width: 5),
+                Text(
+                  widget.branchName.isNotEmpty ? '${widget.branchName}' : 'Branch Admin',
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white.withOpacity(0.8),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -1796,7 +1809,7 @@ class _BranchAdminDashboardState extends State<BranchAdminDashboard> with Ticker
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: AppColors.card,
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
@@ -1950,7 +1963,7 @@ class _BranchAdminDashboardState extends State<BranchAdminDashboard> with Ticker
   List<Color> _getServiceColors(int index) {
     final colorSets = [
       [Colors.purple.shade400, Colors.purple.shade600],
-      [Colors.pink.shade400, Colors.pink.shade600],
+      [Colors.grey.shade700, Colors.grey.shade900],
       [AppColors.accent, AppColors.primary],
       [Colors.blue.shade400, Colors.blue.shade600],
       [Colors.teal.shade400, Colors.teal.shade600],
@@ -1969,7 +1982,7 @@ class _BranchAdminDashboardState extends State<BranchAdminDashboard> with Ticker
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: AppColors.card,
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
@@ -2127,7 +2140,7 @@ class _BranchAdminDashboardState extends State<BranchAdminDashboard> with Ticker
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: AppColors.card,
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
@@ -2423,9 +2436,9 @@ class _BranchAdminDashboardState extends State<BranchAdminDashboard> with Ticker
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey.shade100),
+        color: Theme.of(context).colorScheme.surface,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.white.withOpacity(0.05)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.02),
@@ -2544,9 +2557,9 @@ class _BranchAdminDashboardState extends State<BranchAdminDashboard> with Ticker
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey.shade100),
+        color: Theme.of(context).colorScheme.surface,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.white.withOpacity(0.05)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.02),
@@ -2700,9 +2713,9 @@ class _BranchAdminDashboardState extends State<BranchAdminDashboard> with Ticker
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey.shade100),
+        color: Theme.of(context).colorScheme.surface,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.white.withOpacity(0.05)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.02),
@@ -2773,9 +2786,9 @@ class _BranchAdminDashboardState extends State<BranchAdminDashboard> with Ticker
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey.shade100),
+        color: Theme.of(context).colorScheme.surface,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.white.withOpacity(0.05)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.02),
@@ -2841,7 +2854,7 @@ class _BranchAdminDashboardState extends State<BranchAdminDashboard> with Ticker
             children: [
               CircleAvatar(
                 radius: 20,
-                backgroundColor: Colors.grey.shade200,
+                backgroundColor: Colors.grey.shade800,
                 child: Text(name.isNotEmpty ? name[0].toUpperCase() : '?', style: const TextStyle(color: AppColors.text)),
               ),
               const SizedBox(width: 12),
@@ -2931,8 +2944,8 @@ class _BranchAdminDashboardState extends State<BranchAdminDashboard> with Ticker
         'title': 'Great Retention',
         'description': '${_clientRetention.toStringAsFixed(0)}% of clients are returning customers',
         'icon': FontAwesomeIcons.heart,
-        'iconColor': Colors.pink.shade500,
-        'bgColor': Colors.pink.shade50,
+        'iconColor': Colors.grey.shade800,
+        'bgColor': Colors.grey.shade100,
       });
     } else if (_totalClients > 0) {
       insights.add({
@@ -2957,9 +2970,9 @@ class _BranchAdminDashboardState extends State<BranchAdminDashboard> with Ticker
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey.shade100),
+        color: Theme.of(context).colorScheme.surface,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.white.withOpacity(0.05)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.02),

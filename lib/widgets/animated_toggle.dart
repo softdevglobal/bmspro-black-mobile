@@ -23,8 +23,8 @@ class AnimatedToggle extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // Default colors if not provided
-    final bg = backgroundColor ?? const Color(0xFFFFF5FA);
-    final indicator = indicatorColor ?? const Color(0xFFFF2D8F);
+    final bg = backgroundColor ?? const Color(0xFFF5F5F5);
+    final indicator = indicatorColor ?? const Color(0xFF1A1A1A);
     final txt = textColor ?? const Color(0xFF9E9E9E);
     final selectedTxt = selectedTextColor ?? Colors.white;
 
@@ -34,7 +34,7 @@ class AnimatedToggle extends StatelessWidget {
       decoration: BoxDecoration(
         color: bg,
         borderRadius: BorderRadius.circular(25),
-        border: Border.all(color: const Color(0xFFF2D2E9)),
+        border: Border.all(color: const Color(0xFFE0E0E0)),
       ),
       child: LayoutBuilder(
         builder: (context, constraints) {

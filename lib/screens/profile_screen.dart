@@ -15,14 +15,14 @@ import '../services/audit_log_service.dart';
 import '../services/staff_check_in_service.dart';
 
 class AppColors {
-  static const primary = Color(0xFFFF2D8F);
-  static const primaryDark = Color(0xFFD81F75);
-  static const accent = Color(0xFFFF6FB5);
-  static const background = Color(0xFFFFF5FA);
+  static const primary = Color(0xFF1A1A1A);
+  static const primaryDark = Color(0xFF000000);
+  static const accent = Color(0xFF333333);
+  static const background = Color(0xFFF5F5F5);
   static const card = Colors.white;
   static const text = Color(0xFF1A1A1A);
   static const muted = Color(0xFF9E9E9E);
-  static const border = Color(0xFFF2D2E9);
+  static const border = Color(0xFFE0E0E0);
 }
 
 class ProfileScreen extends StatefulWidget {
@@ -151,7 +151,7 @@ class _ProfileScreenState extends State<ProfileScreen>
             role = staffRole.toString();
           } else {
             if (systemRole == 'workshop_owner') {
-              role = 'Salon Owner';
+              role = 'Workshop Owner';
             } else if (systemRole == 'branch_admin') {
               role = 'Branch Admin';
             } else if (systemRole == 'staff') {
@@ -528,18 +528,26 @@ class _ProfileScreenState extends State<ProfileScreen>
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                   colors: [
-                    Color(0xFFFF2D8F),
-                    Color(0xFFFF6FB5),
-                    Color(0xFFFF8DC7),
+                    Color(0xFF0D0D0D),
+                    Color(0xFF1A1A1A),
+                    Color(0xFF333333),
+                    Color(0xFF4A4A4A),
                   ],
+                  stops: [0.0, 0.3, 0.7, 1.0],
                 ),
                 borderRadius: BorderRadius.circular(28),
                 boxShadow: [
                   BoxShadow(
-                    color: AppColors.primary.withOpacity(0.35),
+                    color: Colors.black.withOpacity(0.4),
                     blurRadius: 30,
                     offset: const Offset(0, 15),
                     spreadRadius: -5,
+                  ),
+                  BoxShadow(
+                    color: const Color(0xFF333333).withOpacity(0.2),
+                    blurRadius: 60,
+                    offset: const Offset(0, 25),
+                    spreadRadius: -10,
                   ),
                 ],
               ),
@@ -724,23 +732,32 @@ class _ProfileScreenState extends State<ProfileScreen>
     return Stack(
       alignment: Alignment.center,
       children: [
-        // Animated outer ring
+        // Animated outer ring with gold/silver shimmer
         AnimatedBuilder(
           animation: _shimmerController,
           builder: (context, child) {
             return Container(
-              width: 120,
-              height: 120,
+              width: 124,
+              height: 124,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 gradient: SweepGradient(
                   colors: const [
-                    Colors.white24,
+                    Color(0xFF555555),
                     Colors.white70,
-                    Colors.white24,
+                    Color(0xFF888888),
+                    Colors.white70,
+                    Color(0xFF555555),
                   ],
                   transform: GradientRotation(_shimmerController.value * 2 * math.pi),
                 ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.white.withOpacity(0.1),
+                    blurRadius: 20,
+                    spreadRadius: 2,
+                  ),
+                ],
               ),
             );
           },

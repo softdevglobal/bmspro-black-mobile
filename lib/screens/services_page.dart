@@ -8,14 +8,14 @@ import 'dart:io';
 import '../services/audit_log_service.dart';
 
 class AppColors {
-  static const primary = Color(0xFFFF2D8F);
-  static const primaryDark = Color(0xFFD81F75);
-  static const accent = Color(0xFFFF6FB5);
-  static const background = Color(0xFFFFF5FA);
+  static const primary = Color(0xFF1A1A1A);
+  static const primaryDark = Color(0xFF000000);
+  static const accent = Color(0xFF333333);
+  static const background = Color(0xFFF5F5F5);
   static const card = Colors.white;
   static const text = Color(0xFF1A1A1A);
   static const muted = Color(0xFF9E9E9E);
-  static const border = Color(0xFFF2D2E9);
+  static const border = Color(0xFFE0E0E0);
 }
 
 // ============================================================================
@@ -644,7 +644,7 @@ class _ServicesPageState extends State<ServicesPage> {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            Colors.pink.shade200,
+            Colors.grey.shade400,
             Colors.purple.shade200,
           ],
         ),
@@ -832,7 +832,7 @@ class _ServicesPageState extends State<ServicesPage> {
                             gradient: LinearGradient(
                               begin: Alignment.topLeft,
                               end: Alignment.bottomRight,
-                              colors: [Colors.pink.shade200, Colors.purple.shade200],
+                              colors: [Colors.grey.shade400, Colors.purple.shade200],
                             ),
                           ),
                           child: service.imageUrl != null && service.imageUrl!.isNotEmpty

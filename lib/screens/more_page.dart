@@ -56,14 +56,14 @@ class WeeklyHoursData {
 }
 
 class AppColors {
-  static const primary = Color(0xFFFF2D8F);
-  static const primaryDark = Color(0xFFD81F75);
-  static const accent = Color(0xFFFF6FB5);
-  static const background = Color(0xFFFFF5FA);
+  static const primary = Color(0xFF1A1A1A);
+  static const primaryDark = Color(0xFF000000);
+  static const accent = Color(0xFF333333);
+  static const background = Color(0xFFF5F5F5);
   static const card = Colors.white;
   static const text = Color(0xFF1A1A1A);
   static const muted = Color(0xFF9E9E9E);
-  static const border = Color(0xFFF2D2E9);
+  static const border = Color(0xFFE0E0E0);
 }
 
 class MorePage extends StatefulWidget {
@@ -816,9 +816,9 @@ class _MySummaryPageState extends State<MySummaryPage> {
                       width: double.infinity,
                       padding: const EdgeInsets.all(20),
                       decoration: BoxDecoration(
-                        gradient: const LinearGradient(colors: [Color(0xFFFF2D8F), Color(0xFFFF6FB5)]),
+                        gradient: const LinearGradient(colors: [Color(0xFF1A1A1A), Color(0xFF333333)]),
                         borderRadius: BorderRadius.circular(20),
-                        boxShadow: [BoxShadow(color: const Color(0xFFFF2D8F).withOpacity(0.3), blurRadius: 20, offset: const Offset(0, 8))],
+                        boxShadow: [BoxShadow(color: const Color(0xFF1A1A1A).withOpacity(0.3), blurRadius: 20, offset: const Offset(0, 8))],
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -911,7 +911,7 @@ class _MySummaryPageState extends State<MySummaryPage> {
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 12),
           decoration: BoxDecoration(
-            color: isSelected ? const Color(0xFFFF2D8F) : Colors.transparent,
+            color: isSelected ? const Color(0xFF1A1A1A) : Colors.transparent,
             borderRadius: BorderRadius.circular(12),
           ),
           child: Center(
@@ -923,7 +923,7 @@ class _MySummaryPageState extends State<MySummaryPage> {
   }
 
   Widget _buildStatCard(IconData icon, String value, String label, [Color? iconColor]) {
-    final color = iconColor ?? const Color(0xFFFF2D8F);
+    final color = iconColor ?? const Color(0xFF1A1A1A);
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -977,12 +977,12 @@ class _MySummaryPageState extends State<MySummaryPage> {
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFFF2D8F).withOpacity(0.1),
+                  color: const Color(0xFF1A1A1A).withOpacity(0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: const Icon(
                   FontAwesomeIcons.chartLine,
-                  color: Color(0xFFFF2D8F),
+                  color: Color(0xFF1A1A1A),
                   size: 20,
                 ),
               ),
@@ -1007,7 +1007,7 @@ class _MySummaryPageState extends State<MySummaryPage> {
                 barTouchData: BarTouchData(
                   enabled: true,
                   touchTooltipData: BarTouchTooltipData(
-                    getTooltipColor: (group) => const Color(0xFFFF2D8F),
+                    getTooltipColor: (group) => const Color(0xFF1A1A1A),
                     tooltipRoundedRadius: 8,
                     tooltipPadding: const EdgeInsets.all(8),
                     getTooltipItem: (group, groupIndex, rod, rodIndex) {
@@ -1084,8 +1084,8 @@ class _MySummaryPageState extends State<MySummaryPage> {
                       BarChartRodData(
                         toY: revenue,
                         color: index % 2 == 0 
-                            ? const Color(0xFFFF2D8F) 
-                            : const Color(0xFFFF6FB5),
+                            ? const Color(0xFF1A1A1A) 
+                            : const Color(0xFF333333),
                         width: 20,
                         borderRadius: const BorderRadius.vertical(
                           top: Radius.circular(4),
@@ -1137,12 +1137,12 @@ class _MySummaryPageState extends State<MySummaryPage> {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            const Color(0xFFFF2D8F).withOpacity(0.1),
-            const Color(0xFFFF6FB5).withOpacity(0.1),
+            const Color(0xFF1A1A1A).withOpacity(0.1),
+            const Color(0xFF333333).withOpacity(0.1),
           ],
         ),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFFFF2D8F).withOpacity(0.2)),
+        border: Border.all(color: const Color(0xFF1A1A1A).withOpacity(0.2)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1152,7 +1152,7 @@ class _MySummaryPageState extends State<MySummaryPage> {
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFFF2D8F).withOpacity(0.2),
+                  color: const Color(0xFF1A1A1A).withOpacity(0.2),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
@@ -2100,12 +2100,12 @@ class _BranchAdminSummaryPageState extends State<BranchAdminSummaryPage> {
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
             gradient: const LinearGradient(
-              colors: [Color(0xFFFF2D8F), Color(0xFFFF6FB5)],
+              colors: [Color(0xFF1A1A1A), Color(0xFF333333)],
             ),
             borderRadius: BorderRadius.circular(20),
             boxShadow: [
               BoxShadow(
-                color: const Color(0xFFFF2D8F).withOpacity(0.3),
+                color: const Color(0xFF1A1A1A).withOpacity(0.3),
                 blurRadius: 20,
                 offset: const Offset(0, 8),
               ),

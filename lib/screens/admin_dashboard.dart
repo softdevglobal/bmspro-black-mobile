@@ -7,14 +7,14 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'profile_screen.dart' as profile_screen;
 
 class AppColors {
-  static const primary = Color(0xFFFF2D8F);
-  static const primaryDark = Color(0xFFD81F75);
-  static const accent = Color(0xFFFF6FB5);
-  static const background = Color(0xFFFFF5FA);
+  static const primary = Color(0xFF1A1A1A);
+  static const primaryDark = Color(0xFF000000);
+  static const accent = Color(0xFF333333);
+  static const background = Color(0xFFF5F5F5);
   static const card = Colors.white;
   static const text = Color(0xFF1A1A1A);
   static const muted = Color(0xFF9E9E9E);
-  static const border = Color(0xFFF2D2E9);
+  static const border = Color(0xFFE0E0E0);
   static const green = Color(0xFF10B981);
   static const blue = Color(0xFF3B82F6);
   static const purple = Color(0xFF8B5CF6);
@@ -322,7 +322,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
     String adminLabel = 'Admin';
     final role = widget.role;
     if (role == 'workshop_owner') {
-      adminLabel = 'Salon Owner';
+      adminLabel = 'Workshop Owner';
     } else if (role == 'branch_admin') {
       if (widget.branchName != null && widget.branchName!.isNotEmpty) {
         adminLabel = '${widget.branchName} Admin';
@@ -331,137 +331,121 @@ class _AdminDashboardState extends State<AdminDashboard> {
       }
     }
 
-    // Leading widget:
-    // - For salon owners: profile icon button on the far left, then the
-    //   "Dashboard" title/subtitle beside it.
-    // - For others: just the title/ subtitle column.
-    Widget leading;
-    if (role == 'workshop_owner') {
-      leading = Row(
-        children: [
-          Material(
-            color: Colors.transparent,
-            shape: const CircleBorder(),
-            child: InkWell(
-              customBorder: const CircleBorder(),
-              onTap: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (_) => Scaffold(
-                      backgroundColor: AppColors.background,
-                      body: const profile_screen.ProfileScreen(
-                        showBackButton: true,
-                      ),
-                    ),
-                  ),
-                );
-              },
-              child: Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: AppColors.primary.withOpacity(0.08),
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppColors.primary.withOpacity(0.18),
-                      blurRadius: 10,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: const Center(
-                  child: Icon(
-                    FontAwesomeIcons.user,
-                    size: 18,
-                    color: AppColors.primary,
-                  ),
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(width: 12),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: const [
-              Text(
-                'Dashboard',
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.text,
-                ),
-              ),
-              Text(
-                'Analytics & insights',
-                style: TextStyle(
-                  fontSize: 14,
-                  color: AppColors.muted,
-                ),
-              ),
-            ],
-          ),
-        ],
-      );
-    } else {
-      leading = Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: const [
-          Text(
-            'Dashboard',
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              color: AppColors.text,
-            ),
-          ),
-          Text(
-            'Analytics & insights',
-            style: TextStyle(
-              fontSize: 14,
-              color: AppColors.muted,
-            ),
-          ),
-        ],
-      );
-    }
-
-    // Trailing widget: role pill ("Salon Owner", "Branch Admin", etc.)
-    final Widget trailing = Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+    return Container(
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: AppColors.primary.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(20),
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFF1A1A1A), Color(0xFF2D2D2D), Color(0xFF333333)],
+        ),
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.2),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
+          ),
+        ],
       ),
       child: Row(
         children: [
-          const Icon(FontAwesomeIcons.userTie,
-              size: 14, color: AppColors.primary),
-          const SizedBox(width: 8),
-          Text(
-            adminLabel,
-            style: const TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-              color: AppColors.primary,
+          // Profile button for workshop owners
+          if (role == 'workshop_owner') ...[
+            Material(
+              color: Colors.transparent,
+              shape: const CircleBorder(),
+              child: InkWell(
+                customBorder: const CircleBorder(),
+                onTap: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => Scaffold(
+                        backgroundColor: AppColors.background,
+                        body: const profile_screen.ProfileScreen(
+                          showBackButton: true,
+                        ),
+                      ),
+                    ),
+                  );
+                },
+                child: Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.white.withOpacity(0.1),
+                    border: Border.all(
+                      color: Colors.white.withOpacity(0.15),
+                      width: 1.5,
+                    ),
+                  ),
+                  child: const Center(
+                    child: Icon(
+                      FontAwesomeIcons.user,
+                      size: 18,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(width: 14),
+          ],
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Dashboard',
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.w800,
+                    color: Colors.white,
+                    letterSpacing: -0.3,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  'Analytics & insights',
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: Colors.white.withOpacity(0.5),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          // Role pill
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: Colors.white.withOpacity(0.15),
+                width: 1,
+              ),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(FontAwesomeIcons.crown,
+                    size: 12, color: Colors.white.withOpacity(0.8)),
+                const SizedBox(width: 6),
+                Text(
+                  adminLabel,
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white.withOpacity(0.8),
+                  ),
+                ),
+              ],
             ),
           ),
         ],
       ),
-    );
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const SizedBox(height: 12),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            leading,
-            trailing,
-          ],
-        ),
-      ],
     );
   }
 
@@ -558,16 +542,20 @@ class _AdminDashboardState extends State<AdminDashboard> {
     Color? progressBarColor,
     bool isPill = false,
   }) {
+    final Color surface = Theme.of(context).colorScheme.surface;
+    final Color onSurface = Theme.of(context).colorScheme.onSurface;
+    final Color muted = Theme.of(context).colorScheme.onBackground.withOpacity(0.6);
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey.shade100),
+        color: surface,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.white.withOpacity(0.05)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.02),
-            blurRadius: 10,
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 15,
             offset: const Offset(0, 4),
           ),
         ],
@@ -579,21 +567,21 @@ class _AdminDashboardState extends State<AdminDashboard> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Container(
-                width: 32,
-                height: 32,
+                width: 36,
+                height: 36,
                 decoration: BoxDecoration(
-                  color: iconBg,
-                  borderRadius: BorderRadius.circular(8),
+                  color: iconColor.withOpacity(0.15),
+                  borderRadius: BorderRadius.circular(10),
                 ),
                 child: Center(
-                  child: Icon(icon, color: iconColor, size: 14),
+                  child: Icon(icon, color: iconColor, size: 15),
                 ),
               ),
               if (trend != null)
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                   decoration: BoxDecoration(
-                    color: trendColor?.withOpacity(0.1),
+                    color: trendColor?.withOpacity(0.12),
                     borderRadius: BorderRadius.circular(99),
                   ),
                   child: Row(
@@ -615,7 +603,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
                 ),
               if (progressBarValue != null)
                 Text(
-                  value, // Show value in top right for progress bar card logic from design
+                  value,
                   style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.bold,
@@ -631,7 +619,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
-                color: AppColors.text,
+                color: onSurface,
               ),
             ),
           if (progressBarValue != null) ...[
@@ -639,7 +627,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
               borderRadius: BorderRadius.circular(99),
               child: LinearProgressIndicator(
                 value: progressBarValue,
-                backgroundColor: Colors.grey.shade200,
+                backgroundColor: Colors.grey.shade800,
                 color: progressBarColor,
                 minHeight: 6,
               ),
@@ -650,7 +638,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
             title,
             style: TextStyle(
               fontSize: 12,
-              color: AppColors.muted,
+              color: muted,
             ),
           ),
         ],
@@ -679,13 +667,13 @@ class _AdminDashboardState extends State<AdminDashboard> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey.shade100),
+        color: Theme.of(context).colorScheme.surface,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.white.withOpacity(0.05)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.02),
-            blurRadius: 10,
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 15,
             offset: const Offset(0, 4),
           ),
         ],
@@ -866,13 +854,13 @@ class _AdminDashboardState extends State<AdminDashboard> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey.shade100),
+        color: Theme.of(context).colorScheme.surface,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.white.withOpacity(0.05)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.02),
-            blurRadius: 10,
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 15,
             offset: const Offset(0, 4),
           ),
         ],
@@ -965,13 +953,13 @@ class _AdminDashboardState extends State<AdminDashboard> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey.shade100),
+        color: Theme.of(context).colorScheme.surface,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.white.withOpacity(0.05)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.02),
-            blurRadius: 10,
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 15,
             offset: const Offset(0, 4),
           ),
         ],

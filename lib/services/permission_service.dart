@@ -163,7 +163,7 @@ class PermissionService {
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFFFF2D8F),
+              backgroundColor: const Color(0xFF1A1A1A),
             ),
             onPressed: () {
               Navigator.pop(context);
@@ -200,8 +200,8 @@ class _LocationDisclosureDialog extends StatelessWidget {
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
-                    const Color(0xFFFF2D8F).withOpacity(0.1),
-                    const Color(0xFFFF6FB5).withOpacity(0.05),
+                    const Color(0xFF1A1A1A).withOpacity(0.1),
+                    const Color(0xFF333333).withOpacity(0.05),
                   ],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
@@ -217,12 +217,12 @@ class _LocationDisclosureDialog extends StatelessWidget {
                     width: 64,
                     height: 64,
                     decoration: BoxDecoration(
-                      color: const Color(0xFFFF2D8F).withOpacity(0.15),
+                      color: const Color(0xFF1A1A1A).withOpacity(0.15),
                       shape: BoxShape.circle,
                     ),
                     child: const Icon(
                       Icons.location_on_rounded,
-                      color: Color(0xFFFF2D8F),
+                      color: Color(0xFF1A1A1A),
                       size: 36,
                     ),
                   ),
@@ -320,7 +320,7 @@ class _LocationDisclosureDialog extends StatelessWidget {
                     child: ElevatedButton(
                       onPressed: () => Navigator.pop(context, true),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFFFF2D8F),
+                        backgroundColor: const Color(0xFF1A1A1A),
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
@@ -376,13 +376,13 @@ class _LocationDisclosureDialog extends StatelessWidget {
           width: 36,
           height: 36,
           decoration: BoxDecoration(
-            color: const Color(0xFFFF2D8F).withOpacity(0.1),
+            color: const Color(0xFF1A1A1A).withOpacity(0.1),
             borderRadius: BorderRadius.circular(8),
           ),
           child: Icon(
             icon,
             size: 20,
-            color: const Color(0xFFFF2D8F),
+            color: const Color(0xFF1A1A1A),
           ),
         ),
         const SizedBox(width: 12),

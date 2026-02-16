@@ -1,9 +1,9 @@
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../routes.dart';
 import 'forgot_password_request.dart';
-import '../widgets/primary_gradient_button.dart';
 import '../services/audit_log_service.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -13,16 +13,41 @@ class LoginScreen extends StatefulWidget {
   State<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class _LoginScreenState extends State<LoginScreen>
+    with TickerProviderStateMixin {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   bool _obscure = true;
   bool _isLoading = false;
 
+  late AnimationController _entranceController;
+  late AnimationController _floatController;
+  late Animation<double> _floatAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _entranceController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1000),
+    )..forward();
+
+    _floatController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 3000),
+    )..repeat(reverse: true);
+
+    _floatAnimation = Tween<double>(begin: -6, end: 6).animate(
+      CurvedAnimation(parent: _floatController, curve: Curves.easeInOut),
+    );
+  }
+
   @override
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
+    _entranceController.dispose();
+    _floatController.dispose();
     super.dispose();
   }
 
@@ -42,7 +67,6 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() => _isLoading = true);
 
     try {
-      // 1. Authenticate with Firebase Auth
       final UserCredential userCredential =
           await FirebaseAuth.instance.signInWithEmailAndPassword(
         email: email,
@@ -55,7 +79,6 @@ class _LoginScreenState extends State<LoginScreen> {
             code: 'user-not-found', message: 'Authentication failed.');
       }
 
-      // 2. Fetch user details from Firestore "users" collection
       final DocumentSnapshot userDoc = await FirebaseFirestore.instance
           .collection('users')
           .doc(user.uid)
@@ -72,18 +95,14 @@ class _LoginScreenState extends State<LoginScreen> {
       }
 
       final userData = userDoc.data() as Map<String, dynamic>;
-      // Robust role retrieval
       final rawRole = userData['role'];
-      final String userRole = rawRole != null ? rawRole.toString().trim() : 'unknown';
+      final String userRole =
+          rawRole != null ? rawRole.toString().trim() : 'unknown';
 
-      // 3. Validate Role
       bool isAuthorized = false;
-      
-      // Allowed roles: staff, workshop_owner, branch_admin
       const allowedRoles = ['staff', 'workshop_owner', 'branch_admin'];
-      
       if (allowedRoles.contains(userRole)) {
-         isAuthorized = true;
+        isAuthorized = true;
       }
 
       if (!isAuthorized) {
@@ -93,18 +112,17 @@ class _LoginScreenState extends State<LoginScreen> {
             message: 'Access denied. Role "$userRole" is not authorized.');
       }
 
-      // Log successful login
       final ownerUid = userData['ownerUid'] ?? user.uid;
-      final userName = userData['displayName'] ?? userData['name'] ?? user.email ?? 'Unknown';
-      
-      // Include branch information for branch admins
+      final userName =
+          userData['displayName'] ?? userData['name'] ?? user.email ?? 'Unknown';
+
       String? branchId;
       String? branchName;
       if (userRole == 'branch_admin') {
         branchId = userData['branchId']?.toString();
         branchName = userData['branchName']?.toString();
       }
-      
+
       await AuditLogService.logUserLogin(
         ownerUid: ownerUid.toString(),
         performedBy: user.uid,
@@ -150,293 +168,459 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final Color primary = Theme.of(context).colorScheme.primary;
-    final Color accent = Theme.of(context).colorScheme.secondary;
-    const Color background = Color(0xFFFFF5FA);
+    final screenHeight = MediaQuery.of(context).size.height;
 
     return Scaffold(
-      backgroundColor: background,
-      body: SafeArea(
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            return SingleChildScrollView(
-              child: ConstrainedBox(
-                constraints: BoxConstraints(minHeight: constraints.maxHeight),
-                child: Center(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 24, vertical: 24),
-                    child: SizedBox(
-                      width: double.infinity,
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          // Logo and title
-                          TweenAnimationBuilder<double>(
-                            duration: const Duration(milliseconds: 600),
-                            curve: Curves.easeOut,
-                            tween: Tween(begin: 0, end: 1),
-                            builder: (context, value, child) {
-                              return Opacity(
-                                opacity: value,
-                                child: Transform.translate(
-                                  offset: Offset(0, (1 - value) * 20),
-                                  child: child,
-                                ),
-                              );
-                            },
-                            child: Column(
-                              children: [
-                                const SizedBox(height: 12),
-                                Container(
-                                  width: 84,
-                                  height: 84,
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(20),
-                                    color: Colors.white,
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: primary.withOpacity(0.15),
-                                        blurRadius: 30,
-                                        offset: const Offset(0, 12),
-                                      )
-                                    ],
-                                  ),
-                                  child: Center(
-                                    child: Image.asset(
-                                      'assets/icons/bmsblack-icon.jpeg',
-                                      width: 64,
-                                      height: 64,
-                                      fit: BoxFit.contain,
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(height: 12),
-                                Text(
-                                  'BMS Pro Black',
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .titleLarge
-                                      ?.copyWith(
-                                        fontWeight: FontWeight.w700,
-                                        color: const Color(0xFF1A1A1A),
-                                      ),
-                                ),
-                                const SizedBox(height: 6),
-                                Container(
-                                  width: 48,
-                                  height: 4,
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(99),
-                                    gradient: LinearGradient(
-                                      colors: [primary, accent],
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
+      body: Stack(
+        children: [
+          // ── Full dark background ──
+          Container(
+            width: double.infinity,
+            height: double.infinity,
+            color: const Color(0xFF0D0D0D),
+          ),
 
-                          const SizedBox(height: 20),
-
-                          // Card
-                          TweenAnimationBuilder<double>(
-                            duration: const Duration(milliseconds: 500),
-                            curve: Curves.easeOut,
-                            tween: Tween(begin: 0, end: 1),
-                            builder: (context, value, child) {
-                              return Opacity(
-                                opacity: value,
-                                child: Transform.translate(
-                                  offset: Offset(0, (1 - value) * 40),
-                                  child: child,
-                                ),
-                              );
-                            },
-                            child: Container(
-                              padding: const EdgeInsets.all(20),
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: BorderRadius.circular(20),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: primary.withOpacity(0.08),
-                                    blurRadius: 40,
-                                    offset: const Offset(0, 10),
-                                  ),
-                                ],
-                              ),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.stretch,
-                                children: [
-                                  // Header
-                                  Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.center,
-                                    children: const [
-                                      Text(
-                                        'Welcome Back',
-                                        style: TextStyle(
-                                          fontSize: 26,
-                                          fontWeight: FontWeight.w800,
-                                          color: Color(0xFF1A1A1A),
-                                        ),
-                                      ),
-                                      SizedBox(height: 6),
-                                      Text(
-                                        'Manage bookings, staff & clients with ease',
-                                        textAlign: TextAlign.center,
-                                        style: TextStyle(
-                                          color: Color(0xFF9E9E9E),
-                                          fontSize: 13,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-
-                                  const SizedBox(height: 16),
-
-                                  // Email
-                                  _FocusGlow(
-                                    glowColor: primary.withOpacity(0.10),
-                                    child: TextField(
-                                      controller: _emailController,
-                                      keyboardType: TextInputType.emailAddress,
-                                      decoration: const InputDecoration(
-                                        labelText: 'Email Address',
-                                        hintText: 'Enter your email',
-                                        prefixIcon: Icon(Icons.email_outlined,
-                                            color: Color(0xFF9E9E9E)),
-                                      ),
-                                    ),
-                                  ),
-
-                                  const SizedBox(height: 12),
-
-                                  // Password
-                                  _FocusGlow(
-                                    glowColor: primary.withOpacity(0.10),
-                                    child: TextField(
-                                      controller: _passwordController,
-                                      obscureText: _obscure,
-                                      decoration: InputDecoration(
-                                        labelText: 'Password',
-                                        hintText: 'Enter your password',
-                                        prefixIcon: const Icon(
-                                            Icons.lock_outline,
-                                            color: Color(0xFF9E9E9E)),
-                                        suffixIcon: IconButton(
-                                          onPressed: () => setState(
-                                              () => _obscure = !_obscure),
-                                          icon: Icon(_obscure
-                                              ? Icons.visibility
-                                              : Icons.visibility_off),
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-
-                                  const SizedBox(height: 8),
-
-                                  Align(
-                                    alignment: Alignment.centerRight,
-                                    child: TextButton(
-                                      onPressed: () {
-                                        Navigator.of(context).push(
-                                          MaterialPageRoute(
-                                            builder: (_) => const ForgotPasswordRequestPage(),
-                                          ),
-                                        );
-                                      },
-                                      child: Text(
-                                        'Forgot Password?',
-                                        style: TextStyle(
-                                          color: primary,
-                                          fontWeight: FontWeight.w600,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-
-                                  const SizedBox(height: 8),
-
-                                  // Gradient Sign In Button
-                                  _isLoading
-                                      ? Center(
-                                          child: CircularProgressIndicator(
-                                              color: primary))
-                                      : PrimaryGradientButton(
-                                          label: 'Sign In',
-                                          onTap: _signIn,
-                                        ),
+          // ── Top decorative section with gradient ──
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            height: screenHeight * 0.42,
+            child: Container(
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    Color(0xFF1A1A1A),
+                    Color(0xFF2D2D2D),
+                    Color(0xFF1A1A1A),
+                  ],
+                ),
+                borderRadius: BorderRadius.only(
+                  bottomLeft: Radius.circular(40),
+                  bottomRight: Radius.circular(40),
+                ),
+              ),
+              child: Stack(
+                children: [
+                  // Floating decorative circles
+                  Positioned(
+                    top: -40,
+                    right: -30,
+                    child: AnimatedBuilder(
+                      animation: _floatController,
+                      builder: (context, _) {
+                        return Transform.translate(
+                          offset: Offset(0, _floatAnimation.value * 0.5),
+                          child: Container(
+                            width: 180,
+                            height: 180,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              gradient: RadialGradient(
+                                colors: [
+                                  Colors.white.withOpacity(0.05),
+                                  Colors.transparent,
                                 ],
                               ),
                             ),
                           ),
+                        );
+                      },
+                    ),
+                  ),
+                  Positioned(
+                    bottom: 20,
+                    left: -50,
+                    child: AnimatedBuilder(
+                      animation: _floatController,
+                      builder: (context, _) {
+                        return Transform.translate(
+                          offset: Offset(_floatAnimation.value * 0.3, 0),
+                          child: Container(
+                            width: 120,
+                            height: 120,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              gradient: RadialGradient(
+                                colors: [
+                                  Colors.white.withOpacity(0.04),
+                                  Colors.transparent,
+                                ],
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
 
-                          const SizedBox(height: 16),
-
-                          // Bottom text
-                          Column(
+                  // ── Logo & title ──
+                  SafeArea(
+                    child: Center(
+                      child: SlideTransition(
+                        position: Tween<Offset>(
+                          begin: const Offset(0, -0.5),
+                          end: Offset.zero,
+                        ).animate(CurvedAnimation(
+                          parent: _entranceController,
+                          curve: const Interval(0, 0.6,
+                              curve: Curves.easeOut),
+                        )),
+                        child: FadeTransition(
+                          opacity: CurvedAnimation(
+                            parent: _entranceController,
+                            curve: const Interval(0, 0.5),
+                          ),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
                             children: [
-                              const SizedBox(height: 6),
+                              // Logo with glow
+                              Container(
+                                width: 90,
+                                height: 90,
+                                decoration: BoxDecoration(
+                                  borderRadius:
+                                      BorderRadius.circular(24),
+                                  color: Colors.white,
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.white
+                                          .withOpacity(0.12),
+                                      blurRadius: 40,
+                                      spreadRadius: 2,
+                                    ),
+                                    BoxShadow(
+                                      color: Colors.black
+                                          .withOpacity(0.4),
+                                      blurRadius: 20,
+                                      offset: const Offset(0, 10),
+                                    ),
+                                  ],
+                                ),
+                                child: ClipRRect(
+                                  borderRadius:
+                                      BorderRadius.circular(24),
+                                  child: Image.asset(
+                                    'assets/icons/bmsblack-icon.jpeg',
+                                    width: 90,
+                                    height: 90,
+                                    fit: BoxFit.cover,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 16),
                               const Text(
-                                'Need help? Contact support@bmspro.com',
-                                textAlign: TextAlign.center,
+                                'BMS Pro Black',
                                 style: TextStyle(
-                                    color: Color(0xFF9E9E9E), fontSize: 13),
+                                  color: Colors.white,
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.w800,
+                                  letterSpacing: 0.5,
+                                ),
+                              ),
+                              const SizedBox(height: 6),
+                              Container(
+                                width: 48,
+                                height: 3,
+                                decoration: BoxDecoration(
+                                  borderRadius:
+                                      BorderRadius.circular(99),
+                                  gradient: LinearGradient(
+                                    colors: [
+                                      Colors.white.withOpacity(0.6),
+                                      Colors.white.withOpacity(0.1),
+                                    ],
+                                  ),
+                                ),
                               ),
                             ],
                           ),
-                        ],
+                        ),
                       ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+          // ── Bottom white section (scrollable) ──
+          Positioned(
+            top: screenHeight * 0.38,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            child: SlideTransition(
+              position: Tween<Offset>(
+                begin: const Offset(0, 0.3),
+                end: Offset.zero,
+              ).animate(CurvedAnimation(
+                parent: _entranceController,
+                curve:
+                    const Interval(0.3, 0.8, curve: Curves.easeOut),
+              )),
+              child: FadeTransition(
+                opacity: CurvedAnimation(
+                  parent: _entranceController,
+                  curve: const Interval(0.3, 0.8),
+                ),
+                child: Container(
+                  decoration: const BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(32),
+                      topRight: Radius.circular(32),
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black26,
+                        blurRadius: 30,
+                        offset: Offset(0, -10),
+                      ),
+                    ],
+                  ),
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.fromLTRB(24, 32, 24, 24),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        // Welcome text
+                        const Text(
+                          'Welcome Back',
+                          style: TextStyle(
+                            fontSize: 28,
+                            fontWeight: FontWeight.w800,
+                            color: Color(0xFF1A1A1A),
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'Sign in to manage your workshop',
+                          style: TextStyle(
+                            color: Colors.grey.shade500,
+                            fontSize: 14,
+                          ),
+                        ),
+
+                        const SizedBox(height: 28),
+
+                        // Email field
+                        _buildInputLabel('Email Address'),
+                        const SizedBox(height: 8),
+                        _buildTextField(
+                          controller: _emailController,
+                          hint: 'Enter your email',
+                          icon: Icons.email_outlined,
+                          keyboardType: TextInputType.emailAddress,
+                        ),
+
+                        const SizedBox(height: 18),
+
+                        // Password field
+                        _buildInputLabel('Password'),
+                        const SizedBox(height: 8),
+                        _buildTextField(
+                          controller: _passwordController,
+                          hint: 'Enter your password',
+                          icon: Icons.lock_outline_rounded,
+                          obscure: _obscure,
+                          suffixIcon: IconButton(
+                            onPressed: () =>
+                                setState(() => _obscure = !_obscure),
+                            icon: Icon(
+                              _obscure
+                                  ? Icons.visibility_outlined
+                                  : Icons.visibility_off_outlined,
+                              color: Colors.grey.shade400,
+                              size: 22,
+                            ),
+                          ),
+                        ),
+
+                        const SizedBox(height: 8),
+
+                        // Forgot password
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: TextButton(
+                            onPressed: () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (_) =>
+                                      const ForgotPasswordRequestPage(),
+                                ),
+                              );
+                            },
+                            style: TextButton.styleFrom(
+                              padding: EdgeInsets.zero,
+                              minimumSize: const Size(0, 0),
+                              tapTargetSize:
+                                  MaterialTapTargetSize.shrinkWrap,
+                            ),
+                            child: const Text(
+                              'Forgot Password?',
+                              style: TextStyle(
+                                color: Color(0xFF1A1A1A),
+                                fontWeight: FontWeight.w600,
+                                fontSize: 13,
+                              ),
+                            ),
+                          ),
+                        ),
+
+                        const SizedBox(height: 24),
+
+                        // Sign In button
+                        _isLoading
+                            ? const Center(
+                                child: CircularProgressIndicator(
+                                  color: Color(0xFF1A1A1A),
+                                ),
+                              )
+                            : _buildSignInButton(),
+
+                        const SizedBox(height: 24),
+
+                        // Divider
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Divider(
+                                  color: Colors.grey.shade200),
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 16),
+                              child: Text(
+                                'Secured by Firebase',
+                                style: TextStyle(
+                                  color: Colors.grey.shade400,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ),
+                            Expanded(
+                              child: Divider(
+                                  color: Colors.grey.shade200),
+                            ),
+                          ],
+                        ),
+
+                        const SizedBox(height: 16),
+
+                        // Help text
+                        Center(
+                          child: Text(
+                            'Need help? Contact support@bmspro.com',
+                            style: TextStyle(
+                              color: Colors.grey.shade400,
+                              fontSize: 13,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
               ),
-            );
-          },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildInputLabel(String label) {
+    return Text(
+      label,
+      style: const TextStyle(
+        fontSize: 13,
+        fontWeight: FontWeight.w600,
+        color: Color(0xFF555555),
+      ),
+    );
+  }
+
+  Widget _buildTextField({
+    required TextEditingController controller,
+    required String hint,
+    required IconData icon,
+    TextInputType? keyboardType,
+    bool obscure = false,
+    Widget? suffixIcon,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        color: const Color(0xFFF8F8F8),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: const Color(0xFFEEEEEE)),
+      ),
+      child: TextField(
+        controller: controller,
+        keyboardType: keyboardType,
+        obscureText: obscure,
+        style: const TextStyle(
+          fontSize: 15,
+          color: Color(0xFF1A1A1A),
+        ),
+        decoration: InputDecoration(
+          hintText: hint,
+          hintStyle: TextStyle(
+            color: Colors.grey.shade400,
+            fontSize: 14,
+          ),
+          prefixIcon: Icon(icon, color: Colors.grey.shade400, size: 22),
+          suffixIcon: suffixIcon,
+          border: InputBorder.none,
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
         ),
       ),
     );
   }
-}
 
-// Wrapper to route to Register using named route while showing push usage
-// removed registration class
-
-
-class _FocusGlow extends StatefulWidget {
-  final Widget child;
-  final Color glowColor;
-  const _FocusGlow({required this.child, required this.glowColor});
-
-  @override
-  State<_FocusGlow> createState() => _FocusGlowState();
-}
-
-class _FocusGlowState extends State<_FocusGlow> {
-  bool _focused = false;
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 200),
-      decoration: BoxDecoration(
-        boxShadow: _focused
-            ? [
-                BoxShadow(
-                  color: widget.glowColor,
-                  blurRadius: 16,
-                  spreadRadius: 0,
-                  offset: const Offset(0, 0),
-                )
-              ]
-            : null,
-      ),
-      child: Focus(
-        onFocusChange: (v) => setState(() => _focused = v),
-        child: widget.child,
+  Widget _buildSignInButton() {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: _signIn,
+        borderRadius: BorderRadius.circular(16),
+        child: Container(
+          height: 56,
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              colors: [Color(0xFF1A1A1A), Color(0xFF333333)],
+            ),
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFF1A1A1A).withOpacity(0.3),
+                blurRadius: 20,
+                offset: const Offset(0, 8),
+              ),
+            ],
+          ),
+          child: const Center(
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.login_rounded, color: Colors.white, size: 22),
+                SizedBox(width: 10),
+                Text(
+                  'Sign In',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 17,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }

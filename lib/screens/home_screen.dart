@@ -27,14 +27,14 @@ import 'package:geolocator/geolocator.dart';
 
 // --- 1. Theme & Colors (Matching Tailwind Config) ---
 class AppColors {
-  static const primary = Color(0xFFFF2D8F);
-  static const primaryDark = Color(0xFFD81F75);
-  static const accent = Color(0xFFFF6FB5);
-  static const background = Color(0xFFFFF5FA);
+  static const primary = Color(0xFF1A1A1A);
+  static const primaryDark = Color(0xFF000000);
+  static const accent = Color(0xFF333333);
+  static const background = Color(0xFFF5F5F5);
   static const card = Colors.white;
   static const text = Color(0xFF1A1A1A);
   static const muted = Color(0xFF9E9E9E);
-  static const border = Color(0xFFF2D2E9);
+  static const border = Color(0xFFE0E0E0);
 }
 
 // Default bottom navigation icons (staff / branch admin)
@@ -1501,7 +1501,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin, 
 
   Widget _buildHeader() {
     final displayName = _userName ?? 'Staff';
-    // Capitalize first letter of each word
     final formattedName = displayName.split(' ').map((word) {
       if (word.isEmpty) return word;
       return word[0].toUpperCase() + word.substring(1).toLowerCase();
@@ -1510,105 +1509,162 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin, 
     final initials = _getInitials(displayName);
     final today = DateTime.now();
     final hasPhoto = _photoUrl != null && _photoUrl!.isNotEmpty;
-    
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Row(
-          children: [
-            Container(
-              width: 48,
-              height: 48,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: hasPhoto ? null : LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [AppColors.primary.withOpacity(0.2), AppColors.accent.withOpacity(0.2)],
-                ),
-                image: hasPhoto
-                    ? DecorationImage(
-                        image: NetworkImage(_photoUrl!),
-                        fit: BoxFit.cover,
-                      )
-                    : null,
-                boxShadow: [
-                  BoxShadow(
-                    color: AppColors.primary.withOpacity(0.08),
-                    blurRadius: 25,
-                    offset: const Offset(0, 8),
-                  ),
-                ],
-              ),
-              child: hasPhoto
+
+    // Greeting based on time of day
+    final hour = today.hour;
+    String greeting;
+    IconData greetingIcon;
+    if (hour < 12) {
+      greeting = 'Good Morning';
+      greetingIcon = Icons.wb_sunny_outlined;
+    } else if (hour < 17) {
+      greeting = 'Good Afternoon';
+      greetingIcon = Icons.wb_sunny_rounded;
+    } else {
+      greeting = 'Good Evening';
+      greetingIcon = Icons.nightlight_round;
+    }
+
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFF1A1A1A), Color(0xFF2D2D2D), Color(0xFF333333)],
+        ),
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.2),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          // Avatar with ring
+          Container(
+            width: 54,
+            height: 54,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(color: Colors.white.withOpacity(0.2), width: 2),
+              gradient: hasPhoto
                   ? null
-                  : Center(
-                      child: Text(
-                        initials,
-                        style: const TextStyle(
-                          color: AppColors.primary,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 18,
-                        ),
+                  : LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        Colors.white.withOpacity(0.15),
+                        Colors.white.withOpacity(0.05),
+                      ],
+                    ),
+              image: hasPhoto
+                  ? DecorationImage(
+                      image: NetworkImage(_photoUrl!),
+                      fit: BoxFit.cover,
+                    )
+                  : null,
+            ),
+            child: hasPhoto
+                ? null
+                : Center(
+                    child: Text(
+                      initials,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 20,
                       ),
                     ),
-            ),
-            const SizedBox(width: 12),
-            Column(
+                  ),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                Row(
+                  children: [
+                    Icon(greetingIcon, color: Colors.white.withOpacity(0.6), size: 14),
+                    const SizedBox(width: 6),
+                    Text(
+                      greeting,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.white.withOpacity(0.6),
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 2),
                 Text(
-                  'Hi $firstName',
+                  firstName,
                   style: GoogleFonts.inter(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.text,
+                    fontSize: 22,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.white,
                   ),
                 ),
                 Text(
                   _formatDate(today),
                   style: GoogleFonts.inter(
-                    fontSize: 14,
-                    color: AppColors.muted,
+                    fontSize: 12,
+                    color: Colors.white.withOpacity(0.45),
                   ),
                 ),
               ],
             ),
-          ],
-        ),
-        InkWell(
-          onTap: () {
-            Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => const NotificationsPage()),
-            );
-          },
-          borderRadius: BorderRadius.circular(20),
-          child: Stack(
-            clipBehavior: Clip.none,
-            children: [
-              const Padding(
-                padding: EdgeInsets.all(4.0),
-                child: Icon(FontAwesomeIcons.bell,
-                    color: AppColors.muted, size: 24),
-              ),
-              // Only show the notification dot when there are unread notifications
-              if (_unreadNotificationCount > 0)
-                Positioned(
-                  top: -2,
-                  right: -2,
-                  child: Container(
-                    width: 10,
-                    height: 10,
-                    decoration: const BoxDecoration(
-                      color: AppColors.primary,
-                      shape: BoxShape.circle,
-                    ),
-                  ),
-                ),
-            ],
           ),
-        )
-      ],
+          // Notification bell
+          InkWell(
+            onTap: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const NotificationsPage()),
+              );
+            },
+            borderRadius: BorderRadius.circular(14),
+            child: Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  Icon(
+                    FontAwesomeIcons.bell,
+                    color: Colors.white.withOpacity(0.7),
+                    size: 20,
+                  ),
+                  if (_unreadNotificationCount > 0)
+                    Positioned(
+                      top: 10,
+                      right: 10,
+                      child: Container(
+                        width: 10,
+                        height: 10,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFEF4444),
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: const Color(0xFF2D2D2D),
+                            width: 1.5,
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -1684,14 +1740,24 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin, 
         break;
     }
 
+    final bool isClockedIn = _status != ClockStatus.out;
+
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: AppColors.card,
+        gradient: isClockedIn
+            ? const LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [Color(0xFF1A1A1A), Color(0xFF2D2D2D)],
+              )
+            : null,
+        color: isClockedIn ? null : Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: Colors.white.withOpacity(0.05)),
         boxShadow: [
           BoxShadow(
-            color: AppColors.primary.withOpacity(0.08),
+            color: Colors.black.withOpacity(isClockedIn ? 0.2 : 0.1),
             blurRadius: 25,
             offset: const Offset(0, 8),
           ),
@@ -1704,7 +1770,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin, 
             height: 64,
             margin: const EdgeInsets.only(bottom: 12),
             decoration: BoxDecoration(
-              color: iconBg,
+              color: isClockedIn
+                  ? iconColor.withOpacity(0.2)
+                  : iconBg,
               borderRadius: BorderRadius.circular(16),
             ),
             child: Center(child: Icon(icon, color: iconColor, size: 28)),
@@ -1712,15 +1780,19 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin, 
           const SizedBox(height: 0),
           Text(
             title,
-            style: const TextStyle(
+            style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w600,
-                color: AppColors.text),
+                color: isClockedIn ? Colors.white : AppColors.text),
           ),
           const SizedBox(height: 4),
           Text(
             subtitle,
-            style: const TextStyle(fontSize: 14, color: AppColors.muted),
+            style: TextStyle(
+                fontSize: 14,
+                color: isClockedIn
+                    ? Colors.white.withOpacity(0.6)
+                    : AppColors.muted),
           ),
           if (_status != ClockStatus.out) ...[
             const SizedBox(height: 8),
@@ -1864,11 +1936,12 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin, 
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: AppColors.card,
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: Colors.white.withOpacity(0.05)),
         boxShadow: [
           BoxShadow(
-            color: AppColors.primary.withOpacity(0.08),
+            color: Colors.black.withOpacity(0.1),
             blurRadius: 25,
             offset: const Offset(0, 8),
           ),
@@ -2015,7 +2088,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin, 
   List<Color> _getServiceColors(int index) {
     final colorSets = [
       [Colors.purple.shade400, Colors.purple.shade600],
-      [Colors.pink.shade400, Colors.pink.shade600],
+      [Colors.grey.shade700, Colors.grey.shade900],
       [AppColors.accent, AppColors.primary],
       [Colors.blue.shade400, Colors.blue.shade600],
       [Colors.teal.shade400, Colors.teal.shade600],
@@ -2138,11 +2211,15 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin, 
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: AppColors.card,
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFF1A1A1A), Color(0xFF333333)],
+        ),
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: AppColors.primary.withOpacity(0.08),
+            color: Colors.black.withOpacity(0.15),
             blurRadius: 25,
             offset: const Offset(0, 8),
           ),
@@ -2151,30 +2228,87 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin, 
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Create a New Booking',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
-              color: AppColors.text,
-            ),
+          Row(
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: const Center(
+                  child: Icon(FontAwesomeIcons.calendarPlus,
+                      color: Colors.white, size: 18),
+                ),
+              ),
+              const SizedBox(width: 14),
+              const Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Create a New Booking',
+                    style: TextStyle(
+                      fontSize: 17,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.white,
+                    ),
+                  ),
+                  SizedBox(height: 2),
+                  Text(
+                    'Choose a date, time & assign a client',
+                    style: TextStyle(fontSize: 13, color: Colors.white54),
+                  ),
+                ],
+              ),
+            ],
           ),
-          const SizedBox(height: 8),
-          const Text(
-            'Choose a date and time, then assign a client.',
-            style: TextStyle(fontSize: 14, color: AppColors.muted),
-          ),
-          const SizedBox(height: 16),
-          _GradientButton(
-            text: 'Create Booking',
-            icon: FontAwesomeIcons.calendarPlus,
-            onPressed: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => const WalkInBookingPage()),
-              );
-            },
-            gradient: const LinearGradient(
-              colors: [AppColors.primary, AppColors.accent],
+          const SizedBox(height: 18),
+          SizedBox(
+            width: double.infinity,
+            height: 50,
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                        builder: (_) => const WalkInBookingPage()),
+                  );
+                },
+                borderRadius: BorderRadius.circular(14),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(14),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.white.withOpacity(0.1),
+                        blurRadius: 15,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: const Center(
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.add_rounded,
+                            color: Color(0xFF1A1A1A), size: 20),
+                        SizedBox(width: 8),
+                        Text(
+                          'Create Booking',
+                          style: TextStyle(
+                            color: Color(0xFF1A1A1A),
+                            fontSize: 15,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
             ),
           ),
         ],
@@ -2187,11 +2321,12 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin, 
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 16),
         decoration: BoxDecoration(
-          color: AppColors.card,
+          color: Theme.of(context).colorScheme.surface,
           borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: Colors.white.withOpacity(0.05)),
           boxShadow: [
             BoxShadow(
-              color: AppColors.primary.withOpacity(0.08),
+              color: Colors.black.withOpacity(0.1),
               blurRadius: 25,
               offset: const Offset(0, 8),
             ),
@@ -2244,7 +2379,7 @@ class _BranchSelectionDialogState extends State<BranchSelectionDialog> {
     [Colors.blue.shade400, Colors.blue.shade600],
     [Colors.green.shade400, Colors.green.shade600],
     [Colors.orange.shade400, Colors.orange.shade600],
-    [Colors.pink.shade400, Colors.pink.shade600],
+    [Colors.grey.shade700, Colors.grey.shade900],
     [Colors.teal.shade400, Colors.teal.shade600],
     [Colors.indigo.shade400, Colors.indigo.shade600],
     [Colors.red.shade400, Colors.red.shade600],
