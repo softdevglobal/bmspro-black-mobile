@@ -2,7 +2,7 @@
 
 ## ✅ Completed Steps
 
-1. **Bundle Identifier Updated**: Changed from `com.example.bmsproPink` to `com.softdev.bmspro_pink` to match Android
+1. **Bundle Identifier Updated**: Changed from `com.example.bmsproBlack` to `bmspro.black` to match Android
 2. **Version Number**: Currently set to `1.0.0+1` in `pubspec.yaml`
 
 ## 📋 Next Steps (Requires Xcode & Apple Developer Account)
@@ -15,8 +15,8 @@
 4. Select **App IDs** → **Continue**
 5. Select **App** → **Continue**
 6. Fill in:
-   - **Description**: Bmspro Pink
-   - **Bundle ID**: Select **Explicit** and enter: `com.softdev.bmspro_pink`
+   - **Description**: BMS Pro Black
+   - **Bundle ID**: Select **Explicit** and enter: `bmspro.black`
 7. Enable required capabilities:
    - ✅ Push Notifications (if using Firebase Cloud Messaging)
    - ✅ Background Modes (for location services)
@@ -29,10 +29,10 @@
 2. Click **My Apps** → **+** → **New App**
 3. Fill in:
    - **Platform**: iOS
-   - **Name**: Bmspro Pink
+   - **Name**: BMS Pro Black
    - **Primary Language**: English (or your preferred)
-   - **Bundle ID**: Select `com.softdev.bmspro_pink` (from Step 1)
-   - **SKU**: `bmspro-pink-ios` (unique identifier)
+   - **Bundle ID**: Select `bmspro.black` (from Step 1)
+   - **SKU**: `bmspro-black-ios` (unique identifier)
    - **User Access**: Full Access (or as needed)
 4. Click **Create**
 
@@ -59,7 +59,7 @@
      - Handle code signing
 
 6. **Verify Bundle Identifier**:
-   - Should show: `com.softdev.bmspro_pink`
+   - Should show: `bmspro.black`
    - If not, update it manually
 
 ### Step 4: Prepare App Store Assets
@@ -111,7 +111,7 @@ Before building, prepare these assets:
 flutter build ipa --release
 ```
 
-The IPA file will be at: `build/ios/ipa/bmspro_pink.ipa`
+The IPA file will be at: `build/ios/ipa/bmspro_black.ipa`
 
 **Note**: You'll still need Xcode for code signing configuration.
 
@@ -142,7 +142,7 @@ The IPA file will be at: `build/ios/ipa/bmspro_pink.ipa`
 ### Step 7: Complete App Store Listing
 
 1. Go to [App Store Connect](https://appstoreconnect.apple.com)
-2. Select your app **"Bmspro Pink"**
+2. Select your app **"BMS Pro Black"**
 3. Go to the version you just uploaded
 4. Fill in all required information:
 
@@ -196,7 +196,7 @@ If you encounter code signing errors:
 ### Bundle ID Mismatch
 
 If you get bundle ID errors:
-- Verify bundle ID in Xcode matches: `com.softdev.bmspro_pink`
+- Verify bundle ID in Xcode matches: `bmspro.black`
 - Ensure it's registered in Apple Developer Portal
 - Check App Store Connect app uses the same bundle ID
 

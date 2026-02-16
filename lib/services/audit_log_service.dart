@@ -3,7 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'dart:convert';
 
 class AuditLogService {
-  static const String _baseUrl = 'https://pink.bmspros.com.au/api/audit-log';
+  static const String _baseUrl = 'https://black.bmspros.com.au/api/audit-log';
 
   static Future<bool> createAuditLog({
     required String ownerUid,

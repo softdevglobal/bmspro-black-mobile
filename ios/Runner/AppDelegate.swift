@@ -11,7 +11,7 @@ import UserNotifications
     _ application: UIApplication,
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
   ) -> Bool {
-    // Google Maps API Key for BMS Pro Pink
+    // Google Maps API Key for BMS Pro Black
     GMSServices.provideAPIKey("AIzaSyA2LP8ornek2rve4QBm5d9FLQKOrF78I6M")
     
     // Configure Firebase FIRST

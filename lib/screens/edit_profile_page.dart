@@ -127,9 +127,9 @@ class _EditProfilePageState extends State<EditProfilePage>
   }
 
   void _checkForChanges() {
-    final bool isSalonOwner = _userRole.toLowerCase() == 'salon_owner';
-    final String imageValue = isSalonOwner ? _logoUrl : _avatarUrl;
-    final String originalImageValue = isSalonOwner ? _originalValues['logo'] ?? '' : _originalValues['avatar'] ?? '';
+    final bool isWorkshopOwner = _userRole.toLowerCase() == 'workshop_owner';
+    final String imageValue = isWorkshopOwner ? _logoUrl : _avatarUrl;
+    final String originalImageValue = isWorkshopOwner ? _originalValues['logo'] ?? '' : _originalValues['avatar'] ?? '';
     
     final bool hasChanges =
         _nameController.text != _originalValues['name'] ||
@@ -174,10 +174,10 @@ class _EditProfilePageState extends State<EditProfilePage>
         if (snap.exists) {
           final data = snap.data() as Map<String, dynamic>? ?? {};
           userRole = (data['role'] ?? '').toString();
-          final bool isSalonOwner = userRole.toLowerCase() == 'salon_owner';
+          final bool isWorkshopOwner = userRole.toLowerCase() == 'workshop_owner';
           
           // For salon owners, prioritize business name (name field) over displayName
-          if (isSalonOwner) {
+          if (isWorkshopOwner) {
             name = (data['name'] ?? 
                     data['displayName'] ?? 
                     name ?? 
@@ -200,7 +200,7 @@ class _EditProfilePageState extends State<EditProfilePage>
           logoUrl = (data['logoUrl'] ?? '').toString();
           
           // Load salon owner specific fields
-          if (isSalonOwner) {
+          if (isWorkshopOwner) {
             abn = (data['abn'] ?? '').toString();
             address = (data['locationText'] ?? data['address'] ?? '').toString();
           }
@@ -258,8 +258,8 @@ class _EditProfilePageState extends State<EditProfilePage>
         await user.updateDisplayName(name);
       }
       
-      final bool isSalonOwner = _userRole.toLowerCase() == 'salon_owner';
-      final String imageUrl = isSalonOwner ? _logoUrl : _avatarUrl;
+      final bool isWorkshopOwner = _userRole.toLowerCase() == 'workshop_owner';
+      final String imageUrl = isWorkshopOwner ? _logoUrl : _avatarUrl;
       
       if (imageUrl.isNotEmpty && imageUrl != (user.photoURL ?? '')) {
         await user.updatePhotoURL(imageUrl);
@@ -278,7 +278,7 @@ class _EditProfilePageState extends State<EditProfilePage>
       };
       
       // Add salon owner specific fields
-      if (isSalonOwner) {
+      if (isWorkshopOwner) {
         if (abn.isNotEmpty) {
           update['abn'] = abn;
         }
@@ -304,7 +304,7 @@ class _EditProfilePageState extends State<EditProfilePage>
       setState(() {
         _isSaving = false;
         _hasChanges = false;
-        final bool isSalonOwner = _userRole.toLowerCase() == 'salon_owner';
+        final bool isWorkshopOwner = _userRole.toLowerCase() == 'workshop_owner';
         _originalValues = {
           'name': name,
           'email': email,
@@ -360,13 +360,13 @@ class _EditProfilePageState extends State<EditProfilePage>
 
     try {
       final picker = ImagePicker();
-      final bool isSalonOwner = _userRole.toLowerCase() == 'salon_owner';
+      final bool isWorkshopOwner = _userRole.toLowerCase() == 'workshop_owner';
       
       final XFile? picked = await picker.pickImage(
         source: source,
         imageQuality: 85,
-        maxWidth: isSalonOwner ? 512 : 1024,
-        maxHeight: isSalonOwner ? 512 : 1024,
+        maxWidth: isWorkshopOwner ? 512 : 1024,
+        maxHeight: isWorkshopOwner ? 512 : 1024,
       );
       if (picked == null) return;
 
@@ -384,7 +384,7 @@ class _EditProfilePageState extends State<EditProfilePage>
                 child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
               ),
               const SizedBox(width: 12),
-              Text('Uploading ${isSalonOwner ? 'logo' : 'picture'}...'),
+              Text('Uploading ${isWorkshopOwner ? 'logo' : 'picture'}...'),
             ],
           ),
           duration: const Duration(seconds: 30),
@@ -397,7 +397,7 @@ class _EditProfilePageState extends State<EditProfilePage>
       
       // For salon owners, try API endpoint first, fallback to direct storage
       // For staff, use direct storage upload (should work with current rules)
-      if (isSalonOwner) {
+      if (isWorkshopOwner) {
         // Try API endpoint first for salon owner logo upload
         try {
           final token = await user.getIdToken();
@@ -410,7 +410,7 @@ class _EditProfilePageState extends State<EditProfilePage>
           
           final base64Image = base64Encode(imageBytes);
           
-          const apiBaseUrl = 'https://pink.bmspros.com.au';
+          const apiBaseUrl = 'https://black.bmspros.com.au';
           debugPrint('Uploading logo to API: $apiBaseUrl/api/upload/logo');
           debugPrint('Image size: ${imageBytes.length} bytes, Base64 length: ${base64Image.length}');
           
@@ -632,7 +632,7 @@ class _EditProfilePageState extends State<EditProfilePage>
       }
 
       // Update local state and Firestore for salon owners
-      if (isSalonOwner) {
+      if (isWorkshopOwner) {
         await FirebaseFirestore.instance
             .collection('users')
             .doc(user.uid)
@@ -659,7 +659,7 @@ class _EditProfilePageState extends State<EditProfilePage>
           final role = (userData['role'] ?? '').toString();
           
           // For non-salon owners, get ownerUid from the document
-          if (!isSalonOwner && userData['ownerUid'] != null) {
+          if (!isWorkshopOwner && userData['ownerUid'] != null) {
             ownerUid = userData['ownerUid'].toString();
           }
           
@@ -668,7 +668,7 @@ class _EditProfilePageState extends State<EditProfilePage>
             userId: user.uid,
             userName: userName,
             performedByRole: role.isNotEmpty ? role : null,
-            pictureType: isSalonOwner ? 'logo' : 'avatar',
+            pictureType: isWorkshopOwner ? 'logo' : 'avatar',
           );
         }
       } catch (auditError) {
@@ -678,7 +678,7 @@ class _EditProfilePageState extends State<EditProfilePage>
 
       if (!mounted) return;
       setState(() {
-        if (isSalonOwner) {
+        if (isWorkshopOwner) {
           _logoUrl = url;
           _originalValues['logo'] = url;
         } else {
@@ -696,7 +696,7 @@ class _EditProfilePageState extends State<EditProfilePage>
             children: [
               const Icon(Icons.check, color: Colors.white),
               const SizedBox(width: 8),
-              Text('${isSalonOwner ? 'Logo' : 'Picture'} uploaded successfully!'),
+              Text('${isWorkshopOwner ? 'Logo' : 'Picture'} uploaded successfully!'),
             ],
           ),
           backgroundColor: Colors.green,
@@ -710,7 +710,7 @@ class _EditProfilePageState extends State<EditProfilePage>
       ScaffoldMessenger.of(context).hideCurrentSnackBar();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Failed to upload ${_userRole.toLowerCase() == 'salon_owner' ? 'logo' : 'picture'}. Error: ${e.toString()}'),
+          content: Text('Failed to upload ${_userRole.toLowerCase() == 'workshop_owner' ? 'logo' : 'picture'}. Error: ${e.toString()}'),
           backgroundColor: Colors.redAccent,
           duration: const Duration(seconds: 4),
         ),
@@ -721,8 +721,8 @@ class _EditProfilePageState extends State<EditProfilePage>
   void _removePhoto() {
     Navigator.pop(context);
     setState(() {
-      final bool isSalonOwner = _userRole.toLowerCase() == 'salon_owner';
-      if (isSalonOwner) {
+      final bool isWorkshopOwner = _userRole.toLowerCase() == 'workshop_owner';
+      if (isWorkshopOwner) {
         _logoUrl = '';
       } else {
         _avatarUrl = '';
@@ -793,8 +793,8 @@ class _EditProfilePageState extends State<EditProfilePage>
 
   Widget _buildProfilePictureSection() {
     // For salon owner, show logo if available
-    final bool isSalonOwner = _userRole.toLowerCase() == 'salon_owner';
-    final String displayImageUrl = isSalonOwner && _logoUrl.isNotEmpty 
+    final bool isWorkshopOwner = _userRole.toLowerCase() == 'workshop_owner';
+    final String displayImageUrl = isWorkshopOwner && _logoUrl.isNotEmpty 
         ? _logoUrl 
         : _avatarUrl;
     final bool hasImage = displayImageUrl.isNotEmpty;
@@ -806,7 +806,7 @@ class _EditProfilePageState extends State<EditProfilePage>
       child: Column(
         children: [
           // Show "Salon Logo" label and business name for salon owner
-          if (isSalonOwner) ...[
+          if (isWorkshopOwner) ...[
             const Text(
               'Salon Logo',
               style: TextStyle(
@@ -871,7 +871,7 @@ class _EditProfilePageState extends State<EditProfilePage>
                       child: !hasImage
                           ? Center(
                               child: Icon(
-                                isSalonOwner 
+                                isWorkshopOwner 
                                     ? FontAwesomeIcons.store 
                                     : FontAwesomeIcons.user,
                                 color: AppColors.primary.withOpacity(0.5),
@@ -898,7 +898,7 @@ class _EditProfilePageState extends State<EditProfilePage>
           GestureDetector(
             onTap: _showPictureModal,
             child: Text(
-              isSalonOwner ? 'Change Logo' : 'Change Picture',
+              isWorkshopOwner ? 'Change Logo' : 'Change Picture',
               style: const TextStyle(
                 color: AppColors.primary,
                 fontWeight: FontWeight.w500,
@@ -912,7 +912,7 @@ class _EditProfilePageState extends State<EditProfilePage>
   }
 
   Widget _buildPersonalInfoSection() {
-    final bool isSalonOwner = _userRole.toLowerCase() == 'salon_owner';
+    final bool isWorkshopOwner = _userRole.toLowerCase() == 'workshop_owner';
     
     return Container(
       padding: const EdgeInsets.all(24),
@@ -921,7 +921,7 @@ class _EditProfilePageState extends State<EditProfilePage>
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            isSalonOwner ? 'Business Information' : 'Personal Information',
+            isWorkshopOwner ? 'Business Information' : 'Personal Information',
             style: const TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.w600,
@@ -931,7 +931,7 @@ class _EditProfilePageState extends State<EditProfilePage>
           const SizedBox(height: 16),
           _buildAnimatedField(
             0, 
-            isSalonOwner ? 'Business Name' : 'Full Name', 
+            isWorkshopOwner ? 'Business Name' : 'Full Name', 
             _nameController,
             TextInputType.name,
           ),
@@ -949,7 +949,7 @@ class _EditProfilePageState extends State<EditProfilePage>
             _phoneController, 
             TextInputType.phone,
           ),
-          if (isSalonOwner) ...[
+          if (isWorkshopOwner) ...[
             const SizedBox(height: 16),
             _buildAnimatedField(
               3, 

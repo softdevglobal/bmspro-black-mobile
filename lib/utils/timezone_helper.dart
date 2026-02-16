@@ -1,6 +1,6 @@
 import 'package:intl/intl.dart';
 
-/// Timezone helper utilities for the BMS Pro Pink mobile app
+/// Timezone helper utilities for the BMS Pro Black mobile app
 /// 
 /// This helper provides functions to:
 /// - Convert UTC times to branch local times

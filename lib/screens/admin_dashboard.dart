@@ -321,9 +321,9 @@ class _AdminDashboardState extends State<AdminDashboard> {
   Widget _buildHeader(BuildContext context) {
     String adminLabel = 'Admin';
     final role = widget.role;
-    if (role == 'salon_owner') {
+    if (role == 'workshop_owner') {
       adminLabel = 'Salon Owner';
-    } else if (role == 'salon_branch_admin') {
+    } else if (role == 'branch_admin') {
       if (widget.branchName != null && widget.branchName!.isNotEmpty) {
         adminLabel = '${widget.branchName} Admin';
       } else {
@@ -336,7 +336,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
     //   "Dashboard" title/subtitle beside it.
     // - For others: just the title/ subtitle column.
     Widget leading;
-    if (role == 'salon_owner') {
+    if (role == 'workshop_owner') {
       leading = Row(
         children: [
           Material(

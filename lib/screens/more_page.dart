@@ -109,8 +109,8 @@ class _MorePageState extends State<MorePage> {
     }
   }
 
-  bool get _isBranchAdmin => _userRole == 'salon_branch_admin';
-  bool get _isSalonOwner => _userRole == 'salon_owner';
+  bool get _isBranchAdmin => _userRole == 'branch_admin';
+  bool get _isWorkshopOwner => _userRole == 'workshop_owner';
 
   @override
   Widget build(BuildContext context) {
@@ -166,7 +166,7 @@ class _MorePageState extends State<MorePage> {
             const SizedBox(height: 16),
 
             // Staff Section (Expandable) - Only for salon owners
-            if (_isSalonOwner) ...[
+            if (_isWorkshopOwner) ...[
               _buildExpandableMenuCard(
                 context,
                 icon: FontAwesomeIcons.users,
@@ -246,7 +246,7 @@ class _MorePageState extends State<MorePage> {
             ],
 
             // Summary Section - Only for salon owners
-            if (_isSalonOwner) ...[
+            if (_isWorkshopOwner) ...[
               const SizedBox(height: 16),
               _buildMenuCard(
                 context,
@@ -1516,7 +1516,7 @@ class _BranchAdminSummaryPageState extends State<BranchAdminSummaryPage> {
           final data = doc.data();
           final role = (data['role'] ?? '').toString().toLowerCase();
           
-          if (role != 'salon_staff' && role != 'salon_branch_admin') continue;
+          if (role != 'staff' && role != 'branch_admin') continue;
           
           // Check if user's branchId matches
           final userBranchId = (data['branchId'] ?? '').toString();

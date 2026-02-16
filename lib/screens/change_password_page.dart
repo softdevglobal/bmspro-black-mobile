@@ -204,7 +204,7 @@ class _ChangePasswordPageState extends State<ChangePasswordPage>
           final role = (userData['role'] ?? '').toString();
           
           // Determine ownerUid based on role
-          if (role == 'salon_owner') {
+          if (role == 'workshop_owner') {
             ownerUid = user.uid;
           } else if (userData['ownerUid'] != null && userData['ownerUid'].toString().isNotEmpty) {
             ownerUid = userData['ownerUid'].toString();

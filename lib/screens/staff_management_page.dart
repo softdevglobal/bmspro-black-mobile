@@ -112,7 +112,7 @@ class _StaffManagementPageState extends State<StaffManagementPage> {
       final role = userDoc.data()?['role'] ?? '';
       String ownerUid = user.uid;
       
-      if (role == 'salon_branch_admin') {
+      if (role == 'branch_admin') {
         ownerUid = userDoc.data()?['ownerUid'] ?? user.uid;
       }
 
@@ -129,7 +129,7 @@ class _StaffManagementPageState extends State<StaffManagementPage> {
             _staff = snapshot.docs
                 .where((doc) {
                   final role = doc.data()['role'] ?? '';
-                  return role == 'salon_staff' || role == 'salon_branch_admin';
+                  return role == 'staff' || role == 'branch_admin';
                 })
                 .map((doc) => StaffMember.fromFirestore(doc))
                 .toList();
@@ -350,7 +350,7 @@ class _StaffManagementPageState extends State<StaffManagementPage> {
       // Call the API to disable/enable Firebase Auth account
       try {
         final response = await http.post(
-          Uri.parse('https://pink.bmspros.com.au/api/staff/auth/suspend'),
+          Uri.parse('https://black.bmspros.com.au/api/staff/auth/suspend'),
           headers: {'Content-Type': 'application/json'},
           body: json.encode({
             'uid': staff.id,
@@ -514,7 +514,7 @@ class _StaffManagementPageState extends State<StaffManagementPage> {
 
       // Delete Firebase Auth account via API
       try {
-        final apiUrl = 'https://pink.bmspros.com.au/api/staff/auth/delete';
+        final apiUrl = 'https://black.bmspros.com.au/api/staff/auth/delete';
         final response = await http.post(
           Uri.parse(apiUrl),
           headers: {
@@ -1581,7 +1581,7 @@ class _OnboardStaffSheetState extends State<_OnboardStaffSheet> {
   bool _saving = false;
   bool _showPassword = false;
   // Only allow Standard Staff creation from mobile app
-  final String _selectedRole = 'salon_staff';
+  final String _selectedRole = 'staff';
   String? _selectedBranchId;
   Map<String, String?> _weeklySchedule = {
     'Monday': null,
@@ -1632,7 +1632,7 @@ class _OnboardStaffSheetState extends State<_OnboardStaffSheet> {
       final ownerToken = await currentOwner.getIdToken();
 
       // Create Firebase Auth user via API (doesn't sign in automatically)
-      final apiUrl = 'https://pink.bmspros.com.au/api/staff/auth/create';
+      final apiUrl = 'https://black.bmspros.com.au/api/staff/auth/create';
       final response = await http.post(
         Uri.parse(apiUrl),
         headers: {
@@ -1748,7 +1748,7 @@ class _OnboardStaffSheetState extends State<_OnboardStaffSheet> {
           debugPrint('Failed to fetch salon name: $e');
         }
         
-        const apiBaseUrl = 'https://pink.bmspros.com.au';
+        const apiBaseUrl = 'https://black.bmspros.com.au';
         final emailResponse = await http.post(
           Uri.parse('$apiBaseUrl/api/staff/welcome-email'),
           headers: {
@@ -1934,7 +1934,7 @@ class _OnboardStaffSheetState extends State<_OnboardStaffSheet> {
                     iconColor: const Color(0xFFEC4899),
                     children: [
                       _buildRoleOption(
-                        'salon_staff',
+                        'staff',
                         'Staff Member',
                         'Regular staff with basic access',
                         FontAwesomeIcons.user,
@@ -2104,7 +2104,7 @@ class _OnboardStaffSheetState extends State<_OnboardStaffSheet> {
 
   Widget _buildRoleOption(String value, String title, String subtitle, IconData icon) {
     final isSelected = _selectedRole == value;
-    // Role is fixed to salon_staff, so no need for tap handler
+    // Role is fixed to staff, so no need for tap handler
     return GestureDetector(
       onTap: () {
         // Role selection disabled - only Standard Staff allowed
@@ -2340,7 +2340,7 @@ class _EditStaffSheetState extends State<_EditStaffSheet> {
       if (statusChanged && (widget.staff.status == 'Suspended' || _status == 'Suspended')) {
         try {
           await http.post(
-            Uri.parse('https://pink.bmspros.com.au/api/staff/auth/suspend'),
+            Uri.parse('https://black.bmspros.com.au/api/staff/auth/suspend'),
             headers: {'Content-Type': 'application/json'},
             body: json.encode({
               'uid': widget.staff.id,

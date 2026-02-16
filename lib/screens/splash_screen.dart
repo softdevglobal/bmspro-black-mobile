@@ -79,7 +79,7 @@ class _SplashScreenState extends State<SplashScreen> {
                   ),
                   child: Center(
                     child: Image.asset(
-                      'assets/icons/bmspink-icon.jpeg',
+                      'assets/icons/bmsblack-icon.jpeg',
                       width: 80,
                       height: 80,
                       fit: BoxFit.contain,
@@ -88,7 +88,7 @@ class _SplashScreenState extends State<SplashScreen> {
                 ),
                 const SizedBox(height: 20),
                 const Text(
-                  'BMS Pro Pink',
+                  'BMS Pro Black',
                   style: TextStyle(
                     color: Color(0xFF1A1A1A),
                     fontSize: 26,

@@ -311,7 +311,7 @@ class _ReportScreenState extends State<ReportScreen> {
         // Check if this booking is assigned to current user (for staff)
         bool isMyBooking = false;
 
-        if (_currentUserRole == 'salon_staff' || _currentUserRole == 'salon_branch_admin') {
+        if (_currentUserRole == 'staff' || _currentUserRole == 'branch_admin') {
           // Check top-level staffId
           if (data['staffId'] == user.uid || data['staffAuthUid'] == user.uid) {
             isMyBooking = true;
@@ -571,7 +571,7 @@ class _ReportScreenState extends State<ReportScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final bool isBranchAdmin = _currentUserRole == 'salon_branch_admin';
+    final bool isBranchAdmin = _currentUserRole == 'branch_admin';
 
     return SafeArea(
       child: Container(
@@ -738,7 +738,7 @@ class _ReportScreenState extends State<ReportScreen> {
                 _KpiData(FontAwesomeIcons.star, rating, 'Rating'),
               ]),
         const SizedBox(height: 24),
-        if (!_isBranchView && (_currentUserRole == 'salon_staff' || _currentUserRole == 'salon_branch_admin')) ...[
+        if (!_isBranchView && (_currentUserRole == 'staff' || _currentUserRole == 'branch_admin')) ...[
           _buildWeeklyWorkingHoursCard(),
           const SizedBox(height: 24),
         ],
@@ -779,7 +779,7 @@ class _ReportScreenState extends State<ReportScreen> {
                 _KpiData(FontAwesomeIcons.star, rating, 'Avg Rating'),
               ]),
         const SizedBox(height: 24),
-        if (!_isBranchView && (_currentUserRole == 'salon_staff' || _currentUserRole == 'salon_branch_admin')) ...[
+        if (!_isBranchView && (_currentUserRole == 'staff' || _currentUserRole == 'branch_admin')) ...[
           _buildWeeklyWorkingHoursCard(),
           const SizedBox(height: 24),
         ],

@@ -142,7 +142,7 @@ class _AppointmentRequestsPageState extends State<AppointmentRequestsPage> {
         .where('status', whereIn: ['AwaitingStaffApproval', 'PartiallyApproved']);
     
     // Branch admin should only see bookings for their branch (matching admin panel logic)
-    if (_userRole == 'salon_branch_admin' && _userBranchId != null && _userBranchId!.isNotEmpty) {
+    if (_userRole == 'branch_admin' && _userBranchId != null && _userBranchId!.isNotEmpty) {
       query = query.where('branchId', isEqualTo: _userBranchId);
       debugPrint('Added branchId filter: $_userBranchId');
     }
@@ -618,7 +618,7 @@ class _AppointmentRequestsPageState extends State<AppointmentRequestsPage> {
   }
 
   String _getApiBaseUrl() {
-    return 'https://pink.bmspros.com.au';
+    return 'https://black.bmspros.com.au';
   }
 
   void _showLoadingDialog(String message) {

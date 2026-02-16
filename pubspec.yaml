@@ -1,4 +1,4 @@
-name: bmspro_pink
+name: bmspro_black
 description: "A new Flutter project."
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
@@ -82,14 +82,14 @@ flutter:
   uses-material-design: true
 
   assets:
-    - assets/icons/bmspink-icon.jpeg
+    - assets/icons/bmsblack-icon.jpeg
 
 flutter_icons:
   android: true
   ios: true
-  image_path: "assets/icons/bmspink-icon.jpeg"
+  image_path: "assets/icons/bmsblack-icon.jpeg"
   adaptive_icon_background: "#FFFFFF"
-  adaptive_icon_foreground: "assets/icons/bmspink-icon.jpeg"
+  adaptive_icon_foreground: "assets/icons/bmsblack-icon.jpeg"
 
   # To add assets to your application, add an assets section, like this:
   # assets:

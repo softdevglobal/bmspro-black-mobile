@@ -161,8 +161,8 @@ class _BranchesPageState extends State<BranchesPage> {
   List<StaffOption> _staff = [];
   bool _loading = true;
 
-  bool get _isBranchAdmin => _userRole == 'salon_branch_admin';
-  bool get _canEdit => _userRole == 'salon_owner';
+  bool get _isBranchAdmin => _userRole == 'branch_admin';
+  bool get _canEdit => _userRole == 'workshop_owner';
 
   @override
   void initState() {
@@ -187,7 +187,7 @@ class _BranchesPageState extends State<BranchesPage> {
       String ownerUid = user.uid;
       String? userBranchId;
 
-      if (role == 'salon_branch_admin') {
+      if (role == 'branch_admin') {
         ownerUid = userDoc.data()?['ownerUid'] ?? user.uid;
         userBranchId = userDoc.data()?['branchId'];
       }
@@ -247,7 +247,7 @@ class _BranchesPageState extends State<BranchesPage> {
             _staff = snapshot.docs
                 .where((doc) {
                   final role = doc.data()['role'] ?? '';
-                  return role == 'salon_staff' || role == 'salon_branch_admin';
+                  return role == 'staff' || role == 'branch_admin';
                 })
                 .map((doc) {
                   final data = doc.data();
@@ -395,8 +395,8 @@ class _BranchesPageState extends State<BranchesPage> {
               .collection('users')
               .doc(adminStaffId)
               .update({
-            'role': 'salon_staff',
-            'systemRole': 'salon_staff',
+            'role': 'staff',
+            'systemRole': 'staff',
             'branchId': FieldValue.delete(),
             'branchName': FieldValue.delete(),
             'updatedAt': FieldValue.serverTimestamp(),
@@ -1084,7 +1084,7 @@ class _BranchFormSheetState extends State<_BranchFormSheet> {
             final branchHours = data['hours'] as Map<String, dynamic>?;
             
             final apiResponse = await http.post(
-              Uri.parse('https://pink.bmspros.com.au/api/branches/assign-admin'),
+              Uri.parse('https://black.bmspros.com.au/api/branches/assign-admin'),
               headers: {
                 'Content-Type': 'application/json',
                 'Authorization': 'Bearer $ownerToken',
@@ -1177,7 +1177,7 @@ class _BranchFormSheetState extends State<_BranchFormSheet> {
             final branchHours = data['hours'] as Map<String, dynamic>?;
             
             final apiResponse = await http.post(
-              Uri.parse('https://pink.bmspros.com.au/api/branches/assign-admin'),
+              Uri.parse('https://black.bmspros.com.au/api/branches/assign-admin'),
               headers: {
                 'Content-Type': 'application/json',
                 'Authorization': 'Bearer $ownerToken',

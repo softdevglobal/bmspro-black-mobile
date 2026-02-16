@@ -23,7 +23,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
     _OnboardData(
       icon: Icons.brush_rounded,
       title: 'Delightful Experience',
-      subtitle: 'Beautiful pink & purple theme with smooth, responsive layouts.',
+      subtitle: 'Sleek black theme with smooth, responsive layouts.',
     ),
     _OnboardData(
       icon: Icons.event_available_rounded,
@@ -84,7 +84,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                             ),
                             child: Center(
                               child: Image.asset(
-                                'assets/icons/bmspink-icon.jpeg',
+                                'assets/icons/bmsblack-icon.jpeg',
                                 width: 140,
                                 height: 140,
                                 fit: BoxFit.contain,

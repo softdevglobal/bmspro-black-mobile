@@ -4,7 +4,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'dart:async';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../widgets/pink_bottom_nav.dart';
+import '../widgets/app_bottom_nav.dart';
 import 'calender_screen.dart';
 import 'report_screen.dart';
 import 'profile_screen.dart';
@@ -386,7 +386,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin, 
             });
             
             // Fetch today's appointments for staff (only once on initial load)
-            if (previousRole == null && _userRole != 'salon_owner' && _userRole != 'salon_branch_admin') {
+            if (previousRole == null && _userRole != 'workshop_owner' && _userRole != 'branch_admin') {
               _fetchTodayAppointments();
             }
           } else {
@@ -1274,14 +1274,14 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin, 
       );
     }
 
-    final bool isOwnerOrBranchAdmin = _userRole == 'salon_owner' || _userRole == 'salon_branch_admin';
+    final bool isOwnerOrBranchAdmin = _userRole == 'workshop_owner' || _userRole == 'branch_admin';
     final List<IconData> icons = isOwnerOrBranchAdmin ? kOwnerNavIcons : kDefaultNavIcons;
 
     return Scaffold(
       body: _navIndex == 0
           ? _buildHomeTab()
           : _buildTabBody(),
-      bottomNavigationBar: PinkBottomNav(
+      bottomNavigationBar: AppBottomNav(
         currentIndex: _navIndex,
         onChanged: (index) => setState(() => _navIndex = index),
         icons: icons,
@@ -1291,12 +1291,12 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin, 
 
   Widget _buildHomeTab() {
     // Check if user is admin or owner
-    if (_userRole == 'salon_owner') {
+    if (_userRole == 'workshop_owner') {
       return AdminDashboard(
         role: _userRole!,
         branchName: _branchName,
       );
-    } else if (_userRole == 'salon_branch_admin') {
+    } else if (_userRole == 'branch_admin') {
       return BranchAdminDashboard(
         branchName: _branchName ?? 'Branch',
       );
@@ -1449,7 +1449,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin, 
   }
 
   Widget _buildTabBody() {
-    final bool isOwnerOrBranchAdmin = _userRole == 'salon_owner' || _userRole == 'salon_branch_admin';
+    final bool isOwnerOrBranchAdmin = _userRole == 'workshop_owner' || _userRole == 'branch_admin';
 
     if (isOwnerOrBranchAdmin) {
       // For salon owners and branch admins: 3rd tab is Bookings, 5th is More

@@ -738,7 +738,7 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
                 const SizedBox(width: 12),
                 const Expanded(
                   child: Text(
-                    'support@bmspropink.com',
+                    'support@bmsproblack.com',
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w500,

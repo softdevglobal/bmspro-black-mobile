@@ -347,9 +347,9 @@ class _CalenderScreenState extends State<CalenderScreen> {
 
   void _rebuildScheduleFromBookings() {
     final Map<int, DaySchedule> byDay = {};
-    final bool isOwner = _currentUserRole == 'salon_owner';
-    final bool isBranchAdmin = _currentUserRole == 'salon_branch_admin';
-    final bool isStaff = _currentUserRole == 'salon_staff';
+    final bool isOwner = _currentUserRole == 'workshop_owner';
+    final bool isBranchAdmin = _currentUserRole == 'branch_admin';
+    final bool isStaff = _currentUserRole == 'staff';
 
     for (final data in _allBookings) {
       final statusRaw = (data['status'] ?? '').toString().toLowerCase();
@@ -595,13 +595,13 @@ class _CalenderScreenState extends State<CalenderScreen> {
     final branchId = _branchId;
 
     // Salon owner: see all confirmed bookings for their salon
-    if (role == 'salon_owner') return true;
+    if (role == 'workshop_owner') return true;
 
     final bookingBranchId = (data['branchId'] ?? '').toString();
 
     // Branch admin: see only their branch in calendar;
     // per-staff vs branch-wide is handled later in _buildAppointmentsList.
-    if (role == 'salon_branch_admin') {
+    if (role == 'branch_admin') {
       if (branchId != null &&
           branchId.isNotEmpty &&
           bookingBranchId.isNotEmpty &&
@@ -713,8 +713,8 @@ class _CalenderScreenState extends State<CalenderScreen> {
   }
 
   Widget _buildHeader() {
-    final bool isBranchAdmin = _currentUserRole == 'salon_branch_admin';
-    final bool isOwner = _currentUserRole == 'salon_owner';
+    final bool isBranchAdmin = _currentUserRole == 'branch_admin';
+    final bool isOwner = _currentUserRole == 'workshop_owner';
     
     return Column(
       crossAxisAlignment: CrossAxisAlignment.center,
@@ -864,8 +864,8 @@ class _CalenderScreenState extends State<CalenderScreen> {
               if (dayData != null) {
                 // Filter bookings for current user based on role
                 final filteredItems = dayData.items.where((appt) {
-                  if (_currentUserRole == 'salon_owner') return true;
-                  if (_currentUserRole == 'salon_branch_admin' && _isBranchView) return true;
+                  if (_currentUserRole == 'workshop_owner') return true;
+                  if (_currentUserRole == 'branch_admin' && _isBranchView) return true;
                   return _currentUserId != null && appt.staffId == _currentUserId;
                 }).toList();
                 
@@ -962,8 +962,8 @@ class _CalenderScreenState extends State<CalenderScreen> {
                       if (dayData != null) Builder(
                         builder: (context) {
                           final filteredCount = dayData.items.where((appt) {
-                            if (_currentUserRole == 'salon_owner') return true;
-                            if (_currentUserRole == 'salon_branch_admin' && _isBranchView) return true;
+                            if (_currentUserRole == 'workshop_owner') return true;
+                            if (_currentUserRole == 'branch_admin' && _isBranchView) return true;
                             return _currentUserId != null && appt.staffId == _currentUserId;
                           }).length;
                           if (filteredCount > 1) {
@@ -1028,7 +1028,7 @@ class _CalenderScreenState extends State<CalenderScreen> {
     final dayInt = _selectedDate.day;
     final data =
         _scheduleData[dayInt]; // Schedule generated from live bookings
-    final bool isOwner = _currentUserRole == 'salon_owner';
+    final bool isOwner = _currentUserRole == 'workshop_owner';
     
     List<Color> gradient = [Colors.grey.shade400, Colors.grey.shade300];
     String branchName = "No Schedule";
@@ -1038,8 +1038,8 @@ class _CalenderScreenState extends State<CalenderScreen> {
     if (data != null) {
       // Filter items based on role & view mode (same logic as _buildAppointmentsList)
       final filteredItems = data.items.where((appt) {
-        if (_currentUserRole == 'salon_owner') return true;
-        if (_currentUserRole == 'salon_branch_admin' && _isBranchView) return true;
+        if (_currentUserRole == 'workshop_owner') return true;
+        if (_currentUserRole == 'branch_admin' && _isBranchView) return true;
         // Staff or branch admin (My Schedule): only their own appointments
         return _currentUserId != null && appt.staffId == _currentUserId;
       }).toList();
@@ -1236,12 +1236,12 @@ class _CalenderScreenState extends State<CalenderScreen> {
     // Filter items based on role & view mode
     final filteredItems = data.items.where((appt) {
       // Salon owner: always see full salon schedule
-      if (_currentUserRole == 'salon_owner') {
+      if (_currentUserRole == 'workshop_owner') {
         return true;
       }
 
       // Branch admin: in branch view see all, otherwise personal
-      if (_currentUserRole == 'salon_branch_admin' && _isBranchView) {
+      if (_currentUserRole == 'branch_admin' && _isBranchView) {
         return true; 
       }
 
@@ -1254,9 +1254,9 @@ class _CalenderScreenState extends State<CalenderScreen> {
           FontAwesomeIcons.calendarXmark, "No appointments for you today.");
     }
 
-    final bool isOwner = _currentUserRole == 'salon_owner';
-    final bool isBranchAdmin = _currentUserRole == 'salon_branch_admin';
-    final bool isStaff = _currentUserRole == 'salon_staff';
+    final bool isOwner = _currentUserRole == 'workshop_owner';
+    final bool isBranchAdmin = _currentUserRole == 'branch_admin';
+    final bool isStaff = _currentUserRole == 'staff';
     
     // Sort by time
     filteredItems.sort((a, b) => a.time.compareTo(b.time));

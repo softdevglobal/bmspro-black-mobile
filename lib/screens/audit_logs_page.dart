@@ -68,8 +68,8 @@ class _AuditLogsPageState extends State<AuditLogsPage> {
         final data = doc.data();
         final role = data?['role'] as String?;
         
-        // Only salon_owner can view audit logs
-        if (role != 'salon_owner') {
+        // Only workshop_owner can view audit logs
+        if (role != 'workshop_owner') {
           if (mounted) {
             Navigator.of(context).pop();
             ScaffoldMessenger.of(context).showSnackBar(
@@ -222,9 +222,9 @@ class _AuditLogsPageState extends State<AuditLogsPage> {
 
   String _getRoleLabel(String? role) {
     switch (role) {
-      case 'salon_owner': return 'Owner';
-      case 'salon_branch_admin': return 'Branch Admin';
-      case 'salon_staff': return 'Staff';
+      case 'workshop_owner': return 'Owner';
+      case 'branch_admin': return 'Branch Admin';
+      case 'staff': return 'Staff';
       default: return role ?? 'User';
     }
   }

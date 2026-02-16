@@ -134,7 +134,7 @@ class _ProfileScreenState extends State<ProfileScreen>
           
           logoUrl = (data['logoUrl'] ?? '').toString();
 
-          if (systemRole == 'salon_owner' && businessName.isNotEmpty) {
+          if (systemRole == 'workshop_owner' && businessName.isNotEmpty) {
             name = businessName;
           } else if (displayName.isNotEmpty) {
             name = displayName;
@@ -150,11 +150,11 @@ class _ProfileScreenState extends State<ProfileScreen>
           if (staffRole != null && staffRole.toString().trim().isNotEmpty) {
             role = staffRole.toString();
           } else {
-            if (systemRole == 'salon_owner') {
+            if (systemRole == 'workshop_owner') {
               role = 'Salon Owner';
-            } else if (systemRole == 'salon_branch_admin') {
+            } else if (systemRole == 'branch_admin') {
               role = 'Branch Admin';
-            } else if (systemRole == 'salon_staff') {
+            } else if (systemRole == 'staff') {
               role = 'Staff Member';
             } else if (rawRoleValue.isNotEmpty) {
               role = rawRoleValue;
@@ -198,7 +198,7 @@ class _ProfileScreenState extends State<ProfileScreen>
           }
           
           // Get total bookings count for staff
-          if (systemRole == 'salon_staff') {
+          if (systemRole == 'staff') {
             final ownerUid = data['ownerUid'] ?? '';
             if (ownerUid.isNotEmpty) {
               final bookingsSnap = await FirebaseFirestore.instance
@@ -211,7 +211,7 @@ class _ProfileScreenState extends State<ProfileScreen>
           }
           
           // Load timezone and branchId for branch admins
-          if (systemRole == 'salon_branch_admin') {
+          if (systemRole == 'branch_admin') {
             // For branch admins, load branch timezone instead of user timezone
             _branchId = data['branchId']?.toString();
             debugPrint('ProfileScreen: Branch admin detected, branchId: $_branchId');
@@ -260,7 +260,7 @@ class _ProfileScreenState extends State<ProfileScreen>
           }
           
           // Load salon owner details if user is a salon owner
-          if (systemRole == 'salon_owner') {
+          if (systemRole == 'workshop_owner') {
             final ownerEmail = user.email ?? data['email'] ?? '';
             final ownerPhone = data['contactPhone'] ?? data['phone'] ?? '';
             final ownerAddress = data['locationText'] ?? data['address'] ?? '';
@@ -325,7 +325,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                         const SizedBox(height: 24),
                         _buildStatsRow(),
                         // Only show Edit Profile button for non-salon owners
-                        if (_systemRole != 'salon_owner') ...[
+                        if (_systemRole != 'workshop_owner') ...[
                           const SizedBox(height: 24),
                           _buildQuickActions(),
                         ],
@@ -624,7 +624,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                     ],
                   ),
                   // Salon owner details section
-                  if (_systemRole == 'salon_owner') ...[
+                  if (_systemRole == 'workshop_owner') ...[
                     const SizedBox(height: 20),
                     Container(
                       width: double.infinity,
@@ -715,8 +715,8 @@ class _ProfileScreenState extends State<ProfileScreen>
   }
 
   Widget _buildAnimatedAvatar() {
-    final bool isSalonOwner = _systemRole == 'salon_owner';
-    final String displayImageUrl = isSalonOwner && _logoUrl.isNotEmpty 
+    final bool isWorkshopOwner = _systemRole == 'workshop_owner';
+    final String displayImageUrl = isWorkshopOwner && _logoUrl.isNotEmpty 
         ? _logoUrl 
         : _photoUrl;
     final bool hasImage = displayImageUrl.isNotEmpty;
@@ -777,7 +777,7 @@ class _ProfileScreenState extends State<ProfileScreen>
           ),
           child: !hasImage
               ? Center(
-                  child: isSalonOwner
+                  child: isWorkshopOwner
                       ? const Icon(
                           FontAwesomeIcons.store,
                           size: 36,
@@ -846,11 +846,11 @@ class _ProfileScreenState extends State<ProfileScreen>
 
   IconData _getRoleIcon() {
     switch (_systemRole) {
-      case 'salon_owner':
+      case 'workshop_owner':
         return FontAwesomeIcons.crown;
-      case 'salon_branch_admin':
+      case 'branch_admin':
         return FontAwesomeIcons.userTie;
-      case 'salon_staff':
+      case 'staff':
         return FontAwesomeIcons.scissors;
       default:
         return FontAwesomeIcons.user;
@@ -1092,13 +1092,13 @@ class _ProfileScreenState extends State<ProfileScreen>
                   },
                 ),
                 // Only show timezone for salon owners and branch admins (not salon staff)
-                if (_systemRole != 'salon_staff') ...[
+                if (_systemRole != 'staff') ...[
                   _buildDivider(),
                   _buildMenuTile(
                     icon: FontAwesomeIcons.clock,
                     iconBgColor: const Color(0xFFE3F2FD),
                     iconColor: const Color(0xFF2196F3),
-                    title: _systemRole == 'salon_branch_admin' ? 'Branch Time Zone' : 'Time Zone',
+                    title: _systemRole == 'branch_admin' ? 'Branch Time Zone' : 'Time Zone',
                     subtitle: _isLoadingTimezone 
                         ? 'Loading...' 
                         : TimezoneHelper.getTimezoneLabel(_selectedTimezone),
@@ -1438,7 +1438,7 @@ class _ProfileScreenState extends State<ProfileScreen>
       debugPrint('ProfileScreen: Saving timezone - role: $_systemRole, branchId: $_branchId, timezone: $timezone');
 
       // For branch admins, update branch timezone via API (they don't have direct Firestore write permission)
-      if (_systemRole == 'salon_branch_admin') {
+      if (_systemRole == 'branch_admin') {
         // Try to get branchId from user document if not already set
         if (_branchId == null || _branchId!.isEmpty) {
           try {
@@ -1460,7 +1460,7 @@ class _ProfileScreenState extends State<ProfileScreen>
           // Use API endpoint to update branch timezone (branch admins don't have direct Firestore write permission)
           try {
             final token = await user.getIdToken();
-            final apiUrl = 'https://pink.bmspros.com.au/api/branches/$_branchId/timezone';
+            final apiUrl = 'https://black.bmspros.com.au/api/branches/$_branchId/timezone';
             
             final response = await http.patch(
               Uri.parse(apiUrl),

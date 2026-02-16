@@ -1,4 +1,4 @@
-// File generated manually - configuration might need update for native Android/iOS App IDs
+// File generated manually - configuration for bmspro-black Firebase project
 import 'package:firebase_core/firebase_core.dart' show FirebaseOptions;
 import 'package:flutter/foundation.dart'
     show defaultTargetPlatform, kIsWeb, TargetPlatform;
@@ -33,39 +33,37 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'AIzaSyD08qXcZjC1N_wX8EE5YGgN4sA-ZrJQICg',
-    appId: '1:960634304944:web:9c9cb29b14b13924b73e75',
-    messagingSenderId: '960634304944',
-    projectId: 'bmspro-pink',
-    authDomain: 'bmspro-pink.firebaseapp.com',
-    storageBucket: 'bmspro-pink.firebasestorage.app',
-    measurementId: 'G-M4XJKLN1Y2',
+    apiKey: 'AIzaSyAgrG7oHTHu_hocI7S7FfwslA7M6sIZ6Gc',
+    appId: '1:807442450614:web:539a7034e62d1d3f60fe17',
+    messagingSenderId: '807442450614',
+    projectId: 'bmspro-black',
+    authDomain: 'bmspro-black.firebaseapp.com',
+    storageBucket: 'bmspro-black.firebasestorage.app',
   );
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyD2q67hCjMyxb0N79zouXW1tzXDwAIwNFM',
-    appId: '1:960634304944:android:fbfb092f36221831b73e75',
-    messagingSenderId: '960634304944',
-    projectId: 'bmspro-pink',
-    storageBucket: 'bmspro-pink.firebasestorage.app',
+    apiKey: 'AIzaSyAgrG7oHTHu_hocI7S7FfwslA7M6sIZ6Gc',
+    appId: '1:807442450614:android:539a7034e62d1d3f60fe17',
+    messagingSenderId: '807442450614',
+    projectId: 'bmspro-black',
+    storageBucket: 'bmspro-black.firebasestorage.app',
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyA9x7ZvVcVHLudKbEoOgcXWCuLItKmWf08',
-    appId: '1:960634304944:ios:638ad6724068b113b73e75',
-    messagingSenderId: '960634304944',
-    projectId: 'bmspro-pink',
-    storageBucket: 'bmspro-pink.firebasestorage.app',
-    iosBundleId: 'com.softdev.bmspro-pink',
+    apiKey: 'AIzaSyCMGI_tsXhwwFBi_p-wBIVG4TG_VYYAlbU',
+    appId: '1:807442450614:ios:f83c91754b091d9a60fe17',
+    messagingSenderId: '807442450614',
+    projectId: 'bmspro-black',
+    storageBucket: 'bmspro-black.firebasestorage.app',
+    iosBundleId: 'bmspro.black',
   );
 
   static const FirebaseOptions macos = FirebaseOptions(
-    apiKey: 'AIzaSyA9x7ZvVcVHLudKbEoOgcXWCuLItKmWf08',
-    appId: '1:960634304944:ios:638ad6724068b113b73e75',
-    messagingSenderId: '960634304944',
-    projectId: 'bmspro-pink',
-    storageBucket: 'bmspro-pink.firebasestorage.app',
-    iosBundleId: 'com.softdev.bmspro-pink',
+    apiKey: 'AIzaSyCMGI_tsXhwwFBi_p-wBIVG4TG_VYYAlbU',
+    appId: '1:807442450614:ios:f83c91754b091d9a60fe17',
+    messagingSenderId: '807442450614',
+    projectId: 'bmspro-black',
+    storageBucket: 'bmspro-black.firebasestorage.app',
+    iosBundleId: 'bmspro.black',
   );
 }
-

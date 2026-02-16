@@ -98,7 +98,7 @@ class _ServicesPageState extends State<ServicesPage> {
   List<BranchModel> _branches = [];
   bool _loading = true;
 
-  bool get _canEdit => _userRole == 'salon_owner';
+  bool get _canEdit => _userRole == 'workshop_owner';
 
   @override
   void initState() {
@@ -123,7 +123,7 @@ class _ServicesPageState extends State<ServicesPage> {
       _userRole = role;
       String ownerUid = user.uid;
       
-      if (role == 'salon_branch_admin') {
+      if (role == 'branch_admin') {
         ownerUid = userDoc.data()?['ownerUid'] ?? user.uid;
       }
 
@@ -174,7 +174,7 @@ class _ServicesPageState extends State<ServicesPage> {
             _staff = snapshot.docs
                 .where((doc) {
                   final role = doc.data()['role'] ?? '';
-                  return role == 'salon_staff' || role == 'salon_branch_admin';
+                  return role == 'staff' || role == 'branch_admin';
                 })
                 .map((doc) {
                   final data = doc.data();

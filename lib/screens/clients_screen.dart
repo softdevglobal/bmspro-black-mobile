@@ -105,7 +105,7 @@ class _ClientsScreenState extends State<ClientsScreen> with TickerProviderStateM
           _userRole = (data['role'] ?? '').toString();
           _branchId = (data['branchId'] ?? '').toString();
           // For branch admin and staff, use ownerUid; for owner, use own uid
-          if (_userRole == 'salon_branch_admin' || _userRole == 'salon_staff') {
+          if (_userRole == 'branch_admin' || _userRole == 'staff') {
             _ownerUid = (data['ownerUid'] ?? user.uid).toString();
           } else {
             _ownerUid = user.uid;
@@ -134,8 +134,8 @@ class _ClientsScreenState extends State<ClientsScreen> with TickerProviderStateM
     }
   }
 
-  bool get _isBranchAdmin => _userRole == 'salon_branch_admin';
-  bool get _isStaff => _userRole == 'salon_staff';
+  bool get _isBranchAdmin => _userRole == 'branch_admin';
+  bool get _isStaff => _userRole == 'staff';
 
   void _listenToClients() {
     if (_ownerUid == null || _ownerUid!.isEmpty) return;
@@ -425,7 +425,7 @@ class _ClientsScreenState extends State<ClientsScreen> with TickerProviderStateM
     }
     _staggerControllers.clear();
     
-    // For salon_staff, only show clients who worked with them
+    // For staff, only show clients who worked with them
     // For branch_admin, show branch clients or my clients based on toggle
     // For others (owner), show all clients
     final currentList = _isStaff
@@ -469,7 +469,7 @@ class _ClientsScreenState extends State<ClientsScreen> with TickerProviderStateM
         ..sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
     }
 
-    // For salon_staff, only show clients who worked with them
+    // For staff, only show clients who worked with them
     if (_isStaff) {
       final merged = mergeClients(_myClients, _savedMyClients);
       debugPrint('Staff client list: ${merged.length} clients');

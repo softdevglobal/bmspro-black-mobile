@@ -140,7 +140,7 @@ class _TimesheetsPageState extends State<TimesheetsPage> {
       final role = userDoc.data()?['role'] ?? '';
       String ownerUid = user.uid;
       
-      if (role == 'salon_branch_admin') {
+      if (role == 'branch_admin') {
         ownerUid = userDoc.data()?['ownerUid'] ?? user.uid;
       }
 
@@ -157,7 +157,7 @@ class _TimesheetsPageState extends State<TimesheetsPage> {
             _staffMembers = snapshot.docs
                 .where((doc) {
                   final role = doc.data()['role'] ?? '';
-                  return role == 'salon_staff' || role == 'salon_branch_admin';
+                  return role == 'staff' || role == 'branch_admin';
                 })
                 .map((doc) => StaffMember.fromFirestore(doc))
                 .toList();
@@ -399,7 +399,7 @@ class _TimesheetsPageState extends State<TimesheetsPage> {
     if (_selectedRole != 'all') {
       filtered = filtered.where((s) {
         if (_selectedRole == 'Branch Admin') {
-          return s.systemRole == 'salon_branch_admin';
+          return s.systemRole == 'branch_admin';
         }
         return s.staffRole == _selectedRole;
       }).toList();
@@ -437,7 +437,7 @@ class _TimesheetsPageState extends State<TimesheetsPage> {
     final roles = <String>{};
     for (final s in _workSummaries) {
       if (s.staffRole != null) roles.add(s.staffRole!);
-      if (s.systemRole == 'salon_branch_admin') roles.add('Branch Admin');
+      if (s.systemRole == 'branch_admin') roles.add('Branch Admin');
     }
     return roles.toList()..sort();
   }
@@ -1006,7 +1006,7 @@ class _TimesheetsPageState extends State<TimesheetsPage> {
                       const SizedBox(height: 4),
                       Row(
                         children: [
-                          if (summary.systemRole == 'salon_branch_admin')
+                          if (summary.systemRole == 'branch_admin')
                             Container(
                               margin: const EdgeInsets.only(right: 6),
                               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
@@ -1021,7 +1021,7 @@ class _TimesheetsPageState extends State<TimesheetsPage> {
                             ),
                           Flexible(
                             child: Text(
-                              summary.systemRole == 'salon_branch_admin'
+                              summary.systemRole == 'branch_admin'
                                   ? 'Branch Admin'
                                   : summary.staffRole ?? 'Staff',
                               style: TextStyle(fontSize: 12, color: Colors.grey.shade600),

@@ -24,7 +24,7 @@ class _ForgotPasswordRequestPageState extends State<ForgotPasswordRequestPage> {
   bool _sending = false;
   String? _error;
 
-  static const String _apiBaseUrl = 'https://pink.bmspros.com.au';
+  static const String _apiBaseUrl = 'https://black.bmspros.com.au';
 
   @override
   void dispose() {
@@ -239,7 +239,7 @@ class _ForgotPasswordCodePageState extends State<_ForgotPasswordCodePage> {
   bool _resending = false;
   String? _error;
 
-  static const String _apiBaseUrl = 'https://pink.bmspros.com.au';
+  static const String _apiBaseUrl = 'https://black.bmspros.com.au';
 
   @override
   void dispose() {
@@ -515,7 +515,7 @@ class _ForgotPasswordResetPageState extends State<_ForgotPasswordResetPage> {
   bool _hasNumber = false;
   bool _hasSpecial = false;
 
-  static const String _apiBaseUrl = 'https://pink.bmspros.com.au';
+  static const String _apiBaseUrl = 'https://black.bmspros.com.au';
 
   @override
   void initState() {

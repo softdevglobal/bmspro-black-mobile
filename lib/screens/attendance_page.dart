@@ -81,18 +81,18 @@ class _AttendancePageState extends State<AttendancePage> {
     setState(() => _loading = true);
 
     try {
-      // Get owner UID - check salon_staff collection first (like admin panel)
+      // Get owner UID - check staff collection first (like admin panel)
       String ownerUid = user.uid;
       
-      // Try salon_staff collection first
+      // Try staff collection first
       final staffDoc = await FirebaseFirestore.instance
-          .collection('salon_staff')
+          .collection('staff')
           .doc(user.uid)
           .get();
       
       if (staffDoc.exists && staffDoc.data()?['ownerUid'] != null) {
         ownerUid = staffDoc.data()!['ownerUid'];
-        debugPrint('Got ownerUid from salon_staff: $ownerUid');
+        debugPrint('Got ownerUid from staff: $ownerUid');
       } else {
         // Fall back to users collection
         final userDoc = await FirebaseFirestore.instance
@@ -101,7 +101,7 @@ class _AttendancePageState extends State<AttendancePage> {
             .get();
         
         final role = userDoc.data()?['role'] ?? '';
-        if (role == 'salon_branch_admin' || role == 'staff') {
+        if (role == 'branch_admin' || role == 'staff') {
           ownerUid = userDoc.data()?['ownerUid'] ?? user.uid;
         }
         debugPrint('Got ownerUid from users: $ownerUid (role: $role)');

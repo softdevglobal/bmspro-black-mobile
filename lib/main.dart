@@ -43,11 +43,11 @@ void main() async {
   // Also performs an immediate location check to handle out-of-radius cases
   await BackgroundLocationService().resumeMonitoringIfNeeded();
   
-  runApp(const BmsproPinkApp());
+  runApp(const BmsproBlackApp());
 }
 
-class BmsproPinkApp extends StatelessWidget {
-  const BmsproPinkApp({super.key});
+class BmsproBlackApp extends StatelessWidget {
+  const BmsproBlackApp({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -66,7 +66,7 @@ class BmsproPinkApp extends StatelessWidget {
     );
 
     return MaterialApp(
-      title: 'BMSPRO PINK',
+      title: 'BMSPRO BLACK',
       debugShowCheckedModeBanner: false,
       navigatorKey: AppInitializer().navigatorKey,
       builder: (context, child) {

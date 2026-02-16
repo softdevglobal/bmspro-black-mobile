@@ -79,8 +79,8 @@ class _LoginScreenState extends State<LoginScreen> {
       // 3. Validate Role
       bool isAuthorized = false;
       
-      // Allowed roles: salon_staff, salon_owner, salon_branch_admin
-      const allowedRoles = ['salon_staff', 'salon_owner', 'salon_branch_admin'];
+      // Allowed roles: staff, workshop_owner, branch_admin
+      const allowedRoles = ['staff', 'workshop_owner', 'branch_admin'];
       
       if (allowedRoles.contains(userRole)) {
          isAuthorized = true;
@@ -100,7 +100,7 @@ class _LoginScreenState extends State<LoginScreen> {
       // Include branch information for branch admins
       String? branchId;
       String? branchName;
-      if (userRole == 'salon_branch_admin') {
+      if (userRole == 'branch_admin') {
         branchId = userData['branchId']?.toString();
         branchName = userData['branchName']?.toString();
       }
@@ -205,7 +205,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                   ),
                                   child: Center(
                                     child: Image.asset(
-                                      'assets/icons/bmspink-icon.jpeg',
+                                      'assets/icons/bmsblack-icon.jpeg',
                                       width: 64,
                                       height: 64,
                                       fit: BoxFit.contain,
@@ -214,7 +214,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 ),
                                 const SizedBox(height: 12),
                                 Text(
-                                  'BMS Pro Pink',
+                                  'BMS Pro Black',
                                   style: Theme.of(context)
                                       .textTheme
                                       .titleLarge

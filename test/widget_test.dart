@@ -7,14 +7,14 @@
 
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:bmspro_pink/main.dart';
+import 'package:bmspro_black/main.dart';
 
 void main() {
   testWidgets('App builds and shows splash title', (WidgetTester tester) async {
     // Build our app and trigger a frame.
-    await tester.pumpWidget(const BmsproPinkApp());
+    await tester.pumpWidget(const BmsproBlackApp());
 
     // Verify SplashScreen title is visible.
-    expect(find.text('BMSPRO PINK'), findsOneWidget);
+    expect(find.text('BMSPRO BLACK'), findsOneWidget);
   });
 }

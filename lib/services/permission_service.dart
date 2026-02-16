@@ -153,7 +153,7 @@ class PermissionService {
         ),
         content: const Text(
           'Location permission is required for staff check-in features.\n\n'
-          'Please go to Settings and enable location permission for BMS Pro Pink.',
+          'Please go to Settings and enable location permission for BMS Pro Black.',
           style: TextStyle(fontSize: 14, height: 1.5),
         ),
         actions: [
@@ -247,7 +247,7 @@ class _LocationDisclosureDialog extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Text(
-                    'BMS Pro Pink needs your location to:',
+                    'BMS Pro Black needs your location to:',
                     style: TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.w600,

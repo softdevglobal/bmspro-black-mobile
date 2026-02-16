@@ -387,7 +387,7 @@ class NotificationService {
     }
   }
 
-  /// Save FCM token to user document (and salon_staff if exists)
+  /// Save FCM token to user document (and staff if exists)
   Future<void> _saveFcmToken(String? token) async {
     if (token == null) {
       print('⚠️ _saveFcmToken: Token is null, skipping save');
@@ -437,20 +437,20 @@ class NotificationService {
       }
     }
     
-    // Also try to save to salon_staff collection (for branch admins and staff)
+    // Also try to save to staff collection (for branch admins and staff)
     try {
-      final staffDoc = await _db.collection('salon_staff').doc(user.uid).get();
+      final staffDoc = await _db.collection('staff').doc(user.uid).get();
       if (staffDoc.exists) {
-        await _db.collection('salon_staff').doc(user.uid).update({
+        await _db.collection('staff').doc(user.uid).update({
           'fcmToken': token,
           'fcmTokenUpdatedAt': FieldValue.serverTimestamp(),
           'platform': Platform.isAndroid ? 'android' : 'ios',
         });
-        print('✅ FCM token also saved to salon_staff collection');
+        print('✅ FCM token also saved to staff collection');
       }
     } catch (e) {
-      // It's okay if this fails - user might not be in salon_staff collection
-      print('⚠️ Could not save FCM token to salon_staff (user may not be staff): $e');
+      // It's okay if this fails - user might not be in staff collection
+      print('⚠️ Could not save FCM token to staff (user may not be staff): $e');
     }
   }
   
@@ -864,7 +864,7 @@ class NotificationService {
     
     // For branch admins: Listen for notifications by branchId
     // This allows branch admins to receive the same notifications as owners for their branch
-    if (_userRole == 'salon_branch_admin' && _userBranchId != null && _userBranchId!.isNotEmpty) {
+    if (_userRole == 'branch_admin' && _userBranchId != null && _userBranchId!.isNotEmpty) {
       print('🏢 Setting up branch-filtered notifications for branch: $_userBranchId');
       bool isInitialBranchIdLoad = true;
       _branchIdNotificationSubscription = _db

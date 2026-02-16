@@ -71,7 +71,7 @@ class _OwnerBookingsPageState extends State<OwnerBookingsPage> {
         _userBranchId = (data['branchId'] ?? '').toString();
         
         // Determine ownerUid based on role
-        if (_userRole == 'salon_owner') {
+        if (_userRole == 'workshop_owner') {
           _ownerUid = user.uid;
         } else if (data['ownerUid'] != null) {
           _ownerUid = data['ownerUid'].toString();
@@ -132,10 +132,10 @@ class _OwnerBookingsPageState extends State<OwnerBookingsPage> {
   void _listenToStaff() {
     if (_ownerUid == null) return;
 
-    final bool isBranchAdmin = _userRole == 'salon_branch_admin' && _userBranchId != null && _userBranchId!.isNotEmpty;
+    final bool isBranchAdmin = _userRole == 'branch_admin' && _userBranchId != null && _userBranchId!.isNotEmpty;
 
     // Listen to users where ownerUid matches
-    // and role is 'salon_staff' or 'salon_branch_admin'
+    // and role is 'staff' or 'branch_admin'
     _staffSub = FirebaseFirestore.instance
         .collection('users')
         .where('ownerUid', isEqualTo: _ownerUid)
@@ -145,7 +145,7 @@ class _OwnerBookingsPageState extends State<OwnerBookingsPage> {
       for (var doc in snap.docs) {
         final data = doc.data();
         final role = (data['role'] ?? '').toString();
-        if (role == 'salon_staff' || role == 'salon_branch_admin') {
+        if (role == 'staff' || role == 'branch_admin') {
           final staffBranchId = (data['branchId'] ?? '').toString();
           final weeklySchedule = data['weeklySchedule'] as Map<String, dynamic>?;
           
@@ -203,7 +203,7 @@ class _OwnerBookingsPageState extends State<OwnerBookingsPage> {
       return;
     }
 
-    final bool isBranchAdmin = _userRole == 'salon_branch_admin' && _userBranchId != null && _userBranchId!.isNotEmpty;
+    final bool isBranchAdmin = _userRole == 'branch_admin' && _userBranchId != null && _userBranchId!.isNotEmpty;
 
     List<_Booking> bookingsData = [];
     List<_Booking> bookingRequestsData = [];
@@ -557,7 +557,7 @@ class _OwnerBookingsPageState extends State<OwnerBookingsPage> {
       final Set<String> notifiedStaffIds = {};
       
       // API base URL for sending push notifications
-      const String apiBaseUrl = 'https://pink.bmspros.com.au';
+      const String apiBaseUrl = 'https://black.bmspros.com.au';
       
       if (services.isEmpty) {
         debugPrint("⚠️ No services provided, cannot send notifications");
@@ -834,7 +834,7 @@ class _OwnerBookingsPageState extends State<OwnerBookingsPage> {
   /// Get API base URL
   String _getApiBaseUrl() {
     // Use the same API base URL as other screens
-    return 'https://pink.bmspros.com.au';
+    return 'https://black.bmspros.com.au';
   }
 
   /// Create notifications for each staff member assigned to a confirmed booking

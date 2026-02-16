@@ -11,7 +11,7 @@ class FcmPushService {
   FcmPushService._internal();
 
   // Admin panel API base URL
-  static const String _apiBaseUrl = 'https://pink.bmspros.com.au';
+  static const String _apiBaseUrl = 'https://black.bmspros.com.au';
   
   final FirebaseFirestore _db = FirebaseFirestore.instance;
 
@@ -165,7 +165,7 @@ class FcmPushService {
     required String creatorName,
     required String creatorRole,
   }) async {
-    final roleLabel = creatorRole == 'salon_branch_admin' ? 'Branch Admin' : 'Staff';
+    final roleLabel = creatorRole == 'branch_admin' ? 'Branch Admin' : 'Staff';
     final title = 'New Booking Created by $roleLabel';
     final message = '$creatorName created a booking for $clientName - $serviceNames at $branchName on $dateStr at $timeStr';
 

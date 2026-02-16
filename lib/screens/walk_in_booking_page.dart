@@ -236,7 +236,7 @@ class _WalkInBookingPageState extends State<WalkInBookingPage> with TickerProvid
             ? Map<String, dynamic>.from(data['weeklySchedule']) 
             : null;
 
-        if (role == 'salon_owner') {
+        if (role == 'workshop_owner') {
           ownerUid = user.uid;
         } else if (data['ownerUid'] != null &&
             data['ownerUid'].toString().isNotEmpty) {
@@ -433,12 +433,12 @@ class _WalkInBookingPageState extends State<WalkInBookingPage> with TickerProvid
       List<Map<String, dynamic>> filteredServices = services;
       
       // For branch admins, only show their own branch
-      if (_userRole == 'salon_branch_admin' && _userBranchId != null) {
+      if (_userRole == 'branch_admin' && _userBranchId != null) {
         filteredBranches = branches.where((b) => b['id'] == _userBranchId).toList();
       }
       
       // For staff members, filter by their branches and services they can provide
-      if (_userRole == 'salon_staff' && _currentUserId != null) {
+      if (_userRole == 'staff' && _currentUserId != null) {
         // Get branches where staff works (from weeklySchedule or branchId)
         Set<String> staffBranchIds = {};
         
@@ -481,7 +481,7 @@ class _WalkInBookingPageState extends State<WalkInBookingPage> with TickerProvid
         _bookings = bookings; // Store bookings for time slot blocking
         
         // For staff, don't show "Any Staff" option - they will be auto-assigned
-        if (_userRole == 'salon_staff') {
+        if (_userRole == 'staff') {
           _staff = staff; // Just the regular staff list for reference
         } else {
           _staff = [
@@ -491,7 +491,7 @@ class _WalkInBookingPageState extends State<WalkInBookingPage> with TickerProvid
         }
 
         // Auto-select branch for branch admins (they only have one option)
-        if (_userRole == 'salon_branch_admin' && _userBranchId != null) {
+        if (_userRole == 'branch_admin' && _userBranchId != null) {
           final br = filteredBranches.firstWhere(
               (b) => b['id'] == _userBranchId,
               orElse: () => {});
@@ -503,7 +503,7 @@ class _WalkInBookingPageState extends State<WalkInBookingPage> with TickerProvid
         }
         
         // Auto-select branch for staff if they only work at one branch
-        if (_userRole == 'salon_staff' && filteredBranches.length == 1) {
+        if (_userRole == 'staff' && filteredBranches.length == 1) {
           _selectedBranchId = filteredBranches.first['id'] as String;
           _selectedBranchLabel = filteredBranches.first['name'] as String;
           _selectedBranchTimezone = (filteredBranches.first['timezone'] ?? 'Australia/Sydney').toString();
@@ -561,8 +561,8 @@ class _WalkInBookingPageState extends State<WalkInBookingPage> with TickerProvid
     String? mainStaffId;
     String mainStaffName = 'Any Available';
     
-    // For salon_staff, they are always assigned to their own bookings
-    if (_userRole == 'salon_staff' && _currentUserId != null) {
+    // For staff, they are always assigned to their own bookings
+    if (_userRole == 'staff' && _currentUserId != null) {
       mainStaffId = _currentUserId;
       mainStaffName = _currentUserName ?? 'Staff';
     } else {
@@ -593,8 +593,8 @@ class _WalkInBookingPageState extends State<WalkInBookingPage> with TickerProvid
       String? staffId;
       String staffName = 'Any Available';
       
-      // For salon_staff, auto-assign themselves to all services
-      if (_userRole == 'salon_staff' && _currentUserId != null) {
+      // For staff, auto-assign themselves to all services
+      if (_userRole == 'staff' && _currentUserId != null) {
         staffId = _currentUserId;
         staffName = _currentUserName ?? 'Staff';
       } else {
@@ -621,11 +621,11 @@ class _WalkInBookingPageState extends State<WalkInBookingPage> with TickerProvid
       };
       
       // Set approval status based on user role and staff assignment
-      if (_userRole == 'salon_staff' && staffId != null) {
+      if (_userRole == 'staff' && staffId != null) {
         // Staff bookings: auto-accept the service and store auth UID
         serviceData['approvalStatus'] = 'accepted';
         serviceData['staffAuthUid'] = staffId; // Store auth UID for calendar matching
-      } else if (_userRole == 'salon_owner' || _userRole == 'salon_branch_admin') {
+      } else if (_userRole == 'workshop_owner' || _userRole == 'branch_admin') {
         // Owner/Admin bookings: set approval status based on staff assignment
         // Services with valid staff get "pending" approval status
         // Services without staff (Any Available) get "needs_assignment" status
@@ -644,11 +644,11 @@ class _WalkInBookingPageState extends State<WalkInBookingPage> with TickerProvid
     
     // Determine booking source based on user role
     String bookingSource = 'AdminBooking';
-    if (_userRole == 'salon_branch_admin') {
+    if (_userRole == 'branch_admin') {
       bookingSource = 'Branch Admin Booking - $_selectedBranchLabel';
-    } else if (_userRole == 'salon_owner') {
+    } else if (_userRole == 'workshop_owner') {
       bookingSource = 'Salon Owner Booking';
-    } else if (_userRole == 'salon_staff') {
+    } else if (_userRole == 'staff') {
       // For staff bookings, show the staff member's name (use mainStaffName as it's more reliable)
       final staffDisplayName = mainStaffName != 'Any Available' && mainStaffName != 'Multiple Staff' 
           ? mainStaffName 
@@ -699,14 +699,14 @@ class _WalkInBookingPageState extends State<WalkInBookingPage> with TickerProvid
       'services': servicesArray,
       'staffId': mainStaffId,
       'staffName': mainStaffName,
-      if (_userRole == 'salon_staff' && mainStaffId != null) 'staffAuthUid': mainStaffId, // Store auth UID for calendar matching
+      if (_userRole == 'staff' && mainStaffId != null) 'staffAuthUid': mainStaffId, // Store auth UID for calendar matching
       // Determine booking status:
-      // - salon_staff: Confirmed (all services auto-accepted)
-      // - salon_owner/salon_branch_admin: AwaitingStaffApproval (skip Pending, go directly to staff approval)
+      // - staff: Confirmed (all services auto-accepted)
+      // - workshop_owner/branch_admin: AwaitingStaffApproval (skip Pending, go directly to staff approval)
       // - Other roles: Pending
-      'status': _userRole == 'salon_staff' 
+      'status': _userRole == 'staff' 
           ? 'Confirmed' 
-          : (_userRole == 'salon_owner' || _userRole == 'salon_branch_admin')
+          : (_userRole == 'workshop_owner' || _userRole == 'branch_admin')
               ? 'AwaitingStaffApproval'
               : 'Pending',
       'time': mainTimeStr, // Local time for backward compatibility
@@ -743,7 +743,7 @@ class _WalkInBookingPageState extends State<WalkInBookingPage> with TickerProvid
       debugPrint('📤 API booking data keys: ${apiBookingData.keys.toList()}');
       
       // Call the API endpoint
-      const apiBaseUrl = 'https://pink.bmspros.com.au';
+      const apiBaseUrl = 'https://black.bmspros.com.au';
       final response = await http.post(
         Uri.parse('$apiBaseUrl/api/bookings'),
         headers: {
@@ -775,7 +775,7 @@ class _WalkInBookingPageState extends State<WalkInBookingPage> with TickerProvid
     }
 
     // Log audit trail for staff and branch admin created bookings
-    if ((_userRole == 'salon_staff' || _userRole == 'salon_branch_admin') && _ownerUid != null && _currentUserId != null) {
+    if ((_userRole == 'staff' || _userRole == 'branch_admin') && _ownerUid != null && _currentUserId != null) {
       try {
         await AuditLogService.logWalkInBookingCreated(
           ownerUid: _ownerUid,
@@ -883,7 +883,7 @@ class _WalkInBookingPageState extends State<WalkInBookingPage> with TickerProvid
   }) async {
     if (_ownerUid == null) return;
     
-    final roleLabel = creatorRole == 'salon_branch_admin' ? 'Branch Admin' : 'Staff';
+    final roleLabel = creatorRole == 'branch_admin' ? 'Branch Admin' : 'Staff';
     
     // Determine notification type and message based on whether staff assignment is needed
     final String notificationType;
@@ -956,9 +956,9 @@ class _WalkInBookingPageState extends State<WalkInBookingPage> with TickerProvid
       'branchId': _selectedBranchId, // Include branchId for branch filtering
       'bookingDate': dateStr,
       'bookingTime': timeStr,
-      'status': _userRole == 'salon_staff' 
+      'status': _userRole == 'staff' 
           ? 'Confirmed' 
-          : (_userRole == 'salon_owner' || _userRole == 'salon_branch_admin')
+          : (_userRole == 'workshop_owner' || _userRole == 'branch_admin')
               ? 'AwaitingStaffApproval'
               : 'Pending',
       'createdAt': FieldValue.serverTimestamp(),
@@ -1022,7 +1022,7 @@ class _WalkInBookingPageState extends State<WalkInBookingPage> with TickerProvid
       final branchAdminQuery = await FirebaseFirestore.instance
           .collection('users')
           .where('ownerUid', isEqualTo: _ownerUid)
-          .where('role', isEqualTo: 'salon_branch_admin')
+          .where('role', isEqualTo: 'branch_admin')
           .where('branchId', isEqualTo: _selectedBranchId)
           .get();
       
@@ -1031,7 +1031,7 @@ class _WalkInBookingPageState extends State<WalkInBookingPage> with TickerProvid
         return;
       }
       
-      final roleLabel = creatorRole == 'salon_branch_admin' ? 'Branch Admin' : 'Staff';
+      final roleLabel = creatorRole == 'branch_admin' ? 'Branch Admin' : 'Staff';
       
       // Determine notification type and message based on whether staff assignment is needed
       final String notificationType;
@@ -1116,9 +1116,9 @@ class _WalkInBookingPageState extends State<WalkInBookingPage> with TickerProvid
           'branchId': _selectedBranchId,
           'bookingDate': dateStr,
           'bookingTime': timeStr,
-          'status': _userRole == 'salon_staff' 
+          'status': _userRole == 'staff' 
               ? 'Confirmed' 
-              : (_userRole == 'salon_owner' || _userRole == 'salon_branch_admin')
+              : (_userRole == 'workshop_owner' || _userRole == 'branch_admin')
                   ? 'AwaitingStaffApproval'
                   : 'Pending',
           'createdAt': FieldValue.serverTimestamp(),
@@ -1196,14 +1196,14 @@ class _WalkInBookingPageState extends State<WalkInBookingPage> with TickerProvid
           Column(
             children: [
               Text(
-                _userRole == 'salon_staff' ? 'Create My Booking' : 'Create Booking',
+                _userRole == 'staff' ? 'Create My Booking' : 'Create Booking',
                 style: const TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
                     color: AppColors.text)),
               const SizedBox(height: 4),
               Text(
-                _userRole == 'salon_staff' 
+                _userRole == 'staff' 
                     ? (_currentStep == 0 
                         ? 'Step 1: Date, Branch & Services'
                         : _currentStep == 1 
@@ -1322,7 +1322,7 @@ class _WalkInBookingPageState extends State<WalkInBookingPage> with TickerProvid
 
     if (_services.isEmpty) {
       return Text(
-        _userRole == 'salon_staff' 
+        _userRole == 'staff' 
             ? 'You are not assigned to any services yet.\nPlease contact your manager.'
             : 'No services found. Please add services in the admin panel.',
         textAlign: TextAlign.center,
@@ -1351,7 +1351,7 @@ class _WalkInBookingPageState extends State<WalkInBookingPage> with TickerProvid
 
     if (visibleServices.isEmpty) {
       return Text(
-        _userRole == 'salon_staff'
+        _userRole == 'staff'
             ? 'No services you can provide at this branch.'
             : 'No services available for this branch.',
         style: const TextStyle(fontSize: 13, color: AppColors.muted),
@@ -1529,8 +1529,8 @@ class _WalkInBookingPageState extends State<WalkInBookingPage> with TickerProvid
 
   // Get staff who can perform a specific service and work at the selected branch
   List<Map<String, dynamic>> _getAvailableStaffForService(String serviceId) {
-    // For salon_staff, they can only book themselves
-    if (_userRole == 'salon_staff' && _currentUserId != null) {
+    // For staff, they can only book themselves
+    if (_userRole == 'staff' && _currentUserId != null) {
       final currentStaff = _staff.firstWhere(
         (s) => s['id'] == _currentUserId,
         orElse: () => {},
@@ -1870,8 +1870,8 @@ class _WalkInBookingPageState extends State<WalkInBookingPage> with TickerProvid
               ),
               const SizedBox(height: 16),
 
-              // Staff selector - hidden for salon_staff (they are auto-assigned)
-              if (_userRole == 'salon_staff') ...[
+              // Staff selector - hidden for staff (they are auto-assigned)
+              if (_userRole == 'staff') ...[
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
@@ -2049,7 +2049,7 @@ class _WalkInBookingPageState extends State<WalkInBookingPage> with TickerProvid
     final selectedStaffId = _serviceStaffSelections[serviceId];
     
     // Get current staff ID for staff-specific blocking
-    final String? staffIdToCheck = _userRole == 'salon_staff' 
+    final String? staffIdToCheck = _userRole == 'staff' 
         ? _currentUserId 
         : (selectedStaffId != null && selectedStaffId != 'any' ? selectedStaffId : null);
     
@@ -2059,7 +2059,7 @@ class _WalkInBookingPageState extends State<WalkInBookingPage> with TickerProvid
     // For "Any Staff" bookings, get all eligible staff IDs for this service+branch.
     // A slot is only blocked when ALL eligible staff are occupied at that time.
     final List<String> eligibleStaffIds = [];
-    if (isAnyStaffSelected && _userRole != 'salon_staff') {
+    if (isAnyStaffSelected && _userRole != 'staff') {
       final eligible = _getAvailableStaffForService(serviceId);
       for (final st in eligible) {
         final id = st['id']?.toString() ?? '';
@@ -2293,7 +2293,7 @@ class _WalkInBookingPageState extends State<WalkInBookingPage> with TickerProvid
       // For staff bookings, always check for conflicts since staff are auto-assigned to all services
       // For other roles, handle "Any Staff" aggregate check or specific staff check
       
-      if (isAnyStaffSelected && _userRole != 'salon_staff') {
+      if (isAnyStaffSelected && _userRole != 'staff') {
         // "Any Staff" mode: check if enough free staff remain after existing bookings
         // (including other "any staff" bookings) AND other services in the current booking session
         if (eligibleStaffIds.isEmpty) return {'blocked': false};
@@ -2344,7 +2344,7 @@ class _WalkInBookingPageState extends State<WalkInBookingPage> with TickerProvid
       }
       
       final bool shouldCheckConflicts;
-      if (_userRole == 'salon_staff' && _currentUserId != null) {
+      if (_userRole == 'staff' && _currentUserId != null) {
         shouldCheckConflicts = true;
       } else {
         if (staffIdToCheck == null || staffIdToCheck.isEmpty) return {'blocked': false};
@@ -2362,7 +2362,7 @@ class _WalkInBookingPageState extends State<WalkInBookingPage> with TickerProvid
         
         // For staff bookings, check all other services since staff is assigned to all
         // For other roles, only check if the other service has the same staff assigned
-        if (_userRole == 'salon_staff') {
+        if (_userRole == 'staff') {
           // Staff is assigned to all services, so always check
         } else {
           final otherStaffId = _serviceStaffSelections[otherServiceId];
@@ -2838,8 +2838,8 @@ class _WalkInBookingPageState extends State<WalkInBookingPage> with TickerProvid
   Widget _buildStepContent() {
     switch (_currentStep) {
       case 0:
-        // For salon_staff, show date first because their branch depends on the day
-        if (_userRole == 'salon_staff') {
+        // For staff, show date first because their branch depends on the day
+        if (_userRole == 'staff') {
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -2956,8 +2956,8 @@ class _WalkInBookingPageState extends State<WalkInBookingPage> with TickerProvid
           ],
         );
       case 1:
-        // For salon_staff, date was already selected in Step 0
-        if (_userRole == 'salon_staff') {
+        // For staff, date was already selected in Step 0
+        if (_userRole == 'staff') {
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -3066,7 +3066,7 @@ class _WalkInBookingPageState extends State<WalkInBookingPage> with TickerProvid
     }
   }
 
-  /// For salon_staff: Determine and display the branch they work at on the selected date
+  /// For staff: Determine and display the branch they work at on the selected date
   Widget _buildStaffBranchForDate() {
     if (_selectedDate == null) {
       return const SizedBox.shrink();
