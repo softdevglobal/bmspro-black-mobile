@@ -385,6 +385,7 @@ class _WalkInBookingPageState extends State<WalkInBookingPage> with TickerProvid
               ? List<String>.from(
                   (data['staffIds'] as List).map((e) => e.toString()))
               : <String>[],
+          'checklist': (data['checklist'] is List) ? data['checklist'] : [],
         };
       }).toList();
 
@@ -767,6 +768,39 @@ class _WalkInBookingPageState extends State<WalkInBookingPage> with TickerProvid
       }
     } catch (apiError) {
       debugPrint('⚠️ API call failed, falling back to direct Firestore write: $apiError');
+      
+      // Build tasks from service checklists for the fallback
+      final List<Map<String, dynamic>> allTasks = [];
+      for (final service in selectedServices) {
+        final checklist = service['checklist'];
+        if (checklist is List && checklist.isNotEmpty) {
+          for (int i = 0; i < checklist.length; i++) {
+            final item = checklist[i];
+            allTasks.add({
+              'id': '${service['id']}_task_$i',
+              'serviceId': service['id']?.toString() ?? '',
+              'serviceName': service['name']?.toString() ?? 'Service',
+              'name': (item is Map ? item['name'] ?? item['title'] ?? 'Task ${i + 1}' : 'Task ${i + 1}').toString(),
+              'description': (item is Map ? item['description'] ?? '' : '').toString(),
+              'done': false,
+              'imageUrl': '',
+              'staffNote': '',
+              'completedAt': null,
+              'completedByStaffUid': null,
+              'completedByStaffName': null,
+            });
+          }
+        }
+      }
+      bookingData['tasks'] = allTasks;
+      bookingData['finalSubmission'] = {
+        'description': '',
+        'imageUrl': '',
+        'submittedAt': null,
+        'submittedByStaffUid': null,
+        'submittedByStaffName': null,
+      };
+      
       // Fallback to direct Firestore write if API fails
       final bookingRef = await FirebaseFirestore.instance
           .collection('bookings')

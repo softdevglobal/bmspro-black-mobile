@@ -1,8 +1,11 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'task_details_page.dart';
@@ -51,6 +54,13 @@ class _AppointmentDetailsPageState extends State<AppointmentDetailsPage> with Ti
   String? _currentServiceId;
   bool _isMyAppointment = false; // Track if appointment belongs to current user
 
+  // Task management state
+  List<Map<String, dynamic>> _tasks = [];
+  int _taskProgress = 0;
+  Map<String, dynamic>? _finalSubmission;
+  bool _isUpdatingTask = false;
+  final ImagePicker _imagePicker = ImagePicker();
+
   @override
   void initState() {
     super.initState();
@@ -58,8 +68,8 @@ class _AppointmentDetailsPageState extends State<AppointmentDetailsPage> with Ti
       vsync: this,
       duration: const Duration(milliseconds: 800),
     );
-    // Staggered animations for sections (removed checklist and notes, so 4 sections now)
-    for (int i = 0; i < 4; i++) {
+    // Staggered animations for sections (5 sections: customer, info, tasks, points, actions)
+    for (int i = 0; i < 5; i++) {
       final start = i * 0.1;
       final end = start + 0.4;
       _fadeAnimations.add(
@@ -137,11 +147,25 @@ class _AppointmentDetailsPageState extends State<AppointmentDetailsPage> with Ti
         isCompleted = status == 'completed';
       }
       
+      // Parse tasks from booking data
+      final rawTasks = data['tasks'];
+      List<Map<String, dynamic>> parsedTasks = [];
+      if (rawTasks is List) {
+        parsedTasks = rawTasks.map<Map<String, dynamic>>((t) => Map<String, dynamic>.from(t as Map)).toList();
+      }
+      final taskProg = (data['taskProgress'] as num?)?.toInt() ?? 0;
+      final finalSub = data['finalSubmission'] != null
+          ? Map<String, dynamic>.from(data['finalSubmission'] as Map)
+          : null;
+
       // Update booking data and completion status
       setState(() {
         _bookingData = data;
         _isServiceCompleted = isCompleted;
         _isMyAppointment = isMyAppointment;
+        _tasks = parsedTasks;
+        _taskProgress = taskProg;
+        _finalSubmission = finalSub;
       });
     });
   }
@@ -454,9 +478,13 @@ class _AppointmentDetailsPageState extends State<AppointmentDetailsPage> with Ti
                     const SizedBox(height: 24),
                     _buildFadeWrapper(1, _buildAppointmentInfo()),
                     const SizedBox(height: 24),
-                    _buildFadeWrapper(2, _buildPointsRewards()),
+                    if (_tasks.isNotEmpty) ...[
+                      _buildFadeWrapper(2, _buildTaskSection()),
+                      const SizedBox(height: 24),
+                    ],
+                    _buildFadeWrapper(3, _buildPointsRewards()),
                     const SizedBox(height: 24),
-                    _buildFadeWrapper(3, _buildActionButtons()),
+                    _buildFadeWrapper(4, _buildActionButtons()),
                     const SizedBox(height: 40), // Bottom padding
                   ],
                 ),
@@ -780,6 +808,1020 @@ class _AppointmentDetailsPageState extends State<AppointmentDetailsPage> with Ti
         ],
       ),
     );
+  }
+
+  // ─── Task Management Section ─────────────────────────────────────────────
+  Widget _buildTaskSection() {
+    final completedCount = _tasks.where((t) => t['done'] == true).length;
+    final totalCount = _tasks.length;
+    final progress = totalCount > 0 ? (completedCount / totalCount) : 0.0;
+    final allDone = completedCount == totalCount && totalCount > 0;
+
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: _cardDecoration(),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header
+          Row(
+            children: [
+              Container(
+                width: 40, height: 40,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: allDone
+                        ? [Colors.green.shade400, Colors.green.shade600]
+                        : [Colors.amber.shade400, Colors.amber.shade600],
+                  ),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Center(
+                  child: Icon(
+                    allDone ? FontAwesomeIcons.clipboardCheck : FontAwesomeIcons.clipboardList,
+                    color: Colors.white, size: 16,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text('Task Progress', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: AppColors.text)),
+                    const SizedBox(height: 2),
+                    Text('$completedCount of $totalCount tasks completed', style: const TextStyle(fontSize: 12, color: AppColors.muted)),
+                  ],
+                ),
+              ),
+              // Progress percentage
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: allDone ? Colors.green.shade50 : Colors.amber.shade50,
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: allDone ? Colors.green.shade200 : Colors.amber.shade200),
+                ),
+                child: Text(
+                  '${(progress * 100).round()}%',
+                  style: TextStyle(
+                    fontSize: 14, fontWeight: FontWeight.bold,
+                    color: allDone ? Colors.green.shade700 : Colors.amber.shade700,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+
+          // Progress bar
+          ClipRRect(
+            borderRadius: BorderRadius.circular(6),
+            child: LinearProgressIndicator(
+              value: progress,
+              minHeight: 8,
+              backgroundColor: Colors.grey.shade200,
+              valueColor: AlwaysStoppedAnimation<Color>(
+                allDone ? Colors.green.shade500 : Colors.amber.shade500,
+              ),
+            ),
+          ),
+          const SizedBox(height: 20),
+
+          // Task list
+          ..._tasks.asMap().entries.map((entry) {
+            final idx = entry.key;
+            final task = entry.value;
+            final isDone = task['done'] == true;
+            return _buildTaskItem(task, idx, isDone);
+          }),
+
+          // Final submission section
+          if (allDone && _finalSubmission == null && _isMyAppointment) ...[
+            const SizedBox(height: 16),
+            _buildFinalSubmissionForm(),
+          ],
+          if (_finalSubmission != null) ...[
+            const SizedBox(height: 16),
+            _buildFinalSubmissionView(),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTaskItem(Map<String, dynamic> task, int index, bool isDone) {
+    final taskName = task['name']?.toString() ?? 'Task ${index + 1}';
+    final taskDesc = task['description']?.toString() ?? '';
+    final staffNote = task['staffNote']?.toString() ?? '';
+    final imageUrl = task['imageUrl']?.toString() ?? '';
+    final serviceName = task['serviceName']?.toString() ?? '';
+    final completedBy = task['completedByStaffName']?.toString() ?? '';
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: isDone ? Colors.green.shade50.withOpacity(0.5) : Colors.grey.shade50,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: isDone ? Colors.green.shade200 : Colors.grey.shade200,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Checkbox / number
+              Container(
+                width: 28, height: 28,
+                decoration: BoxDecoration(
+                  color: isDone ? Colors.green.shade500 : Colors.grey.shade300,
+                  shape: BoxShape.circle,
+                ),
+                child: Center(
+                  child: isDone
+                      ? const Icon(Icons.check, color: Colors.white, size: 16)
+                      : Text(
+                          '${index + 1}',
+                          style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
+                        ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      taskName,
+                      style: TextStyle(
+                        fontSize: 15, fontWeight: FontWeight.w600,
+                        color: isDone ? Colors.green.shade700 : AppColors.text,
+                        decoration: isDone ? TextDecoration.lineThrough : null,
+                      ),
+                    ),
+                    if (taskDesc.isNotEmpty) ...[
+                      const SizedBox(height: 4),
+                      Text(taskDesc, style: TextStyle(fontSize: 12, color: Colors.grey.shade600)),
+                    ],
+                    if (serviceName.isNotEmpty) ...[
+                      const SizedBox(height: 4),
+                      Row(
+                        children: [
+                          Icon(FontAwesomeIcons.wandMagicSparkles, size: 10, color: Colors.purple.shade400),
+                          const SizedBox(width: 4),
+                          Text(serviceName, style: TextStyle(fontSize: 11, color: Colors.purple.shade600)),
+                        ],
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              if (isDone)
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: Colors.green.shade100,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text('Done', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.green.shade700)),
+                ),
+            ],
+          ),
+
+          // Staff note
+          if (staffNote.isNotEmpty) ...[
+            const SizedBox(height: 10),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: Colors.blue.shade50,
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: Colors.blue.shade100),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(FontAwesomeIcons.commentDots, size: 10, color: Colors.blue.shade600),
+                      const SizedBox(width: 6),
+                      Text('Staff Note', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.blue.shade700)),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Text(staffNote, style: TextStyle(fontSize: 12, color: Colors.blue.shade800)),
+                  if (completedBy.isNotEmpty) ...[
+                    const SizedBox(height: 4),
+                    Text('— $completedBy', style: TextStyle(fontSize: 10, color: Colors.blue.shade500)),
+                  ],
+                ],
+              ),
+            ),
+          ],
+
+          // Task image
+          if (imageUrl.isNotEmpty) ...[
+            const SizedBox(height: 10),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: Image.network(
+                imageUrl,
+                width: double.infinity,
+                height: 180,
+                fit: BoxFit.cover,
+                errorBuilder: (_, __, ___) => Container(
+                  height: 60,
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade200,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Center(child: Icon(Icons.broken_image, color: Colors.grey)),
+                ),
+              ),
+            ),
+          ],
+
+          // Action button for assigned staff (mark as done)
+          if (!isDone && _isMyAppointment) ...[
+            const SizedBox(height: 12),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: _isUpdatingTask ? null : () => _showTaskCompletionDialog(task),
+                icon: _isUpdatingTask
+                    ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                    : const Icon(FontAwesomeIcons.check, size: 14),
+                label: const Text('Mark as Done', style: TextStyle(fontWeight: FontWeight.w600)),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Future<void> _showTaskCompletionDialog(Map<String, dynamic> task) async {
+    final noteController = TextEditingController();
+    File? selectedImage;
+    String? uploadedImageUrl;
+    bool isUploading = false;
+    bool showImageError = false;
+
+    await showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (ctx, setSheetState) {
+            return Container(
+              padding: EdgeInsets.only(
+                bottom: MediaQuery.of(ctx).viewInsets.bottom,
+              ),
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Handle
+                    Center(
+                      child: Container(
+                        width: 40, height: 4,
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade300,
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    Text(
+                      'Complete: ${task['name'] ?? 'Task'}',
+                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.text),
+                    ),
+                    if ((task['description'] ?? '').toString().isNotEmpty) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        task['description'].toString(),
+                        style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
+                      ),
+                    ],
+                    const SizedBox(height: 20),
+
+                    // Photo capture (REQUIRED)
+                    Row(
+                      children: [
+                        const Text('Photo ', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.text)),
+                        Text('(required)', style: TextStyle(fontSize: 12, color: showImageError ? Colors.red : Colors.orange.shade700, fontWeight: showImageError ? FontWeight.bold : FontWeight.normal)),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    GestureDetector(
+                      onTap: isUploading ? null : () async {
+                        final source = await showDialog<ImageSource>(
+                          context: ctx,
+                          builder: (c) => AlertDialog(
+                            title: const Text('Select Image Source'),
+                            content: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                ListTile(
+                                  leading: const Icon(Icons.camera_alt),
+                                  title: const Text('Camera'),
+                                  onTap: () => Navigator.pop(c, ImageSource.camera),
+                                ),
+                                ListTile(
+                                  leading: const Icon(Icons.photo_library),
+                                  title: const Text('Gallery'),
+                                  onTap: () => Navigator.pop(c, ImageSource.gallery),
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                        if (source == null) return;
+                        final picked = await _imagePicker.pickImage(source: source, imageQuality: 70, maxWidth: 1200);
+                        if (picked != null) {
+                          setSheetState(() {
+                            selectedImage = File(picked.path);
+                            showImageError = false;
+                          });
+                        }
+                      },
+                      child: Container(
+                        width: double.infinity,
+                        height: selectedImage != null ? 200 : 120,
+                        decoration: BoxDecoration(
+                          color: selectedImage != null ? Colors.grey.shade100 : (showImageError ? Colors.red.shade50 : Colors.grey.shade100),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: showImageError ? Colors.red.shade400 : (selectedImage != null ? Colors.green.shade300 : Colors.grey.shade300),
+                            width: showImageError ? 2 : 1,
+                          ),
+                        ),
+                        child: selectedImage != null
+                            ? Stack(
+                                children: [
+                                  ClipRRect(
+                                    borderRadius: BorderRadius.circular(15),
+                                    child: Image.file(selectedImage!, width: double.infinity, height: 200, fit: BoxFit.cover),
+                                  ),
+                                  Positioned(
+                                    top: 8, right: 8,
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                      decoration: BoxDecoration(
+                                        color: Colors.green.shade600,
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      child: const Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Icon(Icons.check_circle, color: Colors.white, size: 12),
+                                          SizedBox(width: 4),
+                                          Text('Photo selected', style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                  Positioned(
+                                    bottom: 8, right: 8,
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                      decoration: BoxDecoration(
+                                        color: Colors.black54,
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      child: const Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Icon(FontAwesomeIcons.camera, color: Colors.white, size: 10),
+                                          SizedBox(width: 4),
+                                          Text('Tap to change', style: TextStyle(color: Colors.white, fontSize: 10)),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              )
+                            : Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(FontAwesomeIcons.camera, color: showImageError ? Colors.red.shade400 : Colors.grey.shade400, size: 28),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    showImageError ? 'Photo is required!' : 'Tap to capture photo',
+                                    style: TextStyle(
+                                      color: showImageError ? Colors.red.shade600 : Colors.grey.shade500,
+                                      fontSize: 13,
+                                      fontWeight: showImageError ? FontWeight.bold : FontWeight.normal,
+                                    ),
+                                  ),
+                                  if (showImageError) ...[
+                                    const SizedBox(height: 4),
+                                    Text('Please take a photo of the completed work', style: TextStyle(color: Colors.red.shade400, fontSize: 11)),
+                                  ],
+                                ],
+                              ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Description
+                    const Text('Description', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.text)),
+                    const SizedBox(height: 8),
+                    TextField(
+                      controller: noteController,
+                      maxLines: 3,
+                      decoration: InputDecoration(
+                        hintText: 'Describe the work done...',
+                        hintStyle: TextStyle(color: Colors.grey.shade400),
+                        filled: true,
+                        fillColor: Colors.grey.shade50,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: Colors.grey.shade300),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: Colors.grey.shade300),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: AppColors.primary, width: 2),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+
+                    // Submit button
+                    SizedBox(
+                      width: double.infinity,
+                      height: 52,
+                      child: ElevatedButton.icon(
+                        onPressed: isUploading ? null : () async {
+                          // Validate: photo is required
+                          if (selectedImage == null) {
+                            setSheetState(() {
+                              showImageError = true;
+                            });
+                            return;
+                          }
+
+                          // Upload image
+                          setSheetState(() {
+                            isUploading = true;
+                          });
+                          uploadedImageUrl = await _uploadTaskImage(selectedImage!);
+                          if (uploadedImageUrl == null || uploadedImageUrl!.isEmpty) {
+                            setSheetState(() {
+                              isUploading = false;
+                            });
+                            if (mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: const Text('Failed to upload photo. Please try again.'),
+                                  backgroundColor: Colors.red.shade600,
+                                  behavior: SnackBarBehavior.floating,
+                                ),
+                              );
+                            }
+                            return;
+                          }
+                          Navigator.pop(ctx, {
+                            'note': noteController.text.trim(),
+                            'imageUrl': uploadedImageUrl ?? '',
+                          });
+                        },
+                        icon: isUploading
+                            ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                            : const Icon(FontAwesomeIcons.check, size: 16),
+                        label: Text(
+                          isUploading ? 'Uploading Photo...' : 'Complete Task',
+                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: isUploading ? Colors.grey.shade400 : Colors.green.shade600,
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                          elevation: 2,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    ).then((result) {
+      if (result != null && result is Map) {
+        _completeTask(task, result['note'] ?? '', result['imageUrl'] ?? '');
+      }
+    });
+  }
+
+  Future<String?> _uploadTaskImage(File imageFile) async {
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) return null;
+      final bookingId = widget.appointmentData?['id'] as String? ?? 'unknown';
+      final fileName = 'task_${DateTime.now().millisecondsSinceEpoch}.jpg';
+      final ref = FirebaseStorage.instance
+          .ref()
+          .child('bookings/$bookingId/tasks/$fileName');
+      await ref.putFile(imageFile);
+      return await ref.getDownloadURL();
+    } catch (e) {
+      debugPrint('Error uploading task image: $e');
+      return null;
+    }
+  }
+
+  Future<void> _completeTask(Map<String, dynamic> task, String staffNote, String imageUrl) async {
+    final bookingId = widget.appointmentData?['id'] as String?;
+    if (bookingId == null) return;
+
+    setState(() => _isUpdatingTask = true);
+
+    try {
+      final taskId = task['id']?.toString() ?? '';
+      
+      // Update the task directly in Firestore
+      final bookingRef = FirebaseFirestore.instance.collection('bookings').doc(bookingId);
+      final bookingSnap = await bookingRef.get();
+      if (!bookingSnap.exists) return;
+
+      final data = bookingSnap.data()!;
+      final tasks = List<Map<String, dynamic>>.from(
+        (data['tasks'] as List? ?? []).map((t) => Map<String, dynamic>.from(t as Map)),
+      );
+
+      final user = FirebaseAuth.instance.currentUser;
+      final taskIndex = tasks.indexWhere((t) => t['id'] == taskId);
+      if (taskIndex == -1) return;
+
+      tasks[taskIndex] = {
+        ...tasks[taskIndex],
+        'done': true,
+        'imageUrl': imageUrl.isNotEmpty ? imageUrl : (tasks[taskIndex]['imageUrl'] ?? ''),
+        'staffNote': staffNote.isNotEmpty ? staffNote : (tasks[taskIndex]['staffNote'] ?? ''),
+        'completedAt': DateTime.now().toIso8601String(),
+        'completedByStaffUid': user?.uid ?? '',
+        'completedByStaffName': user?.displayName ?? 'Staff',
+      };
+
+      final total = tasks.length;
+      final completed = tasks.where((t) => t['done'] == true).length;
+      final taskProgress = total > 0 ? ((completed / total) * 100).round() : 0;
+
+      await bookingRef.update({
+        'tasks': tasks,
+        'taskProgress': taskProgress,
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Task "${task['name']}" completed!'),
+            backgroundColor: Colors.green.shade600,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          ),
+        );
+      }
+    } catch (e) {
+      debugPrint('Error completing task: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to complete task: $e'),
+            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isUpdatingTask = false);
+    }
+  }
+
+  Widget _buildFinalSubmissionForm() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.indigo.shade50.withOpacity(0.5),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.indigo.shade200),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(FontAwesomeIcons.flagCheckered, size: 16, color: Colors.indigo.shade600),
+              const SizedBox(width: 8),
+              Text('Final Submission', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.indigo.shade700)),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'All tasks completed! Submit your final report.',
+            style: TextStyle(fontSize: 12, color: Colors.indigo.shade500),
+          ),
+          const SizedBox(height: 12),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed: _isUpdatingTask ? null : _showFinalSubmissionDialog,
+              icon: const Icon(FontAwesomeIcons.paperPlane, size: 14),
+              label: const Text('Submit Final Report', style: TextStyle(fontWeight: FontWeight.bold)),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.indigo.shade600,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFinalSubmissionView() {
+    final desc = _finalSubmission?['description']?.toString() ?? '';
+    final imgUrl = _finalSubmission?['imageUrl']?.toString() ?? '';
+    final submittedBy = _finalSubmission?['submittedByStaffName']?.toString() ?? '';
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.indigo.shade50.withOpacity(0.5),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.indigo.shade200),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 28, height: 28,
+                decoration: BoxDecoration(
+                  color: Colors.indigo.shade500,
+                  shape: BoxShape.circle,
+                ),
+                child: const Center(child: Icon(FontAwesomeIcons.flagCheckered, size: 12, color: Colors.white)),
+              ),
+              const SizedBox(width: 8),
+              Text('Final Submission', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.indigo.shade700)),
+              const Spacer(),
+              if (submittedBy.isNotEmpty)
+                Text('by $submittedBy', style: TextStyle(fontSize: 10, color: Colors.indigo.shade400)),
+            ],
+          ),
+          if (desc.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            Text(desc, style: TextStyle(fontSize: 13, color: Colors.indigo.shade800, height: 1.5)),
+          ],
+          if (imgUrl.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: Image.network(
+                imgUrl,
+                width: double.infinity,
+                height: 200,
+                fit: BoxFit.cover,
+                errorBuilder: (_, __, ___) => Container(
+                  height: 60,
+                  color: Colors.grey.shade200,
+                  child: const Center(child: Icon(Icons.broken_image, color: Colors.grey)),
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Future<void> _showFinalSubmissionDialog() async {
+    final descController = TextEditingController();
+    File? selectedImage;
+    String? uploadedImageUrl;
+    bool isUploading = false;
+    bool showImageError = false;
+    bool showDescError = false;
+
+    await showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (ctx, setSheetState) {
+            return Container(
+              padding: EdgeInsets.only(bottom: MediaQuery.of(ctx).viewInsets.bottom),
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Center(
+                      child: Container(
+                        width: 40, height: 4,
+                        decoration: BoxDecoration(color: Colors.grey.shade300, borderRadius: BorderRadius.circular(2)),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    const Text('Final Submission', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.text)),
+                    const SizedBox(height: 4),
+                    Text('Provide an overall summary and final photo.', style: TextStyle(fontSize: 12, color: Colors.grey.shade500)),
+                    const SizedBox(height: 20),
+
+                    // Final photo (REQUIRED)
+                    Row(
+                      children: [
+                        const Text('Final Photo ', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.text)),
+                        Text('(required)', style: TextStyle(fontSize: 12, color: showImageError ? Colors.red : Colors.orange.shade700, fontWeight: showImageError ? FontWeight.bold : FontWeight.normal)),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    GestureDetector(
+                      onTap: isUploading ? null : () async {
+                        final source = await showDialog<ImageSource>(
+                          context: ctx,
+                          builder: (c) => AlertDialog(
+                            title: const Text('Select Image Source'),
+                            content: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                ListTile(
+                                  leading: const Icon(Icons.camera_alt),
+                                  title: const Text('Camera'),
+                                  onTap: () => Navigator.pop(c, ImageSource.camera),
+                                ),
+                                ListTile(
+                                  leading: const Icon(Icons.photo_library),
+                                  title: const Text('Gallery'),
+                                  onTap: () => Navigator.pop(c, ImageSource.gallery),
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                        if (source == null) return;
+                        final picked = await _imagePicker.pickImage(source: source, imageQuality: 70, maxWidth: 1200);
+                        if (picked != null) {
+                          setSheetState(() {
+                            selectedImage = File(picked.path);
+                            showImageError = false;
+                          });
+                        }
+                      },
+                      child: Container(
+                        width: double.infinity,
+                        height: selectedImage != null ? 200 : 120,
+                        decoration: BoxDecoration(
+                          color: selectedImage != null ? Colors.grey.shade100 : (showImageError ? Colors.red.shade50 : Colors.grey.shade100),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: showImageError ? Colors.red.shade400 : (selectedImage != null ? Colors.indigo.shade300 : Colors.grey.shade300),
+                            width: showImageError ? 2 : 1,
+                          ),
+                        ),
+                        child: selectedImage != null
+                            ? Stack(
+                                children: [
+                                  ClipRRect(
+                                    borderRadius: BorderRadius.circular(15),
+                                    child: Image.file(selectedImage!, width: double.infinity, height: 200, fit: BoxFit.cover),
+                                  ),
+                                  Positioned(
+                                    top: 8, right: 8,
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                      decoration: BoxDecoration(
+                                        color: Colors.indigo.shade600,
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      child: const Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Icon(Icons.check_circle, color: Colors.white, size: 12),
+                                          SizedBox(width: 4),
+                                          Text('Photo selected', style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                  Positioned(
+                                    bottom: 8, right: 8,
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                      decoration: BoxDecoration(color: Colors.black54, borderRadius: BorderRadius.circular(8)),
+                                      child: const Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Icon(FontAwesomeIcons.camera, color: Colors.white, size: 10),
+                                          SizedBox(width: 4),
+                                          Text('Tap to change', style: TextStyle(color: Colors.white, fontSize: 10)),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              )
+                            : Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(FontAwesomeIcons.camera, color: showImageError ? Colors.red.shade400 : Colors.grey.shade400, size: 28),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    showImageError ? 'Final photo is required!' : 'Tap to capture final photo',
+                                    style: TextStyle(
+                                      color: showImageError ? Colors.red.shade600 : Colors.grey.shade500,
+                                      fontSize: 13,
+                                      fontWeight: showImageError ? FontWeight.bold : FontWeight.normal,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Description (REQUIRED)
+                    Row(
+                      children: [
+                        const Text('Description ', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.text)),
+                        Text('(required)', style: TextStyle(fontSize: 12, color: showDescError ? Colors.red : Colors.orange.shade700, fontWeight: showDescError ? FontWeight.bold : FontWeight.normal)),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    TextField(
+                      controller: descController,
+                      maxLines: 4,
+                      onChanged: (_) {
+                        if (showDescError) setSheetState(() => showDescError = false);
+                      },
+                      decoration: InputDecoration(
+                        hintText: 'Overall description of work completed...',
+                        hintStyle: TextStyle(color: Colors.grey.shade400),
+                        filled: true,
+                        fillColor: showDescError ? Colors.red.shade50 : Colors.grey.shade50,
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: showDescError ? Colors.red.shade400 : Colors.grey.shade300)),
+                        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: showDescError ? Colors.red.shade400 : Colors.grey.shade300, width: showDescError ? 2 : 1)),
+                        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: AppColors.primary, width: 2)),
+                        errorText: showDescError ? 'Please provide a description' : null,
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+
+                    SizedBox(
+                      width: double.infinity,
+                      height: 52,
+                      child: ElevatedButton.icon(
+                        onPressed: isUploading ? null : () async {
+                          bool hasError = false;
+                          if (selectedImage == null) {
+                            showImageError = true;
+                            hasError = true;
+                          }
+                          if (descController.text.trim().isEmpty) {
+                            showDescError = true;
+                            hasError = true;
+                          }
+                          if (hasError) {
+                            setSheetState(() {});
+                            return;
+                          }
+
+                          setSheetState(() {
+                            isUploading = true;
+                          });
+                          uploadedImageUrl = await _uploadTaskImage(selectedImage!);
+                          if (uploadedImageUrl == null || uploadedImageUrl!.isEmpty) {
+                            setSheetState(() {
+                              isUploading = false;
+                            });
+                            if (mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: const Text('Failed to upload photo. Please try again.'),
+                                  backgroundColor: Colors.red.shade600,
+                                  behavior: SnackBarBehavior.floating,
+                                ),
+                              );
+                            }
+                            return;
+                          }
+                          Navigator.pop(ctx, {
+                            'description': descController.text.trim(),
+                            'imageUrl': uploadedImageUrl ?? '',
+                          });
+                        },
+                        icon: isUploading
+                            ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                            : const Icon(FontAwesomeIcons.paperPlane, size: 14),
+                        label: Text(
+                          isUploading ? 'Uploading...' : 'Submit Report',
+                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: isUploading ? Colors.grey.shade400 : Colors.indigo.shade600,
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                          elevation: 2,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    ).then((result) async {
+      if (result != null && result is Map) {
+        await _submitFinalReport(result['description'] ?? '', result['imageUrl'] ?? '');
+      }
+    });
+  }
+
+  Future<void> _submitFinalReport(String description, String imageUrl) async {
+    final bookingId = widget.appointmentData?['id'] as String?;
+    if (bookingId == null) return;
+
+    setState(() => _isUpdatingTask = true);
+
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      final finalSubmission = {
+        'description': description,
+        'imageUrl': imageUrl,
+        'submittedAt': DateTime.now().toIso8601String(),
+        'submittedByStaffUid': user?.uid ?? '',
+        'submittedByStaffName': user?.displayName ?? 'Staff',
+      };
+
+      await FirebaseFirestore.instance.collection('bookings').doc(bookingId).update({
+        'finalSubmission': finalSubmission,
+        'taskProgress': 100,
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Final report submitted successfully!'),
+            backgroundColor: Colors.indigo.shade600,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          ),
+        );
+      }
+    } catch (e) {
+      debugPrint('Error submitting final report: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to submit report: $e'),
+            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isUpdatingTask = false);
+    }
   }
 
   Widget _buildActionButtons() {

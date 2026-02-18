@@ -3077,6 +3077,10 @@ class _Booking {
   final double priceValue;
   final IconData icon;
   final List<Map<String, dynamic>> items;
+  // Task management
+  final List<Map<String, dynamic>> tasks;
+  final int taskProgress;
+  final Map<String, dynamic>? finalSubmission;
 
   const _Booking({
     required this.id,
@@ -3098,6 +3102,9 @@ class _Booking {
     required this.priceValue,
     required this.icon,
     required this.items,
+    this.tasks = const [],
+    this.taskProgress = 0,
+    this.finalSubmission,
   });
 
   /// Normalize booking status to lowercase without underscores
@@ -3218,6 +3225,19 @@ class _Booking {
     final mergeKey =
         doc.id.isNotEmpty ? doc.id : '$client|$date|$time|$serviceName';
 
+    // Parse tasks
+    final rawTasks = data['tasks'];
+    final List<Map<String, dynamic>> parsedTasks = [];
+    if (rawTasks is List) {
+      for (final t in rawTasks) {
+        if (t is Map) parsedTasks.add(Map<String, dynamic>.from(t));
+      }
+    }
+    final taskProg = (data['taskProgress'] as num?)?.toInt() ?? 0;
+    final finalSub = data['finalSubmission'] != null
+        ? Map<String, dynamic>.from(data['finalSubmission'] as Map)
+        : null;
+
     return _Booking(
       id: doc.id,
       collection: collection,
@@ -3238,6 +3258,9 @@ class _Booking {
       priceValue: priceValue,
       icon: icon,
       items: items,
+      tasks: parsedTasks,
+      taskProgress: taskProg,
+      finalSubmission: finalSub,
     );
   }
 }
@@ -3709,6 +3732,11 @@ class _BookingCard extends StatelessWidget {
             const SizedBox(height: 12),
             _buildStaffRejectionSection(booking),
           ],
+          // Task progress bar (visible to admins)
+          if (booking.tasks.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            _buildTaskProgressBar(booking),
+          ],
           const SizedBox(height: 10),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -3832,6 +3860,79 @@ class _BookingCard extends StatelessWidget {
               ),
             ],
           ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTaskProgressBar(_Booking booking) {
+    final completed = booking.tasks.where((t) => t['done'] == true).length;
+    final total = booking.tasks.length;
+    final progress = total > 0 ? (completed / total) : 0.0;
+    final allDone = completed == total;
+
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: allDone ? const Color(0xFFF0FDF4) : const Color(0xFFFFFBEB),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: allDone ? const Color(0xFFBBF7D0) : const Color(0xFFFDE68A)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                allDone ? FontAwesomeIcons.clipboardCheck : FontAwesomeIcons.clipboardList,
+                size: 12,
+                color: allDone ? const Color(0xFF16A34A) : const Color(0xFFD97706),
+              ),
+              const SizedBox(width: 6),
+              Text(
+                'Tasks: $completed/$total',
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.bold,
+                  color: allDone ? const Color(0xFF166534) : const Color(0xFF92400E),
+                ),
+              ),
+              const Spacer(),
+              Text(
+                '${(progress * 100).round()}%',
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.bold,
+                  color: allDone ? const Color(0xFF166534) : const Color(0xFF92400E),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(4),
+            child: LinearProgressIndicator(
+              value: progress,
+              minHeight: 5,
+              backgroundColor: allDone ? const Color(0xFFDCFCE7) : const Color(0xFFFEF3C7),
+              valueColor: AlwaysStoppedAnimation<Color>(
+                allDone ? const Color(0xFF22C55E) : const Color(0xFFF59E0B),
+              ),
+            ),
+          ),
+          if (booking.finalSubmission != null) ...[
+            const SizedBox(height: 6),
+            Row(
+              children: [
+                const Icon(FontAwesomeIcons.flagCheckered, size: 10, color: Color(0xFF6366F1)),
+                const SizedBox(width: 4),
+                Text(
+                  'Final report submitted',
+                  style: const TextStyle(fontSize: 10, color: Color(0xFF4F46E5), fontWeight: FontWeight.w600),
+                ),
+              ],
+            ),
+          ],
         ],
       ),
     );
@@ -4010,6 +4111,203 @@ class _BookingCard extends StatelessWidget {
                         ],
                       ),
                     ),
+
+                    // Task Progress Section (for admins)
+                    if (booking.tasks.isNotEmpty) ...[
+                      const SizedBox(height: 24),
+                      Container(
+                        padding: const EdgeInsets.all(20),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(20),
+                          boxShadow: [
+                            BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4)),
+                          ],
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                const Text("Task Progress", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black87)),
+                                const Spacer(),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                  decoration: BoxDecoration(
+                                    color: booking.taskProgress == 100 ? const Color(0xFFD1FAE5) : const Color(0xFFFEF3C7),
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: Text(
+                                    '${booking.taskProgress}%',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.bold,
+                                      color: booking.taskProgress == 100 ? const Color(0xFF166534) : const Color(0xFF92400E),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 12),
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(6),
+                              child: LinearProgressIndicator(
+                                value: booking.tasks.isEmpty ? 0 : booking.tasks.where((t) => t['done'] == true).length / booking.tasks.length,
+                                minHeight: 8,
+                                backgroundColor: Colors.grey.shade200,
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                  booking.taskProgress == 100 ? const Color(0xFF22C55E) : const Color(0xFFF59E0B),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            ...booking.tasks.asMap().entries.map((entry) {
+                              final idx = entry.key;
+                              final task = entry.value;
+                              final isDone = task['done'] == true;
+                              final taskName = task['name']?.toString() ?? 'Task ${idx + 1}';
+                              final staffNote = task['staffNote']?.toString() ?? '';
+                              final imageUrl = task['imageUrl']?.toString() ?? '';
+                              final completedBy = task['completedByStaffName']?.toString() ?? '';
+
+                              return Container(
+                                margin: const EdgeInsets.only(bottom: 10),
+                                padding: const EdgeInsets.all(12),
+                                decoration: BoxDecoration(
+                                  color: isDone ? const Color(0xFFF0FDF4) : const Color(0xFFF9FAFB),
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(color: isDone ? const Color(0xFFBBF7D0) : const Color(0xFFE5E7EB)),
+                                ),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
+                                      children: [
+                                        Container(
+                                          width: 24, height: 24,
+                                          decoration: BoxDecoration(
+                                            color: isDone ? const Color(0xFF22C55E) : Colors.grey.shade300,
+                                            shape: BoxShape.circle,
+                                          ),
+                                          child: Center(
+                                            child: isDone
+                                                ? const Icon(Icons.check, color: Colors.white, size: 14)
+                                                : Text('${idx + 1}', style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
+                                          ),
+                                        ),
+                                        const SizedBox(width: 10),
+                                        Expanded(
+                                          child: Text(
+                                            taskName,
+                                            style: TextStyle(
+                                              fontSize: 13, fontWeight: FontWeight.w600,
+                                              color: isDone ? const Color(0xFF166534) : Colors.black87,
+                                              decoration: isDone ? TextDecoration.lineThrough : null,
+                                            ),
+                                          ),
+                                        ),
+                                        if (isDone)
+                                          Container(
+                                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                            decoration: BoxDecoration(color: const Color(0xFFDCFCE7), borderRadius: BorderRadius.circular(8)),
+                                            child: const Text('Done', style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: Color(0xFF166534))),
+                                          ),
+                                      ],
+                                    ),
+                                    if (staffNote.isNotEmpty) ...[
+                                      const SizedBox(height: 8),
+                                      Container(
+                                        width: double.infinity,
+                                        padding: const EdgeInsets.all(8),
+                                        decoration: BoxDecoration(
+                                          color: const Color(0xFFEFF6FF),
+                                          borderRadius: BorderRadius.circular(8),
+                                          border: Border.all(color: const Color(0xFFDBEAFE)),
+                                        ),
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Text(staffNote, style: const TextStyle(fontSize: 11, color: Color(0xFF1E40AF))),
+                                            if (completedBy.isNotEmpty)
+                                              Text('— $completedBy', style: const TextStyle(fontSize: 9, color: Color(0xFF3B82F6))),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                    if (imageUrl.isNotEmpty) ...[
+                                      const SizedBox(height: 8),
+                                      ClipRRect(
+                                        borderRadius: BorderRadius.circular(8),
+                                        child: Image.network(
+                                          imageUrl,
+                                          width: double.infinity,
+                                          height: 120,
+                                          fit: BoxFit.cover,
+                                          errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+                                        ),
+                                      ),
+                                    ],
+                                  ],
+                                ),
+                              );
+                            }),
+
+                            // Final submission
+                            if (booking.finalSubmission != null) ...[
+                              const SizedBox(height: 12),
+                              Container(
+                                width: double.infinity,
+                                padding: const EdgeInsets.all(14),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFEEF2FF),
+                                  borderRadius: BorderRadius.circular(14),
+                                  border: Border.all(color: const Color(0xFFC7D2FE)),
+                                ),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
+                                      children: [
+                                        const Icon(FontAwesomeIcons.flagCheckered, size: 14, color: Color(0xFF6366F1)),
+                                        const SizedBox(width: 8),
+                                        const Text('Final Submission', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Color(0xFF4338CA))),
+                                        const Spacer(),
+                                        if (booking.finalSubmission!['submittedByStaffName'] != null)
+                                          Text(
+                                            'by ${booking.finalSubmission!['submittedByStaffName']}',
+                                            style: const TextStyle(fontSize: 10, color: Color(0xFF818CF8)),
+                                          ),
+                                      ],
+                                    ),
+                                    if ((booking.finalSubmission!['description'] ?? '').toString().isNotEmpty) ...[
+                                      const SizedBox(height: 8),
+                                      Text(
+                                        booking.finalSubmission!['description'].toString(),
+                                        style: const TextStyle(fontSize: 12, color: Color(0xFF312E81)),
+                                      ),
+                                    ],
+                                    if ((booking.finalSubmission!['imageUrl'] ?? '').toString().isNotEmpty) ...[
+                                      const SizedBox(height: 8),
+                                      ClipRRect(
+                                        borderRadius: BorderRadius.circular(10),
+                                        child: Image.network(
+                                          booking.finalSubmission!['imageUrl'].toString(),
+                                          width: double.infinity,
+                                          height: 150,
+                                          fit: BoxFit.cover,
+                                          errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+                                        ),
+                                      ),
+                                    ],
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+                    ],
+
                     const SizedBox(height: 32),
                   ],
                 ),

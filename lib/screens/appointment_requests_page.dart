@@ -43,6 +43,7 @@ class ServiceRequest {
   final int totalServices;
   final int acceptedServices;
   final int rejectedServices;
+  final List<Map<String, dynamic>> tasks;
 
   ServiceRequest({
     required this.bookingId,
@@ -66,6 +67,7 @@ class ServiceRequest {
     required this.totalServices,
     required this.acceptedServices,
     required this.rejectedServices,
+    this.tasks = const [],
   });
 }
 
@@ -159,6 +161,16 @@ class _AppointmentRequestsPageState extends State<AppointmentRequestsPage> {
         debugPrint('--- Booking: ${data['bookingCode']} (status: ${data['status']}) ---');
 
         // Check if this is a multi-service booking
+        // Parse tasks from booking data
+        final List<Map<String, dynamic>> bookingTasks = [];
+        if (data['tasks'] is List) {
+          for (final t in data['tasks'] as List) {
+            if (t is Map) {
+              bookingTasks.add(Map<String, dynamic>.from(t));
+            }
+          }
+        }
+
         if (data['services'] is List && (data['services'] as List).isNotEmpty) {
           final services = data['services'] as List;
           
@@ -221,6 +233,7 @@ class _AppointmentRequestsPageState extends State<AppointmentRequestsPage> {
                   totalServices: totalServices,
                   acceptedServices: acceptedServices,
                   rejectedServices: rejectedServices,
+                  tasks: bookingTasks,
                 ));
               }
             }
@@ -254,6 +267,7 @@ class _AppointmentRequestsPageState extends State<AppointmentRequestsPage> {
               totalServices: 1,
               acceptedServices: 0,
               rejectedServices: 0,
+              tasks: bookingTasks,
             ));
           }
         }
@@ -351,6 +365,76 @@ class _AppointmentRequestsPageState extends State<AppointmentRequestsPage> {
                         'Multi-service booking (${request.acceptedServices}/${request.totalServices} already accepted)',
                         style: const TextStyle(fontSize: 12, color: AppColors.cyan),
                       ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+            // Tasks to complete section
+            if (request.tasks.isNotEmpty) ...[
+              const SizedBox(height: 16),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFFF7ED),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: const Color(0xFFFED7AA)),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        const Icon(FontAwesomeIcons.clipboardList, size: 14, color: Color(0xFFEA580C)),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Tasks to Complete (${request.tasks.length})',
+                          style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Color(0xFFEA580C)),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 10),
+                    ...request.tasks.asMap().entries.map((entry) {
+                      final idx = entry.key;
+                      final task = entry.value;
+                      final taskName = task['name']?.toString() ?? 'Task ${idx + 1}';
+                      final taskDesc = task['description']?.toString() ?? '';
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 6),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Container(
+                              width: 20, height: 20,
+                              margin: const EdgeInsets.only(top: 1),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFFED7AA),
+                                shape: BoxShape.circle,
+                              ),
+                              child: Center(
+                                child: Text('${idx + 1}', style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Color(0xFFEA580C))),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(taskName, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF78350F))),
+                                  if (taskDesc.isNotEmpty)
+                                    Text(taskDesc, style: const TextStyle(fontSize: 10, color: Color(0xFF92400E))),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    }),
+                    const SizedBox(height: 6),
+                    const Text(
+                      'You must complete all tasks with photos after accepting.',
+                      style: TextStyle(fontSize: 10, fontStyle: FontStyle.italic, color: Color(0xFFB45309)),
                     ),
                   ],
                 ),
@@ -1074,6 +1158,65 @@ class _AppointmentRequestsPageState extends State<AppointmentRequestsPage> {
                             ),
                           ),
                         ),
+                      ],
+                    ),
+                  ),
+                ],
+
+                // Tasks to do
+                if (request.tasks.isNotEmpty) ...[
+                  const SizedBox(height: 12),
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFFF7ED),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: const Color(0xFFFED7AA)),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            const Icon(FontAwesomeIcons.clipboardList, size: 14, color: Color(0xFFEA580C)),
+                            const SizedBox(width: 8),
+                            Text(
+                              'Tasks (${request.tasks.length})',
+                              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Color(0xFFEA580C)),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        ...request.tasks.asMap().entries.map((entry) {
+                          final idx = entry.key;
+                          final task = entry.value;
+                          final taskName = task['name']?.toString() ?? 'Task ${idx + 1}';
+                          return Padding(
+                            padding: const EdgeInsets.only(bottom: 4),
+                            child: Row(
+                              children: [
+                                Container(
+                                  width: 18, height: 18,
+                                  decoration: const BoxDecoration(
+                                    color: Color(0xFFFED7AA),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: Center(
+                                    child: Text('${idx + 1}', style: const TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: Color(0xFFEA580C))),
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    taskName,
+                                    style: const TextStyle(fontSize: 12, color: Color(0xFF78350F)),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        }),
                       ],
                     ),
                   ),
