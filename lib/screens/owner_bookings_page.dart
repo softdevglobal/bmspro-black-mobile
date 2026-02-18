@@ -67,7 +67,9 @@ class _OwnerBookingsPageState extends State<OwnerBookingsPage> {
 
       if (userDoc.exists) {
         final data = userDoc.data() ?? {};
-        _userRole = (data['role'] ?? '').toString();
+        String rawRole = (data['role'] ?? '').toString();
+        // role is already normalized (staff, branch_admin, workshop_owner)
+        _userRole = rawRole;
         _userBranchId = (data['branchId'] ?? '').toString();
         
         // Determine ownerUid based on role

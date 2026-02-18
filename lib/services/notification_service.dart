@@ -560,7 +560,9 @@ class NotificationService {
       final userDoc = await _db.collection('users').doc(user.uid).get();
       if (userDoc.exists) {
         final userData = userDoc.data();
-        _userRole = userData?['role']?.toString();
+        String? rawRole = userData?['role']?.toString();
+        // role is already normalized (staff, branch_admin, workshop_owner)
+        _userRole = rawRole;
         _userBranchId = userData?['branchId']?.toString();
         print('📱 User role: $_userRole, branchId: $_userBranchId');
       }

@@ -375,7 +375,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin, 
             setState(() {
               // Trim and normalize the role to ensure proper comparison
               final rawRole = data?['role'];
-              _userRole = rawRole != null ? rawRole.toString().trim() : null;
+              String? normalizedRole = rawRole != null ? rawRole.toString().trim() : null;
+              // role is already normalized (staff, branch_admin, workshop_owner)
+              _userRole = normalizedRole;
               // Try to find a branch name or branch field
               _branchName = data?['branchName'] ?? data?['branch'];
               _userName = fetchedName ?? 'Staff';

@@ -41,12 +41,13 @@ class StaffMember {
 
   factory StaffMember.fromFirestore(DocumentSnapshot doc) {
     final data = doc.data() as Map<String, dynamic>;
+    String? rawSystemRole = data['role'];
     return StaffMember(
       id: doc.id,
       name: data['displayName'] ?? data['name'] ?? 'Unknown',
-      role: data['staffRole'] ?? data['role'],
+      role: data['staffRole'] ?? rawSystemRole,
       branchName: data['branchName'],
-      systemRole: data['role'],
+      systemRole: rawSystemRole,
       authUid: data['authUid'] ?? data['uid'] ?? doc.id,
       uid: data['uid'] ?? data['authUid'] ?? doc.id,
     );

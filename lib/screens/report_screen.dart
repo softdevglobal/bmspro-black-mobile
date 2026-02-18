@@ -108,7 +108,9 @@ class _ReportScreenState extends State<ReportScreen> {
         if (mounted && doc.exists) {
           final userData = doc.data();
           setState(() {
-            _currentUserRole = userData?['role'];
+            String? rawRole = userData?['role'];
+            // role is already normalized (staff, branch_admin, workshop_owner)
+            _currentUserRole = rawRole;
             _currentUserName = userData?['displayName'] ?? userData?['name'] ?? 'Staff';
             _ownerUid = userData?['ownerUid']?.toString() ?? user.uid;
             _isLoadingRole = false;

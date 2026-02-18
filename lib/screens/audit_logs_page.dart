@@ -66,7 +66,8 @@ class _AuditLogsPageState extends State<AuditLogsPage> {
       if (user != null) {
         final doc = await _firestore.collection('users').doc(user.uid).get();
         final data = doc.data();
-        final role = data?['role'] as String?;
+        String? role = data?['role'] as String?;
+        // role is already normalized (staff, branch_admin, workshop_owner)
         
         // Only workshop_owner can view audit logs
         if (role != 'workshop_owner') {

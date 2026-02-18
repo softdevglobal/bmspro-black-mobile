@@ -153,7 +153,9 @@ class _CalenderScreenState extends State<CalenderScreen> {
         if (mounted && doc.exists) {
           final userData = doc.data();
           setState(() {
-            _currentUserRole = userData?['role'];
+            String? rawRole = userData?['role'];
+            // role is already normalized (staff, branch_admin, workshop_owner)
+            _currentUserRole = rawRole;
             _ownerUid = (userData?['ownerUid'] ?? user.uid).toString();
             _branchId = (userData?['branchId'] ?? '').toString();
             _isLoadingRole = false;

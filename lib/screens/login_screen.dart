@@ -84,8 +84,11 @@ class _LoginScreenState extends State<LoginScreen>
 
       final userData = userDoc.data() as Map<String, dynamic>;
       final rawRole = userData['role'];
-      final String userRole =
+      String userRole =
           rawRole != null ? rawRole.toString().trim() : 'unknown';
+      
+      // Normalize legacy role names
+      // role is already normalized (staff, branch_admin, workshop_owner)
 
       bool isAuthorized = false;
       const allowedRoles = ['staff', 'workshop_owner', 'branch_admin'];

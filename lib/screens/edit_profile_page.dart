@@ -174,6 +174,7 @@ class _EditProfilePageState extends State<EditProfilePage>
         if (snap.exists) {
           final data = snap.data() as Map<String, dynamic>? ?? {};
           userRole = (data['role'] ?? '').toString();
+          // role is already normalized (staff, branch_admin, workshop_owner)
           final bool isWorkshopOwner = userRole.toLowerCase() == 'workshop_owner';
           
           // For salon owners, prioritize business name (name field) over displayName

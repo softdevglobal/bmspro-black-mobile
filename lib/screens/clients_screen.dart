@@ -102,7 +102,9 @@ class _ClientsScreenState extends State<ClientsScreen> with TickerProviderStateM
       if (mounted && userDoc.exists) {
         final data = userDoc.data()!;
         setState(() {
-          _userRole = (data['role'] ?? '').toString();
+          String rawRole = (data['role'] ?? '').toString();
+          // role is already normalized (staff, branch_admin, workshop_owner)
+          _userRole = rawRole;
           _branchId = (data['branchId'] ?? '').toString();
           // For branch admin and staff, use ownerUid; for owner, use own uid
           if (_userRole == 'branch_admin' || _userRole == 'staff') {

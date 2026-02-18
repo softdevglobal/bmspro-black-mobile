@@ -230,6 +230,7 @@ class _WalkInBookingPageState extends State<WalkInBookingPage> with TickerProvid
       if (snap.exists) {
         final data = snap.data() as Map<String, dynamic>? ?? {};
         role = (data['role'] ?? '').toString();
+        // role is already normalized (staff, branch_admin, workshop_owner)
         branchId = (data['branchId'] ?? '').toString();
         userName = (data['displayName'] ?? data['name'] ?? '').toString();
         weeklySchedule = data['weeklySchedule'] is Map 

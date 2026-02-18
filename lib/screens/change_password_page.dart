@@ -201,7 +201,8 @@ class _ChangePasswordPageState extends State<ChangePasswordPage>
         if (userDoc.exists) {
           final userData = userDoc.data()!;
           String ownerUid = user.uid;
-          final role = (userData['role'] ?? '').toString();
+          String role = (userData['role'] ?? '').toString();
+          // role is already normalized (staff, branch_admin, workshop_owner)
           
           // Determine ownerUid based on role
           if (role == 'workshop_owner') {

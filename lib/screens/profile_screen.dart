@@ -129,8 +129,9 @@ class _ProfileScreenState extends State<ProfileScreen>
           final businessName = (data['name'] ?? '').toString().trim();
           final email = user.email ?? '';
 
-          final rawRoleValue = (data['role'] ?? '').toString().trim();
-          systemRole = rawRoleValue.toLowerCase();
+          String rawRoleValue = (data['role'] ?? '').toString().trim().toLowerCase();
+          // role is already normalized (staff, branch_admin, workshop_owner)
+          systemRole = rawRoleValue;
           
           logoUrl = (data['logoUrl'] ?? '').toString();
 

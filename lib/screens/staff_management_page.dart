@@ -109,7 +109,8 @@ class _StaffManagementPageState extends State<StaffManagementPage> {
           .doc(user.uid)
           .get();
       
-      final role = userDoc.data()?['role'] ?? '';
+      String role = (userDoc.data()?['role'] ?? '').toString();
+      // role is already normalized (staff, branch_admin, workshop_owner)
       String ownerUid = user.uid;
       
       if (role == 'branch_admin') {

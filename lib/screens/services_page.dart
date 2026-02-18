@@ -119,7 +119,8 @@ class _ServicesPageState extends State<ServicesPage> {
           .doc(user.uid)
           .get();
       
-      final role = userDoc.data()?['role'] ?? '';
+      String role = (userDoc.data()?['role'] ?? '').toString();
+      // role is already normalized (staff, branch_admin, workshop_owner)
       _userRole = role;
       String ownerUid = user.uid;
       

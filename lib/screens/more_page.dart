@@ -94,7 +94,9 @@ class _MorePageState extends State<MorePage> {
         
         if (mounted && doc.exists) {
           setState(() {
-            _userRole = doc.data()?['role'] as String?;
+            String? rawRole = doc.data()?['role'] as String?;
+            // role is already normalized (staff, branch_admin, workshop_owner)
+            _userRole = rawRole;
             _isLoading = false;
           });
         } else {
