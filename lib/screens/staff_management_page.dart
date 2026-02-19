@@ -513,7 +513,7 @@ class _StaffManagementPageState extends State<StaffManagementPage> {
       }
       final ownerToken = await currentOwner.getIdToken();
 
-      // Delete Firebase Auth account via API
+      // Delete Firebase Auth account via API (mandatory – prevents orphan auth records)
       try {
         final apiUrl = 'https://black.bmspros.com.au/api/staff/auth/delete';
         final response = await http.post(
@@ -533,11 +533,12 @@ class _StaffManagementPageState extends State<StaffManagementPage> {
           final errorData = json.decode(response.body);
           String message = errorData['error'] ?? 'Failed to delete staff account';
           _showToast(message);
-          return;
+          return; // Do NOT proceed – auth record would remain and block re-creation
         }
       } catch (e) {
         debugPrint('Error deleting auth account: $e');
-        // Continue with Firestore deletion even if auth deletion fails
+        _showToast('Network error – could not delete staff login. Please try again.');
+        return; // Do NOT proceed – auth record would remain and block re-creation
       }
 
       // Remove staff from all branches
