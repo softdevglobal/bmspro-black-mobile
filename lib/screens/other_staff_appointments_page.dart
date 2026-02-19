@@ -299,23 +299,23 @@ class _OtherStaffAppointmentsPageState extends State<OtherStaffAppointmentsPage>
           children: [
             _buildHeader(context),
             _buildFilterTabs(),
-            Expanded(
-              child: _isLoading
-                  ? const Center(
-                      child: CircularProgressIndicator(color: AppColors.primary),
-                    )
-                  : _filteredAppointments.isEmpty
-                      ? _buildEmptyState()
-                      : ListView.separated(
-                          padding: const EdgeInsets.all(16),
-                          itemCount: _filteredAppointments.length,
-                          separatorBuilder: (_, __) => const SizedBox(height: 12),
-                          itemBuilder: (context, index) {
-                            final appt = _filteredAppointments[index];
-                            return _buildAppointmentTile(appt, index);
-                          },
-                        ),
-            ),
+          Expanded(
+            child: _isLoading
+                ? const Center(
+                    child: CircularProgressIndicator(color: AppColors.primary),
+                  )
+                : _filteredAppointments.isEmpty
+                    ? _buildEmptyState()
+                    : ListView.separated(
+                        padding: const EdgeInsets.all(16),
+                        itemCount: _filteredAppointments.length,
+                        separatorBuilder: (_, __) => const SizedBox(height: 12),
+                        itemBuilder: (context, index) {
+                          final appt = _filteredAppointments[index];
+                          return _buildAppointmentTile(appt, index);
+                        },
+                      ),
+          ),
           ],
         ),
       ),
@@ -324,35 +324,54 @@ class _OtherStaffAppointmentsPageState extends State<OtherStaffAppointmentsPage>
 
   Widget _buildHeader(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-      decoration: const BoxDecoration(color: AppColors.background),
-      child: Row(
+      margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFF1A1A1A), Color(0xFF2D2D2D), Color(0xFF1A1A1A)],
+        ),
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(color: const Color(0xFF1A1A1A).withOpacity(0.3), blurRadius: 24, offset: const Offset(0, 8)),
+        ],
+      ),
+      child: Stack(
         children: [
-          GestureDetector(
-            onTap: () => Navigator.pop(context),
-            child: const Icon(FontAwesomeIcons.chevronLeft,
-                size: 18, color: AppColors.text),
-          ),
-          Expanded(
-            child: Center(
-              child: Column(
-                children: [
-                  const Text(
-                    'Other Staff Appointments',
-                    style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.text),
+          Positioned(top: -20, right: -20, child: Container(width: 80, height: 80, decoration: BoxDecoration(shape: BoxShape.circle, color: Colors.white.withOpacity(0.03)))),
+          Row(
+            children: [
+              GestureDetector(
+                onTap: () => Navigator.pop(context),
+                child: Container(
+                  width: 40, height: 40,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.white.withOpacity(0.08)),
                   ),
-                  Text(
-                    '${_filteredAppointments.length} appointments',
-                    style: const TextStyle(fontSize: 12, color: AppColors.muted),
-                  ),
-                ],
+                  child: const Center(child: Icon(FontAwesomeIcons.arrowLeft, size: 14, color: Colors.white)),
+                ),
               ),
-            ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Staff Appointments',
+                      style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: Colors.white, letterSpacing: -0.5),
+                    ),
+                    Text(
+                      '${_filteredAppointments.length} appointments',
+                      style: TextStyle(fontSize: 12, color: Colors.white.withOpacity(0.5)),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
-          const SizedBox(width: 24),
         ],
       ),
     );

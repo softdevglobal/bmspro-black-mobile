@@ -227,36 +227,68 @@ class _StaffCheckInPageState extends State<StaffCheckInPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(FontAwesomeIcons.arrowLeft, size: 18, color: AppColors.text),
-          onPressed: () => Navigator.pop(context),
+      body: SafeArea(
+        child: Column(
+          children: [
+            // ═══════════ CREATIVE HERO HEADER ═══════════
+            Container(
+              margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: [Color(0xFF1A1A1A), Color(0xFF2D2D2D), Color(0xFF1A1A1A)]),
+                borderRadius: BorderRadius.circular(24),
+                boxShadow: [BoxShadow(color: const Color(0xFF1A1A1A).withOpacity(0.3), blurRadius: 24, offset: const Offset(0, 8))],
+              ),
+              child: Stack(
+                children: [
+                  Positioned(top: -20, right: -20, child: Container(width: 80, height: 80, decoration: BoxDecoration(shape: BoxShape.circle, color: Colors.white.withOpacity(0.03)))),
+                  Row(
+                    children: [
+                      GestureDetector(
+                        onTap: () => Navigator.pop(context),
+                        child: Container(
+                          width: 40, height: 40,
+                          decoration: BoxDecoration(color: Colors.white.withOpacity(0.1), borderRadius: BorderRadius.circular(12), border: Border.all(color: Colors.white.withOpacity(0.08))),
+                          child: const Center(child: Icon(FontAwesomeIcons.arrowLeft, size: 14, color: Colors.white)),
+                        ),
+                      ),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text('Check In / Out', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: Colors.white, letterSpacing: -0.5)),
+                            Text('Manage your attendance', style: TextStyle(fontSize: 12, color: Colors.white.withOpacity(0.5))),
+                          ],
+                        ),
+                      ),
+                      GestureDetector(
+                        onTap: _loadData,
+                        child: Container(
+                          width: 40, height: 40,
+                          decoration: BoxDecoration(color: Colors.white.withOpacity(0.1), borderRadius: BorderRadius.circular(12), border: Border.all(color: Colors.white.withOpacity(0.08))),
+                          child: const Center(child: Icon(FontAwesomeIcons.arrowRotateRight, size: 14, color: Colors.white)),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 8),
+            // Body
+            Expanded(
+              child: _isLoading
+                  ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
+                  : _errorMessage != null
+                      ? _buildErrorState()
+                      : _activeCheckIn != null
+                          ? _buildActiveCheckInView()
+                          : _buildCheckInView(),
+            ),
+          ],
         ),
-        title: const Text(
-          'Check In / Out',
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-            color: AppColors.text,
-          ),
-        ),
-        centerTitle: true,
-        actions: [
-          IconButton(
-            icon: const Icon(FontAwesomeIcons.arrowRotateRight, size: 16, color: AppColors.text),
-            onPressed: _loadData,
-          ),
-        ],
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
-          : _errorMessage != null
-              ? _buildErrorState()
-              : _activeCheckIn != null
-                  ? _buildActiveCheckInView()
-                  : _buildCheckInView(),
     );
   }
 

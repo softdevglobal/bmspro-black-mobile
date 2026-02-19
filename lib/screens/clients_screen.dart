@@ -859,13 +859,130 @@ class _ClientsScreenState extends State<ClientsScreen> with TickerProviderStateM
       );
     }
 
+    final activeList = _getActiveClientList();
+    final clientCount = activeList.length;
+    final showAddButton = !_isBranchAdmin || !_showBranchClients;
+
     return SafeArea(
       child: Column(
         children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 24, 16, 16),
-            child: _buildHeader(),
+          // ═══════════ CREATIVE HERO HEADER ═══════════
+          Container(
+            margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [Color(0xFF1A1A1A), Color(0xFF2D2D2D), Color(0xFF1A1A1A)],
+              ),
+              borderRadius: BorderRadius.circular(24),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFF1A1A1A).withOpacity(0.3),
+                  blurRadius: 24,
+                  offset: const Offset(0, 8),
+                ),
+              ],
+            ),
+            child: Stack(
+              children: [
+                Positioned(
+                  top: -20,
+                  right: -20,
+                  child: Container(
+                    width: 80,
+                    height: 80,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Colors.white.withOpacity(0.03),
+                    ),
+                  ),
+                ),
+                Row(
+                  children: [
+                    Container(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            Colors.white.withOpacity(0.15),
+                            Colors.white.withOpacity(0.05),
+                          ],
+                        ),
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(color: Colors.white.withOpacity(0.08)),
+                      ),
+                      child: const Center(
+                        child: Icon(FontAwesomeIcons.users, size: 16, color: Colors.white),
+                      ),
+                    ),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Clients',
+                            style: TextStyle(
+                              fontSize: 22,
+                              fontWeight: FontWeight.w800,
+                              color: Colors.white,
+                              letterSpacing: -0.5,
+                            ),
+                          ),
+                          Text(
+                            '$clientCount active clients',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.white.withOpacity(0.5),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    if (showAddButton)
+                      GestureDetector(
+                        onTap: _showAddClientModal,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(
+                              colors: [Color(0xFF3B82F6), Color(0xFF2563EB)],
+                            ),
+                            borderRadius: BorderRadius.circular(14),
+                            boxShadow: [
+                              BoxShadow(
+                                color: const Color(0xFF3B82F6).withOpacity(0.3),
+                                blurRadius: 8,
+                                offset: const Offset(0, 3),
+                              ),
+                            ],
+                          ),
+                          child: const Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(FontAwesomeIcons.userPlus, color: Colors.white, size: 12),
+                              SizedBox(width: 6),
+                              Text(
+                                'Add',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ],
+            ),
           ),
+          const SizedBox(height: 12),
           // Toggle for branch admins
           if (_isBranchAdmin) ...[
             Padding(
@@ -893,67 +1010,36 @@ class _ClientsScreenState extends State<ClientsScreen> with TickerProviderStateM
     );
   }
 
-  Widget _buildHeader() {
-    final activeList = _getActiveClientList();
-    final clientCount = activeList.length;
-    final label = _isBranchAdmin 
-        ? (_showBranchClients ? '$clientCount Branch Clients' : '$clientCount My Clients')
-        : _isStaff
-            ? '$clientCount My Clients'
-            : '$clientCount Active Clients';
-    
-    // Show add button only for "My Clients" (branch admin) or always (salon owner)
-    final showAddButton = !_isBranchAdmin || !_showBranchClients;
-    
-    return Row(
-      children: [
-        const SizedBox(width: 24),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              const Text('Clients', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: AppColors.text)),
-              Text(label, style: GoogleFonts.inter(fontSize: 12, color: AppColors.muted)),
-            ],
-          ),
-        ),
-        SizedBox(
-          width: 24,
-          child: showAddButton
-              ? GestureDetector(
-                  onTap: _showAddClientModal,
-                  child: const Icon(FontAwesomeIcons.userPlus, color: AppColors.primary, size: 18),
-                )
-              : const SizedBox(),
-        ),
-      ],
-    );
-  }
-
   Widget _buildSearchAndFilter() {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      color: AppColors.background,
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Column(
         children: [
+          // Floating search bar
           Container(
             decoration: BoxDecoration(
-              color: AppColors.card,
+              color: Colors.white,
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: AppColors.border),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.06),
+                  blurRadius: 16,
+                  offset: const Offset(0, 4),
+                ),
+              ],
             ),
             child: TextField(
               onChanged: _onSearchChanged,
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 hintText: 'Search by name, phone, or email...',
-                hintStyle: TextStyle(color: AppColors.muted, fontSize: 14),
-                prefixIcon: Icon(FontAwesomeIcons.magnifyingGlass, size: 16, color: AppColors.muted),
+                hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 14),
+                prefixIcon: Icon(FontAwesomeIcons.magnifyingGlass, size: 15, color: Colors.grey.shade400),
                 border: InputBorder.none,
-                contentPadding: EdgeInsets.symmetric(vertical: 16),
+                contentPadding: const EdgeInsets.symmetric(vertical: 16),
               ),
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 12),
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             child: Row(
@@ -968,6 +1054,7 @@ class _ClientsScreenState extends State<ClientsScreen> with TickerProviderStateM
               ],
             ),
           ),
+          const SizedBox(height: 12),
         ],
       ),
     );
@@ -978,19 +1065,27 @@ class _ClientsScreenState extends State<ClientsScreen> with TickerProviderStateM
     return GestureDetector(
       onTap: () => _onFilterChanged(filterKey),
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 300),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        duration: const Duration(milliseconds: 250),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
         decoration: BoxDecoration(
-          gradient: isActive ? const LinearGradient(colors: [AppColors.primary, AppColors.accent]) : null,
-          color: isActive ? null : AppColors.chipBg,
-          borderRadius: BorderRadius.circular(20),
+          gradient: isActive
+              ? const LinearGradient(colors: [Color(0xFF1A1A1A), Color(0xFF333333)])
+              : null,
+          color: isActive ? null : Colors.white,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(
+            color: isActive ? Colors.transparent : const Color(0xFFE5E7EB),
+          ),
+          boxShadow: isActive
+              ? [BoxShadow(color: const Color(0xFF1A1A1A).withOpacity(0.15), blurRadius: 8, offset: const Offset(0, 3))]
+              : [],
         ),
         child: Text(
           label,
           style: TextStyle(
             color: isActive ? Colors.white : AppColors.muted,
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
           ),
         ),
       ),
@@ -1135,44 +1230,127 @@ class _ClientCard extends StatelessWidget {
         );
       },
       child: Container(
-        padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: AppColors.card,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: const Color(0xFFE5E7EB).withOpacity(0.5)),
-          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.12), blurRadius: 25, offset: const Offset(0, 8))],
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.04),
+              blurRadius: 16,
+              offset: const Offset(0, 6),
+            ),
+            BoxShadow(
+              color: Colors.black.withOpacity(0.02),
+              blurRadius: 4,
+              offset: const Offset(0, 1),
+            ),
+          ],
         ),
-        child: Row(
+        child: Column(
           children: [
-            CircleAvatar(
-              radius: 28,
-              backgroundColor: Colors.white.withOpacity(0.1),
-              child: Text(
-                initials,
-                style: const TextStyle(
-                  color: AppColors.text,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 18,
+            // Gradient top section
+            Container(
+              padding: const EdgeInsets.fromLTRB(16, 14, 16, 12),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    _badgeColor(client.type).withOpacity(0.08),
+                    Colors.white,
+                  ],
+                ),
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(20),
+                  topRight: Radius.circular(20),
                 ),
               ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              child: Row(
                 children: [
-                  Text(client.name, style: const TextStyle(fontWeight: FontWeight.w600, color: AppColors.text, fontSize: 16)),
-                  Text(client.phone, style: const TextStyle(fontSize: 12, color: AppColors.muted)),
+                  Container(
+                    width: 44,
+                    height: 44,
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          _badgeColor(client.type).withOpacity(0.15),
+                          _badgeColor(client.type).withOpacity(0.05),
+                        ],
+                      ),
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(color: _badgeColor(client.type).withOpacity(0.1)),
+                    ),
+                    child: Center(
+                      child: Text(
+                        initials,
+                        style: TextStyle(
+                          color: _badgeColor(client.type),
+                          fontWeight: FontWeight.w800,
+                          fontSize: 15,
+                          letterSpacing: -0.3,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          client.name,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w700,
+                            fontSize: 15,
+                            color: Color(0xFF1A1A1A),
+                            letterSpacing: -0.2,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          client.phone.isNotEmpty ? client.phone : client.email,
+                          style: TextStyle(fontSize: 11, color: Colors.grey.shade500),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ),
+                  ),
+                  _buildStatusBadge(client.type),
                 ],
               ),
             ),
-            _buildStatusBadge(client.type),
-            const SizedBox(width: 8),
-            const Icon(FontAwesomeIcons.chevronRight, size: 14, color: AppColors.muted),
+            // Bottom section with details
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+              child: Row(
+                children: [
+                  Icon(FontAwesomeIcons.calendarCheck, size: 11, color: Colors.grey.shade400),
+                  const SizedBox(width: 6),
+                  Text(
+                    '${client.visits} visits',
+                    style: TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: Colors.grey.shade500),
+                  ),
+                  const Spacer(),
+                  Icon(FontAwesomeIcons.chevronRight, size: 11, color: Colors.grey.shade300),
+                ],
+              ),
+            ),
           ],
         ),
       ),
     );
+  }
+
+  Color _badgeColor(String type) {
+    switch (type) {
+      case 'vip': return const Color(0xFFF59E0B);
+      case 'new': return const Color(0xFF10B981);
+      case 'risk': return const Color(0xFFEF4444);
+      default: return const Color(0xFF1A1A1A);
+    }
   }
 
   Widget _buildStatusBadge(String type) {

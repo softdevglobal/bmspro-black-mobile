@@ -607,44 +607,116 @@ class _NotificationsPageState extends State<NotificationsPage>
 
   Widget _buildHeader() {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-      decoration: const BoxDecoration(color: _NotifTheme.background),
-      child: Row(
-        children: [
-          GestureDetector(
-            onTap: () => Navigator.pop(context),
-            child: const Icon(
-              FontAwesomeIcons.chevronLeft,
-              size: 18,
-              color: _NotifTheme.text,
-            ),
+      margin: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFF1A1A1A), Color(0xFF2D2D2D), Color(0xFF1A1A1A)],
+        ),
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF1A1A1A).withOpacity(0.3),
+            blurRadius: 24,
+            offset: const Offset(0, 8),
           ),
-          const Expanded(
-            child: Center(
-              child: Text(
-                'Notifications',
-                style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600,
-                    color: _NotifTheme.text),
+        ],
+      ),
+      child: Stack(
+        children: [
+          Positioned(
+            top: -20,
+            right: -20,
+            child: Container(
+              width: 80,
+              height: 80,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.white.withOpacity(0.03),
               ),
             ),
           ),
-          const SizedBox(width: 24),
+          Row(
+            children: [
+              GestureDetector(
+                onTap: () => Navigator.pop(context),
+                child: Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.white.withOpacity(0.08)),
+                  ),
+                  child: const Center(
+                    child: Icon(FontAwesomeIcons.arrowLeft, size: 14, color: Colors.white),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Notifications',
+                      style: TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.w800,
+                        color: Colors.white,
+                        letterSpacing: -0.5,
+                      ),
+                    ),
+                    Text(
+                      _unreadCount > 0 ? '$_unreadCount unread' : 'All caught up',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.white.withOpacity(0.5),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              if (_unreadCount > 0)
+                Container(
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFEF4444).withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Center(
+                    child: Text(
+                      '$_unreadCount',
+                      style: const TextStyle(
+                        color: Color(0xFFEF4444),
+                        fontWeight: FontWeight.w800,
+                        fontSize: 14,
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          ),
         ],
       ),
     );
   }
 
   Widget _buildTabs() {
-    return Row(
-      children: [
-        _buildTab('All', 'all'),
-        const SizedBox(width: 24),
-        _buildTab('Tasks', 'task'),
-        const SizedBox(width: 24),
-        _buildTab('System', 'system'),
-      ],
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        children: [
+          _buildTab('All', 'all'),
+          const SizedBox(width: 8),
+          _buildTab('Tasks', 'task'),
+          const SizedBox(width: 8),
+          _buildTab('System', 'system'),
+        ],
+      ),
     );
   }
 
@@ -656,29 +728,30 @@ class _NotificationsPageState extends State<NotificationsPage>
           _currentFilter = filterId;
         });
       },
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: isActive ? FontWeight.w600 : FontWeight.normal,
-              color: isActive ? _NotifTheme.primary : _NotifTheme.muted,
-            ),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 250),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
+        decoration: BoxDecoration(
+          gradient: isActive
+              ? const LinearGradient(colors: [Color(0xFF1A1A1A), Color(0xFF333333)])
+              : null,
+          color: isActive ? null : Colors.white,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(
+            color: isActive ? Colors.transparent : const Color(0xFFE5E7EB),
           ),
-          const SizedBox(height: 4),
-          AnimatedContainer(
-            duration: const Duration(milliseconds: 300),
-            height: 3,
-            width: isActive ? 20 : 0,
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                  colors: [_NotifTheme.primary, _NotifTheme.accent]),
-              borderRadius: BorderRadius.circular(2),
-            ),
+          boxShadow: isActive
+              ? [BoxShadow(color: const Color(0xFF1A1A1A).withOpacity(0.15), blurRadius: 8, offset: const Offset(0, 3))]
+              : [],
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+            color: isActive ? Colors.white : _NotifTheme.muted,
           ),
-        ],
+        ),
       ),
     );
   }

@@ -630,124 +630,203 @@ class _StaffManagementPageState extends State<StaffManagementPage> {
 
   @override
   Widget build(BuildContext context) {
+    final totalStaff = _staff.length;
+    final activeStaff = _staff.where((s) => s.status == 'Active').length;
+    
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(FontAwesomeIcons.arrowLeft, size: 18, color: AppColors.text),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: const Text(
-          'Staff Management',
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-            color: AppColors.text,
-          ),
-        ),
-        centerTitle: true,
-        actions: [
-          if (_ownerUid != null)
-            Padding(
-              padding: const EdgeInsets.only(right: 16),
-              child: GestureDetector(
-                onTap: _showOnboardStaffSheet,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                  decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [Color(0xFF8B5CF6), Color(0xFFA78BFA)],
-                    ),
-                    borderRadius: BorderRadius.circular(20),
-                    boxShadow: [
-                      BoxShadow(
-                        color: const Color(0xFF8B5CF6).withOpacity(0.3),
-                        blurRadius: 8,
-                        offset: const Offset(0, 3),
+      body: SafeArea(
+        child: _loading
+            ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
+            : Column(
+                children: [
+                  // ═══════════ CREATIVE HERO HEADER ═══════════
+                  Container(
+                    margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [Color(0xFF1A1A1A), Color(0xFF2D2D2D), Color(0xFF1A1A1A)],
                       ),
-                    ],
-                  ),
-                  child: const Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(FontAwesomeIcons.userPlus, color: Colors.white, size: 12),
-                      SizedBox(width: 6),
-                      Text(
-                        'Add',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w600,
-                          fontSize: 13,
+                      borderRadius: BorderRadius.circular(24),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFF1A1A1A).withOpacity(0.3),
+                          blurRadius: 24,
+                          offset: const Offset(0, 8),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
+                    child: Stack(
+                      children: [
+                        Positioned(
+                          top: -20,
+                          right: -20,
+                          child: Container(
+                            width: 80,
+                            height: 80,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: Colors.white.withOpacity(0.03),
+                            ),
+                          ),
+                        ),
+                        Row(
+                          children: [
+                            GestureDetector(
+                              onTap: () => Navigator.pop(context),
+                              child: Container(
+                                width: 40,
+                                height: 40,
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withOpacity(0.1),
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(color: Colors.white.withOpacity(0.08)),
+                                ),
+                                child: const Center(
+                                  child: Icon(FontAwesomeIcons.arrowLeft, size: 14, color: Colors.white),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 14),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text(
+                                    'Staff Management',
+                                    style: TextStyle(
+                                      fontSize: 22,
+                                      fontWeight: FontWeight.w800,
+                                      color: Colors.white,
+                                      letterSpacing: -0.5,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Row(
+                                    children: [
+                                      Text(
+                                        '$activeStaff of $totalStaff active',
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color: Colors.white.withOpacity(0.5),
+                                        ),
+                                      ),
+                                      const Spacer(),
+                                      if (_ownerUid != null)
+                                        GestureDetector(
+                                          onTap: _showOnboardStaffSheet,
+                                          child: Container(
+                                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+                                            decoration: BoxDecoration(
+                                              gradient: const LinearGradient(
+                                                colors: [Color(0xFF8B5CF6), Color(0xFFA78BFA)],
+                                              ),
+                                              borderRadius: BorderRadius.circular(12),
+                                              boxShadow: [
+                                                BoxShadow(
+                                                  color: const Color(0xFF8B5CF6).withOpacity(0.3),
+                                                  blurRadius: 8,
+                                                  offset: const Offset(0, 3),
+                                                ),
+                                              ],
+                                            ),
+                                            child: const Row(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                Icon(FontAwesomeIcons.userPlus, color: Colors.white, size: 11),
+                                                SizedBox(width: 6),
+                                                Text(
+                                                  'Add Staff',
+                                                  style: TextStyle(
+                                                    color: Colors.white,
+                                                    fontWeight: FontWeight.w600,
+                                                    fontSize: 12,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
-                ),
+                  const SizedBox(height: 8),
+                  // Filter Tabs
+                  _buildFilterTabs(),
+                  // Staff List
+                  Expanded(
+                    child: _filteredStaff.isEmpty
+                        ? _buildEmptyState()
+                        : _buildStaffList(),
+                  ),
+                ],
               ),
-            ),
-        ],
       ),
-      body: _loading
-          ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
-          : Column(
-              children: [
-                // Filter Tabs
-                _buildFilterTabs(),
-                // Staff List
-                Expanded(
-                  child: _filteredStaff.isEmpty
-                      ? _buildEmptyState()
-                      : _buildStaffList(),
-                ),
-              ],
-            ),
     );
   }
 
   Widget _buildFilterTabs() {
-    return Container(
-      margin: const EdgeInsets.all(16),
-      padding: const EdgeInsets.all(4),
-      decoration: BoxDecoration(
-        color: AppColors.card,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10),
-        ],
-      ),
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Row(
         children: ['All', 'Active', 'Suspended'].map((status) {
           final isSelected = _filterStatus == status;
           final count = status == 'All' 
               ? _staff.length 
               : _staff.where((s) => s.status == status).length;
-          return Expanded(
+          return Padding(
+            padding: const EdgeInsets.only(right: 8),
             child: GestureDetector(
               onTap: () => setState(() => _filterStatus = status),
-              child: Container(
-                padding: const EdgeInsets.symmetric(vertical: 12),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 250),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                 decoration: BoxDecoration(
-                  color: isSelected ? AppColors.primary : Colors.transparent,
-                  borderRadius: BorderRadius.circular(12),
+                  gradient: isSelected
+                      ? const LinearGradient(colors: [Color(0xFF1A1A1A), Color(0xFF333333)])
+                      : null,
+                  color: isSelected ? null : Colors.white,
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(
+                    color: isSelected ? Colors.transparent : const Color(0xFFE5E7EB),
+                  ),
+                  boxShadow: isSelected
+                      ? [
+                          BoxShadow(
+                            color: const Color(0xFF1A1A1A).withOpacity(0.15),
+                            blurRadius: 8,
+                            offset: const Offset(0, 3),
+                          ),
+                        ]
+                      : [],
                 ),
                 child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
+                  mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
                       status,
                       style: TextStyle(
-                        fontSize: 14,
+                        fontSize: 13,
                         fontWeight: FontWeight.w600,
                         color: isSelected ? Colors.white : AppColors.muted,
                       ),
                     ),
                     const SizedBox(width: 6),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
                       decoration: BoxDecoration(
-                        color: isSelected ? Colors.white.withOpacity(0.2) : Colors.grey.shade200,
+                        color: isSelected ? Colors.white.withOpacity(0.2) : Colors.grey.shade100,
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: Text(
@@ -1017,69 +1096,114 @@ class _StaffManagementPageState extends State<StaffManagementPage> {
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
             child: Row(
               children: [
+                // View button – primary action with gradient
                 Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: () => _showStaffPreview(staff),
-                    icon: const Icon(FontAwesomeIcons.eye, size: 12),
-                    label: const Text('View'),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: const Color(0xFF8B5CF6),
-                      side: BorderSide(color: const Color(0xFF8B5CF6).withOpacity(0.3)),
+                  child: GestureDetector(
+                    onTap: () => _showStaffPreview(staff),
+                    child: Container(
                       padding: const EdgeInsets.symmetric(vertical: 10),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: () => _showEditStaffSheet(staff),
-                    icon: const Icon(FontAwesomeIcons.penToSquare, size: 12),
-                    label: const Text('Edit'),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: const Color(0xFF3B82F6),
-                      side: BorderSide(color: const Color(0xFF3B82F6).withOpacity(0.3)),
-                      padding: const EdgeInsets.symmetric(vertical: 10),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: () => _showSuspendConfirmation(staff),
-                    icon: Icon(
-                      staff.status == 'Suspended' 
-                          ? FontAwesomeIcons.userCheck 
-                          : FontAwesomeIcons.userSlash,
-                      size: 12,
-                    ),
-                    label: Text(staff.status == 'Suspended' ? 'Activate' : 'Suspend'),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: staff.status == 'Suspended' 
-                          ? const Color(0xFF10B981) 
-                          : const Color(0xFFEF4444),
-                      side: BorderSide(
-                        color: staff.status == 'Suspended' 
-                            ? const Color(0xFF10B981).withOpacity(0.3) 
-                            : const Color(0xFFEF4444).withOpacity(0.3),
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: [Color(0xFF8B5CF6), Color(0xFFA78BFA)],
+                        ),
+                        borderRadius: BorderRadius.circular(12),
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xFF8B5CF6).withOpacity(0.25),
+                            blurRadius: 8,
+                            offset: const Offset(0, 3),
+                          ),
+                        ],
                       ),
-                      padding: const EdgeInsets.symmetric(vertical: 10),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      child: const Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(FontAwesomeIcons.eye, size: 11, color: Colors.white),
+                          SizedBox(width: 5),
+                          Text('View', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.white)),
+                        ],
+                      ),
                     ),
                   ),
                 ),
                 const SizedBox(width: 8),
+                // Edit button – dark glassy
                 Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: () => _showDeleteConfirmation(staff),
-                    icon: const Icon(FontAwesomeIcons.trash, size: 12),
-                    label: const Text('Delete'),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: const Color(0xFFDC2626),
-                      side: BorderSide(color: const Color(0xFFDC2626).withOpacity(0.3)),
+                  child: GestureDetector(
+                    onTap: () => _showEditStaffSheet(staff),
+                    child: Container(
                       padding: const EdgeInsets.symmetric(vertical: 10),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: [Color(0xFF1A1A1A), Color(0xFF2D2D2D)],
+                        ),
+                        borderRadius: BorderRadius.circular(12),
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xFF1A1A1A).withOpacity(0.15),
+                            blurRadius: 8,
+                            offset: const Offset(0, 3),
+                          ),
+                        ],
+                      ),
+                      child: const Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(FontAwesomeIcons.penToSquare, size: 11, color: Colors.white),
+                          SizedBox(width: 5),
+                          Text('Edit', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.white)),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                // Suspend / Activate – icon-only circle
+                GestureDetector(
+                  onTap: () => _showSuspendConfirmation(staff),
+                  child: Container(
+                    width: 38,
+                    height: 38,
+                    decoration: BoxDecoration(
+                      color: staff.status == 'Suspended'
+                          ? const Color(0xFF10B981).withOpacity(0.12)
+                          : const Color(0xFFEF4444).withOpacity(0.12),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: staff.status == 'Suspended'
+                            ? const Color(0xFF10B981).withOpacity(0.25)
+                            : const Color(0xFFEF4444).withOpacity(0.25),
+                      ),
+                    ),
+                    child: Center(
+                      child: Icon(
+                        staff.status == 'Suspended'
+                            ? FontAwesomeIcons.userCheck
+                            : FontAwesomeIcons.userSlash,
+                        size: 13,
+                        color: staff.status == 'Suspended'
+                            ? const Color(0xFF10B981)
+                            : const Color(0xFFEF4444),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                // Delete – icon-only circle
+                GestureDetector(
+                  onTap: () => _showDeleteConfirmation(staff),
+                  child: Container(
+                    width: 38,
+                    height: 38,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFDC2626).withOpacity(0.10),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: const Color(0xFFDC2626).withOpacity(0.2),
+                      ),
+                    ),
+                    child: const Center(
+                      child: Icon(FontAwesomeIcons.trash, size: 12, color: Color(0xFFDC2626)),
                     ),
                   ),
                 ),

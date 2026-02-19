@@ -270,41 +270,82 @@ class _AttendancePageState extends State<AttendancePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(FontAwesomeIcons.arrowLeft, size: 18, color: AppColors.text),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: const Text(
-          'Attendance & GPS',
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-            color: AppColors.text,
-          ),
-        ),
-        centerTitle: true,
-      ),
-      body: _loading
-          ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
-          : SingleChildScrollView(
-              child: Column(
+      body: SafeArea(
+        child: Column(
+          children: [
+            // ═══════════ CREATIVE HERO HEADER ═══════════
+            Container(
+              margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [Color(0xFF1A1A1A), Color(0xFF2D2D2D), Color(0xFF1A1A1A)],
+                ),
+                borderRadius: BorderRadius.circular(24),
+                boxShadow: [
+                  BoxShadow(color: const Color(0xFF1A1A1A).withOpacity(0.3), blurRadius: 24, offset: const Offset(0, 8)),
+                ],
+              ),
+              child: Stack(
                 children: [
-                  // Stats Cards
-                  _buildStatsCards(),
-                  // Date Navigation & Filters
-                  _buildDateNavigation(),
-                  // View Toggle
-                  _buildViewToggle(),
-                  // Main Content
-                  _activeView == 'list' ? _buildListView() : _buildMapView(),
-                  // Branch Quick View
-                  _buildBranchQuickView(),
+                  Positioned(top: -20, right: -20, child: Container(width: 80, height: 80, decoration: BoxDecoration(shape: BoxShape.circle, color: Colors.white.withOpacity(0.03)))),
+                  Row(
+                    children: [
+                      GestureDetector(
+                        onTap: () => Navigator.pop(context),
+                        child: Container(
+                          width: 40, height: 40,
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: Colors.white.withOpacity(0.08)),
+                          ),
+                          child: const Center(child: Icon(FontAwesomeIcons.arrowLeft, size: 14, color: Colors.white)),
+                        ),
+                      ),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'Attendance & GPS',
+                              style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: Colors.white, letterSpacing: -0.5),
+                            ),
+                            Text(
+                              'Track staff check-ins & locations',
+                              style: TextStyle(fontSize: 12, color: Colors.white.withOpacity(0.5)),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
                 ],
               ),
             ),
+            const SizedBox(height: 8),
+            // Body
+            Expanded(
+            child: _loading
+                ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
+                : SingleChildScrollView(
+                    child: Column(
+                      children: [
+                        _buildStatsCards(),
+                        _buildDateNavigation(),
+                        _buildViewToggle(),
+                        _activeView == 'list' ? _buildListView() : _buildMapView(),
+                        _buildBranchQuickView(),
+                      ],
+                    ),
+                  ),
+          ),
+        ],
+        ),
+      ),
     );
   }
 

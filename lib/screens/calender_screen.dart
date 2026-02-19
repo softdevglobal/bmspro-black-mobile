@@ -812,47 +812,128 @@ class _CalenderScreenState extends State<CalenderScreen> {
   Widget _buildHeader() {
     final bool isBranchAdmin = _currentUserRole == 'branch_admin';
     final bool isOwner = _currentUserRole == 'workshop_owner';
-    
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        Padding(
-          padding: const EdgeInsets.only(bottom: 12),
-          child: Center(
-            child: Column(
-              children: [
-                Text(
-                  isOwner
-                      ? 'Salon Schedule'
-                      : (_isBranchView ? 'Branch Schedule' : 'My Schedule'),
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.w700,
-                    color: AppConfig.text,
-                  ),
-                ),
-                if (isBranchAdmin && !isOwner) ...[
-                  const SizedBox(height: 12),
-                  _buildViewToggle(),
-                ],
-              ],
+
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFF1A1A1A), Color(0xFF2D2D2D), Color(0xFF1A1A1A)],
+        ),
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF1A1A1A).withOpacity(0.3),
+            blurRadius: 24,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Stack(
+        children: [
+          Positioned(
+            top: -20,
+            right: -20,
+            child: Container(
+              width: 80,
+              height: 80,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.white.withOpacity(0.03),
+              ),
             ),
           ),
-        ),
-        if (!_isBranchView || !isBranchAdmin) // Only show legend if complicated, or always? Keeping it simple.
-          _branchThemes.isEmpty
-              ? const SizedBox.shrink()
-              : Row(
+          Column(
+            children: [
+              Row(
+                children: [
+                  Container(
+                    width: 44,
+                    height: 44,
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          Colors.white.withOpacity(0.15),
+                          Colors.white.withOpacity(0.05),
+                        ],
+                      ),
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(color: Colors.white.withOpacity(0.08)),
+                    ),
+                    child: const Center(
+                      child: Icon(FontAwesomeIcons.calendarDays, size: 16, color: Colors.white),
+                    ),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          isOwner
+                              ? 'Salon Schedule'
+                              : (_isBranchView ? 'Branch Schedule' : 'My Schedule'),
+                          style: const TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.w800,
+                            color: Colors.white,
+                            letterSpacing: -0.5,
+                          ),
+                        ),
+                        Text(
+                          DateFormat('MMMM yyyy').format(_focusedMonth),
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.white.withOpacity(0.5),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              if (isBranchAdmin && !isOwner) ...[
+                const SizedBox(height: 14),
+                _buildViewToggle(),
+              ],
+              if ((!_isBranchView || !isBranchAdmin) && _branchThemes.isNotEmpty) ...[
+                const SizedBox(height: 14),
+                Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: _branchThemes.entries.map((entry) {
                     return Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 8),
-                      child: _legendItem(entry.value.color, entry.key),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Container(
+                            width: 8,
+                            height: 8,
+                            decoration: BoxDecoration(
+                              color: entry.value.color,
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            entry.key,
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: Colors.white.withOpacity(0.5),
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
                     );
                   }).toList(),
-                )
-      ],
+                ),
+              ],
+            ],
+          ),
+        ],
+      ),
     );
   }
 

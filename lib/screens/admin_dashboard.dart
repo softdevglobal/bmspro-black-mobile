@@ -337,112 +337,214 @@ class _AdminDashboardState extends State<AdminDashboard> {
         gradient: const LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [Color(0xFF1A1A1A), Color(0xFF2D2D2D), Color(0xFF333333)],
+          colors: [Color(0xFF1A1A1A), Color(0xFF2D2D2D), Color(0xFF1A1A1A)],
         ),
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.2),
-            blurRadius: 20,
+            color: const Color(0xFF1A1A1A).withOpacity(0.3),
+            blurRadius: 24,
             offset: const Offset(0, 8),
           ),
         ],
       ),
-      child: Row(
+      child: Stack(
         children: [
-          // Profile button for workshop owners
-          if (role == 'workshop_owner') ...[
-            Material(
-              color: Colors.transparent,
-              shape: const CircleBorder(),
-              child: InkWell(
-                customBorder: const CircleBorder(),
-                onTap: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (_) => Scaffold(
-                        backgroundColor: AppColors.background,
-                        body: const profile_screen.ProfileScreen(
-                          showBackButton: true,
+          // Decorative circles
+          Positioned(
+            top: -20,
+            right: -20,
+            child: Container(
+              width: 80,
+              height: 80,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.white.withOpacity(0.03),
+              ),
+            ),
+          ),
+          Positioned(
+            bottom: -30,
+            left: -10,
+            child: Container(
+              width: 60,
+              height: 60,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.white.withOpacity(0.02),
+              ),
+            ),
+          ),
+          Column(
+            children: [
+              Row(
+                children: [
+                  // Profile button for workshop owners
+                  if (role == 'workshop_owner') ...[
+                    Material(
+                      color: Colors.transparent,
+                      shape: const CircleBorder(),
+                      child: InkWell(
+                        customBorder: const CircleBorder(),
+                        onTap: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (_) => Scaffold(
+                                backgroundColor: AppColors.background,
+                                body: const profile_screen.ProfileScreen(
+                                  showBackButton: true,
+                                ),
+                              ),
+                            ),
+                          );
+                        },
+                        child: Container(
+                          width: 48,
+                          height: 48,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            gradient: LinearGradient(
+                              colors: [
+                                Colors.white.withOpacity(0.15),
+                                Colors.white.withOpacity(0.05),
+                              ],
+                            ),
+                            border: Border.all(
+                              color: Colors.white.withOpacity(0.15),
+                              width: 1.5,
+                            ),
+                          ),
+                          child: const Center(
+                            child: Icon(
+                              FontAwesomeIcons.user,
+                              size: 18,
+                              color: Colors.white,
+                            ),
+                          ),
                         ),
                       ),
                     ),
-                  );
-                },
-                child: Container(
-                  width: 48,
-                  height: 48,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: Colors.white.withOpacity(0.1),
-                    border: Border.all(
-                      color: Colors.white.withOpacity(0.15),
-                      width: 1.5,
+                    const SizedBox(width: 14),
+                  ],
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Dashboard',
+                          style: TextStyle(
+                            fontSize: 26,
+                            fontWeight: FontWeight.w800,
+                            color: Colors.white,
+                            letterSpacing: -0.5,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          'Analytics & insights',
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: Colors.white.withOpacity(0.5),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                  child: const Center(
-                    child: Icon(
-                      FontAwesomeIcons.user,
-                      size: 18,
-                      color: Colors.white,
+                  // Role pill
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          Colors.white.withOpacity(0.12),
+                          Colors.white.withOpacity(0.06),
+                        ],
+                      ),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                        color: Colors.white.withOpacity(0.15),
+                        width: 1,
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(FontAwesomeIcons.crown,
+                            size: 12, color: const Color(0xFFFFD700).withOpacity(0.9)),
+                        const SizedBox(width: 6),
+                        Text(
+                          adminLabel,
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white.withOpacity(0.85),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
+                ],
+              ),
+              // Revenue highlight row
+              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.06),
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: Colors.white.withOpacity(0.08)),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF10B981).withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: const Icon(FontAwesomeIcons.chartLine, size: 14, color: Color(0xFF10B981)),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Total Revenue',
+                            style: TextStyle(fontSize: 11, color: Colors.white.withOpacity(0.5)),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            _loadingMetrics ? '—' : '\$${_totalRevenue.toStringAsFixed(0)}',
+                            style: const TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.w800,
+                              color: Colors.white,
+                              letterSpacing: -0.5,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF10B981).withOpacity(0.15),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Text(
+                        '${_bookingCount} bookings',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: const Color(0xFF10B981).withOpacity(0.9),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
-            ),
-            const SizedBox(width: 14),
-          ],
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Dashboard',
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.w800,
-                    color: Colors.white,
-                    letterSpacing: -0.3,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  'Analytics & insights',
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: Colors.white.withOpacity(0.5),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          // Role pill
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(
-                color: Colors.white.withOpacity(0.15),
-                width: 1,
-              ),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(FontAwesomeIcons.crown,
-                    size: 12, color: Colors.white.withOpacity(0.8)),
-                const SizedBox(width: 6),
-                Text(
-                  adminLabel,
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.white.withOpacity(0.8),
-                  ),
-                ),
-              ],
-            ),
+            ],
           ),
         ],
       ),
@@ -450,8 +552,6 @@ class _AdminDashboardState extends State<AdminDashboard> {
   }
 
   Widget _buildKpiSection() {
-    final totalRevenueLabel =
-        _loadingMetrics ? '—' : '\$${_totalRevenue.toStringAsFixed(0)}';
     final staffUtilPercent = _loadingMetrics
         ? '—'
         : '${(_staffUtilization * 100).toStringAsFixed(0)}%';
@@ -462,100 +562,65 @@ class _AdminDashboardState extends State<AdminDashboard> {
         _loadingMetrics ? '—' : '\$${_avgTicketValue.toStringAsFixed(0)}';
     final bookingCountLabel = _loadingMetrics ? '—' : '$_bookingCount';
     
-    return Column(
-      children: [
-        Row(
-          children: [
-            Expanded(
-              child: _buildKpiCard(
-                title: 'Total Revenue',
-                value: totalRevenueLabel,
-                icon: FontAwesomeIcons.dollarSign,
-                iconColor: AppColors.green,
-                iconBg: AppColors.green.withOpacity(0.1),
-                trend: '$_bookingCount bookings',
-                trendUp: true,
-                trendColor: AppColors.green,
-                isPill: true,
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: _buildKpiCard(
-                title: 'Staff Utilization',
-                value: staffUtilPercent,
-                icon: FontAwesomeIcons.users,
-                iconColor: AppColors.blue,
-                iconBg: AppColors.blue.withOpacity(0.1),
-                progressBarValue:
-                    _loadingMetrics ? 0.0 : _staffUtilization,
-                progressBarColor: AppColors.blue,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 12),
-        Row(
-          children: [
-            Expanded(
-              child: _buildKpiCard(
-                title: 'Client Retention',
-                value: clientRetentionPercent,
-                icon: FontAwesomeIcons.heart,
-                iconColor: AppColors.purple,
-                iconBg: AppColors.purple.withOpacity(0.1),
-                progressBarValue:
-                    _loadingMetrics ? 0.0 : _clientRetention,
-                progressBarColor: AppColors.purple,
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: _buildKpiCard(
-                title: 'Avg Ticket Value',
-                value: avgTicketLabel,
-                icon: FontAwesomeIcons.receipt,
-                iconColor: AppColors.primary,
-                iconBg: AppColors.primary.withOpacity(0.1),
-                trend: 'per booking',
-                trendUp: true,
-                trendColor: AppColors.primary,
-                isPill: true,
-              ),
-            ),
-          ],
-        ),
-      ],
+    return SizedBox(
+      height: 80,
+      child: ListView(
+        scrollDirection: Axis.horizontal,
+        children: [
+          _buildKpiPill(
+            icon: FontAwesomeIcons.calendarCheck,
+            label: 'Bookings',
+            value: bookingCountLabel,
+            color: AppColors.green,
+            bgColor: const Color(0xFFECFDF5),
+          ),
+          const SizedBox(width: 10),
+          _buildKpiPill(
+            icon: FontAwesomeIcons.users,
+            label: 'Utilization',
+            value: staffUtilPercent,
+            color: AppColors.blue,
+            bgColor: const Color(0xFFEFF6FF),
+          ),
+          const SizedBox(width: 10),
+          _buildKpiPill(
+            icon: FontAwesomeIcons.heart,
+            label: 'Retention',
+            value: clientRetentionPercent,
+            color: AppColors.purple,
+            bgColor: const Color(0xFFF5F3FF),
+          ),
+          const SizedBox(width: 10),
+          _buildKpiPill(
+            icon: FontAwesomeIcons.receipt,
+            label: 'Avg Ticket',
+            value: avgTicketLabel,
+            color: const Color(0xFFF59E0B),
+            bgColor: const Color(0xFFFFFBEB),
+          ),
+        ],
+      ),
     );
   }
 
-  Widget _buildKpiCard({
-    required String title,
-    required String value,
+  Widget _buildKpiPill({
     required IconData icon,
-    required Color iconColor,
-    required Color iconBg,
-    String? trend,
-    bool? trendUp,
-    Color? trendColor,
-    double? progressBarValue,
-    Color? progressBarColor,
-    bool isPill = false,
+    required String label,
+    required String value,
+    required Color color,
+    required Color bgColor,
   }) {
-    final Color surface = Theme.of(context).colorScheme.surface;
-    final Color onSurface = Theme.of(context).colorScheme.onSurface;
-    final Color muted = Theme.of(context).colorScheme.onBackground.withOpacity(0.6);
-
     return Container(
-      padding: const EdgeInsets.all(16),
+      width: 110,
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: surface,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFFE5E7EB).withOpacity(0.5)),
+        color: bgColor,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: color.withOpacity(0.12)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 15,
+            color: color.withOpacity(0.08),
+            blurRadius: 12,
             offset: const Offset(0, 4),
           ),
         ],
@@ -564,87 +629,26 @@ class _AdminDashboardState extends State<AdminDashboard> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Container(
-                width: 36,
-                height: 36,
-                decoration: BoxDecoration(
-                  color: iconColor.withOpacity(0.15),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Center(
-                  child: Icon(icon, color: iconColor, size: 15),
-                ),
+              Icon(icon, size: 12, color: color),
+              const Spacer(),
+              Text(
+                value,
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: color, letterSpacing: -0.5),
               ),
-              if (trend != null)
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                  decoration: BoxDecoration(
-                    color: trendColor?.withOpacity(0.12),
-                    borderRadius: BorderRadius.circular(99),
-                  ),
-                  child: Row(
-                    children: [
-                      if (!isPill && trendUp == true) ...[
-                        Icon(FontAwesomeIcons.arrowUp, size: 10, color: trendColor),
-                        const SizedBox(width: 4),
-                      ],
-                      Text(
-                        trend,
-                        style: TextStyle(
-                          fontSize: 10,
-                          fontWeight: FontWeight.bold,
-                          color: trendColor,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              if (progressBarValue != null)
-                Text(
-                  value,
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                    color: progressBarColor,
-                  ),
-                ),
             ],
           ),
-          const SizedBox(height: 12),
-          if (progressBarValue == null)
-            Text(
-              value,
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: onSurface,
-              ),
-            ),
-          if (progressBarValue != null) ...[
-            ClipRRect(
-              borderRadius: BorderRadius.circular(99),
-              child: LinearProgressIndicator(
-                value: progressBarValue,
-                backgroundColor: Colors.grey.shade200,
-                color: progressBarColor,
-                minHeight: 6,
-              ),
-            ),
-          ],
-          const SizedBox(height: 4),
+          const Spacer(),
           Text(
-            title,
-            style: TextStyle(
-              fontSize: 12,
-              color: muted,
-            ),
+            label,
+            style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: color.withOpacity(0.7)),
           ),
         ],
       ),
     );
   }
+
+  // KPI cards replaced by creative pills above
 
   Widget _buildRevenueChartSection() {
     // Generate chart spots from real data

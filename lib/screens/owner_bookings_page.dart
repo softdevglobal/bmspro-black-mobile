@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:math' as math;
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -2671,322 +2672,497 @@ class _OwnerBookingsPageState extends State<OwnerBookingsPage> {
     }).toList();
 
     return Scaffold(
-      backgroundColor: background,
+      backgroundColor: const Color(0xFFF8F9FA),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.only(bottom: 24),
+          padding: const EdgeInsets.only(bottom: 32),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Header + Create Booking button
+              // ═══════════════ HERO HEADER ═══════════════
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+                padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  color: background,
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text(
-                      'Bookings',
-                      style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.black,
-                      ),
-                    ),
-                    TextButton.icon(
-                      style: TextButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 14, vertical: 8),
-                        backgroundColor: const Color(0xFF1A1A1A),
-                        foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(999),
-                        ),
-                      ),
-                      onPressed: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (_) => const WalkInBookingPage(),
-                          ),
-                        );
-                      },
-                      icon: const Icon(
-                        FontAwesomeIcons.calendarPlus,
-                        size: 14,
-                      ),
-                      label: const Text(
-                        'New Booking',
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              const SizedBox(height: 16),
-
-              // Stats
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Column(
-                  children: [
-                    Row(
-                      children: [
-                        Expanded(
-                          child: _StatCard(
-                            label: 'Total Bookings',
-                            value: '$totalCount',
-                            color: Colors.black87,
-                            background: Colors.white,
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: _StatCard(
-                            label: 'Confirmed Bookings',
-                            value: '$confirmedCount',
-                            color: const Color(0xFF166534),
-                            background: const Color(0xFFD1FAE5),
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: _StatCard(
-                            label: 'Booking Requests',
-                            value: '$pendingCount',
-                            color: const Color(0xFF92400E),
-                            background: const Color(0xFFFEEFC3),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: _StatCard(
-                            label: 'Awaiting Staff',
-                            value: '$awaitingStaffCount',
-                            color: const Color(0xFF1D4ED8),
-                            background: const Color(0xFFDBEAFE),
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: _StatCard(
-                            label: 'Staff Rejected',
-                            value: '$staffRejectedCount',
-                            color: const Color(0xFFEA580C),
-                            background: const Color(0xFFFED7AA),
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: _StatCard(
-                            label: 'Completed',
-                            value: '$completedCount',
-                            color: const Color(0xFF5B21B6),
-                            background: const Color(0xFFEDE9FE),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: _StatCard(
-                            label: 'Revenue',
-                            value: revenueLabel,
-                            color: const Color(0xFF059669),
-                            background: const Color(0xFFD1FAE5),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-
-              const SizedBox(height: 16),
-
-              // Filters
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
-                    boxShadow: const [
-                      BoxShadow(
-                        color: Color(0x0F000000),
-                        blurRadius: 12,
-                        offset: Offset(0, 4),
-                      ),
-                    ],
+                  gradient: const LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [Color(0xFF1A1A1A), Color(0xFF2D2D2D), Color(0xFF1A1A1A)],
                   ),
-                  child: Column(
-                    children: [
-                      TextField(
-                        controller: _searchController,
-                        onChanged: (_) => setState(() {}),
-                        decoration: InputDecoration(
-                          hintText: 'Search bookings...',
-                          prefixIcon: const Icon(Icons.search,
-                              size: 18, color: Color(0xFF9CA3AF)),
-                          isDense: true,
-                          contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 12, vertical: 10),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10),
-                            borderSide:
-                                const BorderSide(color: Color(0xFFE5E7EB)),
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10),
-                            borderSide:
-                                const BorderSide(color: Color(0xFFE5E7EB)),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10),
-                            borderSide: const BorderSide(color: primary),
+                  borderRadius: BorderRadius.circular(24),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFF1A1A1A).withOpacity(0.3),
+                      blurRadius: 24,
+                      offset: const Offset(0, 8),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'Bookings',
+                              style: TextStyle(
+                                fontSize: 28,
+                                fontWeight: FontWeight.w800,
+                                color: Colors.white,
+                                letterSpacing: -0.5,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              '$totalCount total bookings',
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: Colors.white.withOpacity(0.5),
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
+                        ),
+                        GestureDetector(
+                          onTap: () {
+                            Navigator.of(context).push(
+                              MaterialPageRoute(builder: (_) => const WalkInBookingPage()),
+                            );
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(14),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.white.withOpacity(0.15),
+                                  blurRadius: 12,
+                                  offset: const Offset(0, 4),
+                                ),
+                              ],
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: const [
+                                Icon(FontAwesomeIcons.plus, size: 12, color: Color(0xFF1A1A1A)),
+                                SizedBox(width: 8),
+                                Text(
+                                  'New Booking',
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w700,
+                                    color: Color(0xFF1A1A1A),
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
+                      ],
+                    ),
+                    const SizedBox(height: 20),
+
+                    // Revenue highlight
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.08),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: Colors.white.withOpacity(0.06)),
                       ),
-                      const SizedBox(height: 12),
-                      DropdownButtonFormField<String>(
-                        value: _statusFilter,
-                        decoration: InputDecoration(
-                          prefixIcon: const Icon(Icons.filter_alt,
-                              size: 18, color: Color(0xFF9CA3AF)),
-                          isDense: true,
-                          contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 12, vertical: 10),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10),
-                            borderSide:
-                                const BorderSide(color: Color(0xFFE5E7EB)),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 42,
+                            height: 42,
+                            decoration: BoxDecoration(
+                              gradient: const LinearGradient(
+                                colors: [Color(0xFF10B981), Color(0xFF059669)],
+                              ),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: const Center(
+                              child: Icon(FontAwesomeIcons.dollarSign, size: 16, color: Colors.white),
+                            ),
                           ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10),
-                            borderSide:
-                                const BorderSide(color: Color(0xFFE5E7EB)),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10),
-                            borderSide: const BorderSide(color: primary),
-                          ),
-                        ),
-                        items: const [
-                          DropdownMenuItem(
-                            value: 'all',
-                            child: Row(
+                          const SizedBox(width: 14),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Icon(FontAwesomeIcons.list,
-                                    size: 14, color: Colors.black54),
-                                SizedBox(width: 12),
-                                Text('All Statuses'),
+                                Text(
+                                  'Revenue',
+                                  style: TextStyle(fontSize: 11, color: Colors.white.withOpacity(0.5), fontWeight: FontWeight.w600),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  revenueLabel,
+                                  style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w800, color: Color(0xFF10B981), letterSpacing: -0.5),
+                                ),
                               ],
                             ),
                           ),
-                          DropdownMenuItem(
-                            value: 'pending',
-                            child: Row(
-                              children: [
-                                Icon(FontAwesomeIcons.hourglassHalf,
-                                    size: 14, color: Color(0xFFD97706)),
-                                SizedBox(width: 12),
-                                Text('Booking Requests'),
-                              ],
+                          // Completed count chip
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF10B981).withOpacity(0.15),
+                              borderRadius: BorderRadius.circular(10),
                             ),
-                          ),
-                          DropdownMenuItem(
-                            value: 'confirmed',
-                            child: Row(
-                              children: [
-                                Icon(FontAwesomeIcons.check,
-                                    size: 14, color: Color(0xFF166534)),
-                                SizedBox(width: 12),
-                                Text('Confirmed Bookings'),
-                              ],
-                            ),
-                          ),
-                          DropdownMenuItem(
-                            value: 'completed',
-                            child: Row(
-                              children: [
-                                Icon(FontAwesomeIcons.checkDouble,
-                                    size: 14, color: Color(0xFF1D4ED8)),
-                                SizedBox(width: 12),
-                                Text('Completed Bookings'),
-                              ],
-                            ),
-                          ),
-                          DropdownMenuItem(
-                            value: 'cancelled',
-                            child: Row(
-                              children: [
-                                Icon(FontAwesomeIcons.ban,
-                                    size: 14, color: Color(0xFFB91C1C)),
-                                SizedBox(width: 12),
-                                Text('Cancelled Bookings'),
-                              ],
+                            child: Text(
+                              '$completedCount completed',
+                              style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFF34D399)),
                             ),
                           ),
                         ],
-                        onChanged: (value) {
-                          if (value == null) return;
-                          setState(() => _statusFilter = value);
-                        },
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ),
 
               const SizedBox(height: 16),
 
-              // Bookings list
+              // ═══════════════ STAT PILLS ═══════════════
+              SizedBox(
+                height: 80,
+                child: ListView(
+                  scrollDirection: Axis.horizontal,
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  children: [
+                    _StatPill(
+                      icon: FontAwesomeIcons.calendarCheck,
+                      label: 'Confirmed',
+                      value: '$confirmedCount',
+                      color: const Color(0xFF10B981),
+                      bgColor: const Color(0xFFECFDF5),
+                    ),
+                    const SizedBox(width: 10),
+                    _StatPill(
+                      icon: FontAwesomeIcons.hourglassHalf,
+                      label: 'Requests',
+                      value: '$pendingCount',
+                      color: const Color(0xFFF59E0B),
+                      bgColor: const Color(0xFFFFFBEB),
+                    ),
+                    const SizedBox(width: 10),
+                    _StatPill(
+                      icon: FontAwesomeIcons.userClock,
+                      label: 'Awaiting',
+                      value: '$awaitingStaffCount',
+                      color: const Color(0xFF3B82F6),
+                      bgColor: const Color(0xFFEFF6FF),
+                    ),
+                    const SizedBox(width: 10),
+                    _StatPill(
+                      icon: FontAwesomeIcons.triangleExclamation,
+                      label: 'Rejected',
+                      value: '$staffRejectedCount',
+                      color: const Color(0xFFEF4444),
+                      bgColor: const Color(0xFFFEF2F2),
+                    ),
+                    const SizedBox(width: 10),
+                    _StatPill(
+                      icon: FontAwesomeIcons.checkDouble,
+                      label: 'Completed',
+                      value: '$completedCount',
+                      color: const Color(0xFF8B5CF6),
+                      bgColor: const Color(0xFFF5F3FF),
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 16),
+
+              // ═══════════════ SEARCH & FILTER ═══════════════
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: Column(
-                  children: filtered
-                      .map((b) => Padding(
-                            padding: const EdgeInsets.only(bottom: 12),
-                            child: _BookingCard(
-                              booking: b,
-                              onStatusUpdate: (status) {
-                                if (status == 'confirmed') {
-                                  // Show detailed service-wise staff assignment dialog
-                                  _showConfirmationWithDetailsDialog(context, b);
-                                } else if (status == 'reassign') {
-                                  // Show reassignment dialog for staff-rejected bookings
-                                  _showReassignmentDialog(context, b);
-                                } else if (status == 'assign') {
-                                  // Show assignment dialog for services that need staff
-                                  _showStaffAssignmentDialog(context, b);
-                                } else {
-                                  _showConfirmDialog(
-                                    context,
-                                    status,
-                                    () => _updateBookingStatus(b, status),
-                                  );
-                                }
-                              },
+                  children: [
+                    // Search
+                    Container(
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.04),
+                            blurRadius: 12,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: TextField(
+                        controller: _searchController,
+                        onChanged: (_) => setState(() {}),
+                        style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+                        decoration: InputDecoration(
+                          hintText: 'Search by name, email, or service...',
+                          hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 13, fontWeight: FontWeight.w400),
+                          prefixIcon: Padding(
+                            padding: const EdgeInsets.only(left: 14, right: 10),
+                            child: Icon(FontAwesomeIcons.magnifyingGlass, size: 15, color: Colors.grey.shade400),
+                          ),
+                          prefixIconConstraints: const BoxConstraints(minWidth: 0, minHeight: 0),
+                          isDense: true,
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(16),
+                            borderSide: BorderSide.none,
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(16),
+                            borderSide: BorderSide.none,
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(16),
+                            borderSide: const BorderSide(color: Color(0xFF1A1A1A), width: 1.5),
+                          ),
+                          filled: true,
+                          fillColor: Colors.white,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    // Filter chips row
+                    SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Row(
+                        children: [
+                          _FilterChip(
+                            label: 'All',
+                            icon: FontAwesomeIcons.layerGroup,
+                            isSelected: _statusFilter == 'all',
+                            onTap: () => setState(() => _statusFilter = 'all'),
+                          ),
+                          const SizedBox(width: 8),
+                          _FilterChip(
+                            label: 'Requests',
+                            icon: FontAwesomeIcons.hourglassHalf,
+                            isSelected: _statusFilter == 'pending',
+                            color: const Color(0xFFF59E0B),
+                            onTap: () => setState(() => _statusFilter = 'pending'),
+                          ),
+                          const SizedBox(width: 8),
+                          _FilterChip(
+                            label: 'Confirmed',
+                            icon: FontAwesomeIcons.check,
+                            isSelected: _statusFilter == 'confirmed',
+                            color: const Color(0xFF10B981),
+                            onTap: () => setState(() => _statusFilter = 'confirmed'),
+                          ),
+                          const SizedBox(width: 8),
+                          _FilterChip(
+                            label: 'Completed',
+                            icon: FontAwesomeIcons.checkDouble,
+                            isSelected: _statusFilter == 'completed',
+                            color: const Color(0xFF8B5CF6),
+                            onTap: () => setState(() => _statusFilter = 'completed'),
+                          ),
+                          const SizedBox(width: 8),
+                          _FilterChip(
+                            label: 'Cancelled',
+                            icon: FontAwesomeIcons.ban,
+                            isSelected: _statusFilter == 'cancelled',
+                            color: const Color(0xFFEF4444),
+                            onTap: () => setState(() => _statusFilter = 'cancelled'),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 16),
+
+              // ═══════════════ RESULTS COUNT ═══════════════
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Text(
+                  '${filtered.length} booking${filtered.length != 1 ? "s" : ""}',
+                  style: TextStyle(fontSize: 12, color: Colors.grey.shade500, fontWeight: FontWeight.w600),
+                ),
+              ),
+              const SizedBox(height: 8),
+
+              // ═══════════════ BOOKINGS LIST ═══════════════
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Column(
+                  children: filtered.isEmpty
+                      ? [
+                          const SizedBox(height: 40),
+                          Center(
+                            child: Column(
+                              children: [
+                                Container(
+                                  width: 60,
+                                  height: 60,
+                                  decoration: BoxDecoration(
+                                    color: Colors.grey.shade100,
+                                    borderRadius: BorderRadius.circular(16),
+                                  ),
+                                  child: Center(
+                                    child: Icon(FontAwesomeIcons.calendarXmark, size: 24, color: Colors.grey.shade400),
+                                  ),
+                                ),
+                                const SizedBox(height: 14),
+                                Text(
+                                  'No bookings found',
+                                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: Colors.grey.shade500),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  'Try adjusting your filters',
+                                  style: TextStyle(fontSize: 12, color: Colors.grey.shade400),
+                                ),
+                              ],
                             ),
-                          ))
-                      .toList(),
+                          ),
+                        ]
+                      : filtered
+                          .map((b) => Padding(
+                                padding: const EdgeInsets.only(bottom: 12),
+                                child: _BookingCard(
+                                  booking: b,
+                                  onStatusUpdate: (status) {
+                                    if (status == 'confirmed') {
+                                      _showConfirmationWithDetailsDialog(context, b);
+                                    } else if (status == 'reassign') {
+                                      _showReassignmentDialog(context, b);
+                                    } else if (status == 'assign') {
+                                      _showStaffAssignmentDialog(context, b);
+                                    } else {
+                                      _showConfirmDialog(
+                                        context,
+                                        status,
+                                        () => _updateBookingStatus(b, status),
+                                      );
+                                    }
+                                  },
+                                ),
+                              ))
+                          .toList(),
                 ),
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class _StatPill extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final String value;
+  final Color color;
+  final Color bgColor;
+
+  const _StatPill({
+    required this.icon,
+    required this.label,
+    required this.value,
+    required this.color,
+    required this.bgColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 110,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: bgColor,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: color.withOpacity(0.12)),
+        boxShadow: [
+          BoxShadow(
+            color: color.withOpacity(0.08),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(icon, size: 12, color: color),
+              const Spacer(),
+              Text(
+                value,
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: color, letterSpacing: -0.5),
+              ),
+            ],
+          ),
+          const Spacer(),
+          Text(
+            label,
+            style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: color.withOpacity(0.7)),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _FilterChip extends StatelessWidget {
+  final String label;
+  final IconData icon;
+  final bool isSelected;
+  final Color? color;
+  final VoidCallback onTap;
+
+  const _FilterChip({
+    required this.label,
+    required this.icon,
+    required this.isSelected,
+    required this.onTap,
+    this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final activeColor = color ?? const Color(0xFF1A1A1A);
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
+        decoration: BoxDecoration(
+          color: isSelected ? activeColor : Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: isSelected ? activeColor : Colors.grey.shade200,
+          ),
+          boxShadow: isSelected
+              ? [BoxShadow(color: activeColor.withOpacity(0.2), blurRadius: 8, offset: const Offset(0, 3))]
+              : [BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 6, offset: const Offset(0, 2))],
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 11, color: isSelected ? Colors.white : Colors.grey.shade500),
+            const SizedBox(width: 6),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: isSelected ? Colors.white : Colors.grey.shade600,
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -3629,140 +3805,223 @@ class _BookingCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final statusBg = _statusBg(booking.status);
     final statusColor = _statusColor(booking.status);
+    final isCancelled = booking.status == 'cancelled';
 
     return Container(
-      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE5E7EB)),
-        boxShadow: const [
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
           BoxShadow(
-            color: Color(0x0F000000),
-            blurRadius: 8,
-            offset: Offset(0, 4),
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 16,
+            offset: const Offset(0, 6),
+          ),
+          BoxShadow(
+            color: Colors.black.withOpacity(0.02),
+            blurRadius: 4,
+            offset: const Offset(0, 1),
           ),
         ],
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              CircleAvatar(
-                radius: 22,
-                backgroundColor: const Color(0xFF1A1A1A).withOpacity(0.15),
-                child: Text(
-                  _getInitials(booking.customerName),
-                  style: const TextStyle(
-                    color: Color(0xFF1A1A1A),
-                    fontWeight: FontWeight.bold,
-                    fontSize: 14,
+          // ── Card Header ──
+          Container(
+            padding: const EdgeInsets.fromLTRB(16, 14, 16, 12),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  statusBg.withOpacity(0.3),
+                  Colors.white,
+                ],
+              ),
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(20),
+                topRight: Radius.circular(20),
+              ),
+            ),
+            child: Row(
+              children: [
+                // Avatar
+                Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        statusColor.withOpacity(0.15),
+                        statusColor.withOpacity(0.05),
+                      ],
+                    ),
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: statusColor.withOpacity(0.1)),
+                  ),
+                  child: Center(
+                    child: Text(
+                      _getInitials(booking.customerName),
+                      style: TextStyle(
+                        color: statusColor,
+                        fontWeight: FontWeight.w800,
+                        fontSize: 15,
+                        letterSpacing: -0.3,
+                      ),
+                    ),
                   ),
                 ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      booking.customerName,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 14,
-                        color: Colors.black,
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        booking.customerName,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 15,
+                          color: Color(0xFF1A1A1A),
+                          letterSpacing: -0.2,
+                        ),
+                        overflow: TextOverflow.ellipsis,
                       ),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    Text(
-                      booking.email,
-                      style: const TextStyle(
-                        fontSize: 11,
-                        color: Color(0xFF6B7280),
+                      const SizedBox(height: 2),
+                      Text(
+                        booking.email,
+                        style: TextStyle(fontSize: 11, color: Colors.grey.shade500),
+                        overflow: TextOverflow.ellipsis,
                       ),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 8),
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: statusBg,
-                  borderRadius: BorderRadius.circular(999),
-                ),
-                child: Text(
-                  _capitalise(booking.status),
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
-                    color: statusColor,
+                    ],
                   ),
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 10),
-          _infoRow(
-            icon: booking.icon,
-            text: booking.service,
-          ),
-          _infoRow(
-            icon: FontAwesomeIcons.user,
-            text: 'with ${booking.staff}',
-          ),
-          _infoRow(
-            icon: FontAwesomeIcons.calendar,
-            text: booking.dateTime,
-          ),
-          _infoRow(
-            icon: FontAwesomeIcons.clock,
-            text: booking.duration,
-          ),
-          // Show staff-wise approval status for awaiting bookings
-          if (_isAwaitingStatus(booking.status) && booking.items.isNotEmpty) ...[
-            const SizedBox(height: 12),
-            _buildStaffApprovalSection(booking.items),
-          ],
-          // Show staff rejection details for rejected bookings
-          if (_isStaffRejectedStatus(booking.status)) ...[
-            const SizedBox(height: 12),
-            _buildStaffRejectionSection(booking),
-          ],
-          // Task progress bar (visible to admins)
-          if (booking.tasks.isNotEmpty) ...[
-            const SizedBox(height: 12),
-            _buildTaskProgressBar(booking),
-          ],
-          const SizedBox(height: 10),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                booking.price,
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: booking.status == 'cancelled'
-                      ? const Color(0xFF9CA3AF)
-                      : const Color(0xFF1A1A1A),
-                  decoration: booking.status == 'cancelled'
-                      ? TextDecoration.lineThrough
-                      : TextDecoration.none,
+                const SizedBox(width: 8),
+                // Status badge
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                  decoration: BoxDecoration(
+                    color: statusBg,
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: statusColor.withOpacity(0.15)),
+                  ),
+                  child: Text(
+                    _capitalise(booking.status),
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w700,
+                      color: statusColor,
+                      letterSpacing: 0.2,
+                    ),
+                  ),
                 ),
-              ),
-              const SizedBox(height: 12),
-              SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: Row(
+              ],
+            ),
+          ),
+
+          // ── Card Body ──
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 14),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Service & details in a clean grid
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF9FAFB),
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: Column(
+                    children: [
+                      _infoRowCreative(
+                        icon: booking.icon,
+                        text: booking.service,
+                        iconColor: const Color(0xFF1A1A1A),
+                      ),
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _infoRowCreative(
+                              icon: FontAwesomeIcons.user,
+                              text: booking.staff,
+                              iconColor: const Color(0xFF6B7280),
+                            ),
+                          ),
+                          Container(
+                            width: 1,
+                            height: 16,
+                            color: Colors.grey.shade200,
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: _infoRowCreative(
+                              icon: FontAwesomeIcons.clock,
+                              text: booking.duration,
+                              iconColor: const Color(0xFF6B7280),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      _infoRowCreative(
+                        icon: FontAwesomeIcons.calendar,
+                        text: booking.dateTime,
+                        iconColor: const Color(0xFF6B7280),
+                      ),
+                    ],
+                  ),
+                ),
+
+                // Staff approval / rejection sections
+                if (_isAwaitingStatus(booking.status) && booking.items.isNotEmpty) ...[
+                  const SizedBox(height: 12),
+                  _buildStaffApprovalSection(booking.items),
+                ],
+                if (_isStaffRejectedStatus(booking.status)) ...[
+                  const SizedBox(height: 12),
+                  _buildStaffRejectionSection(booking),
+                ],
+
+                // Task progress bar
+                if (booking.tasks.isNotEmpty) ...[
+                  const SizedBox(height: 12),
+                  _buildTaskProgressBar(booking),
+                ],
+
+                const SizedBox(height: 14),
+
+                // Price + Action buttons
+                Row(
                   children: [
+                    // Price
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Total',
+                          style: TextStyle(fontSize: 10, color: Colors.grey.shade500, fontWeight: FontWeight.w500),
+                        ),
+                        Text(
+                          booking.price,
+                          style: TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.w800,
+                            color: isCancelled ? const Color(0xFF9CA3AF) : const Color(0xFF1A1A1A),
+                            decoration: isCancelled ? TextDecoration.lineThrough : TextDecoration.none,
+                            letterSpacing: -0.5,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const Spacer(),
+                    // Actions
                     _ActionIcon(
                       icon: FontAwesomeIcons.eye,
-                      background: const Color(0xFFE0EDFF),
-                      color: const Color(0xFF2563EB),
+                      background: const Color(0xFFF3F4F6),
+                      color: const Color(0xFF6B7280),
                       onTap: () => _showBookingDetails(context, booking),
                     ),
                     if (booking.status == 'pending') ...[
@@ -3771,21 +4030,21 @@ class _BookingCard extends StatelessWidget {
                         label: "Send to Staff",
                         background: const Color(0xFFFEF3C7),
                         color: const Color(0xFFD97706),
+                        icon: FontAwesomeIcons.paperPlane,
                         onTap: () => onStatusUpdate('confirmed'),
                       ),
                       const SizedBox(width: 8),
-                      _ActionButton(
-                        label: "Decline",
+                      _ActionIcon(
+                        icon: FontAwesomeIcons.xmark,
                         background: const Color(0xFFFEE2E2),
-                        color: const Color(0xFFB91C1C),
+                        color: const Color(0xFFEF4444),
                         onTap: () => onStatusUpdate('cancelled'),
                       ),
                     ] else if (_isAwaitingStatus(booking.status)) ...[
-                      // Show "Assign Staff" button if any services need assignment
                       if (_hasServicesNeedingAssignment(booking)) ...[
                         const SizedBox(width: 8),
                         _ActionButton(
-                          label: "Assign Staff",
+                          label: "Assign",
                           background: const Color(0xFFF3E8FF),
                           color: const Color(0xFF7C3AED),
                           icon: FontAwesomeIcons.userPlus,
@@ -3794,70 +4053,284 @@ class _BookingCard extends StatelessWidget {
                       ] else ...[
                         const SizedBox(width: 8),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
                           decoration: BoxDecoration(
-                            color: const Color(0xFFDBEAFE),
-                            borderRadius: BorderRadius.circular(8),
+                            color: const Color(0xFFEFF6FF),
+                            borderRadius: BorderRadius.circular(10),
                           ),
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
-                            children: const [
-                              Icon(FontAwesomeIcons.userClock, size: 12, color: Color(0xFF1D4ED8)),
-                              SizedBox(width: 6),
-                              Text(
-                                "Awaiting Staff",
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w600,
-                                  color: Color(0xFF1D4ED8),
-                                ),
-                              ),
+                            children: [
+                              Icon(FontAwesomeIcons.userClock, size: 11, color: const Color(0xFF3B82F6)),
+                              const SizedBox(width: 5),
+                              const Text('Waiting', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFF3B82F6))),
                             ],
                           ),
                         ),
                       ],
                       const SizedBox(width: 8),
-                      _ActionButton(
-                        label: "Cancel",
+                      _ActionIcon(
+                        icon: FontAwesomeIcons.xmark,
                         background: const Color(0xFFFEE2E2),
-                        color: const Color(0xFFB91C1C),
+                        color: const Color(0xFFEF4444),
                         onTap: () => onStatusUpdate('cancelled'),
                       ),
                     ] else if (_isStaffRejectedStatus(booking.status)) ...[
                       const SizedBox(width: 8),
                       _ActionButton(
                         label: "Reassign",
-                        background: const Color(0xFFDBEAFE),
-                        color: const Color(0xFF1D4ED8),
-                        icon: FontAwesomeIcons.userPlus,
+                        background: const Color(0xFFEFF6FF),
+                        color: const Color(0xFF3B82F6),
+                        icon: FontAwesomeIcons.arrowsRotate,
                         onTap: () => onStatusUpdate('reassign'),
                       ),
                       const SizedBox(width: 8),
-                      _ActionButton(
-                        label: "Cancel",
+                      _ActionIcon(
+                        icon: FontAwesomeIcons.xmark,
                         background: const Color(0xFFFEE2E2),
-                        color: const Color(0xFFB91C1C),
+                        color: const Color(0xFFEF4444),
                         onTap: () => onStatusUpdate('cancelled'),
                       ),
                     ] else if (booking.status == 'confirmed') ...[
                       const SizedBox(width: 8),
                       _ActionButton(
                         label: "Complete",
-                        background: const Color(0xFFDBEAFE),
-                        color: const Color(0xFF1D4ED8),
+                        background: const Color(0xFFECFDF5),
+                        color: const Color(0xFF059669),
+                        icon: FontAwesomeIcons.checkDouble,
                         onTap: () => onStatusUpdate('completed'),
                       ),
                       const SizedBox(width: 8),
-                      _ActionButton(
-                        label: "Cancel",
+                      _ActionIcon(
+                        icon: FontAwesomeIcons.xmark,
                         background: const Color(0xFFFEE2E2),
-                        color: const Color(0xFFB91C1C),
+                        color: const Color(0xFFEF4444),
                         onTap: () => onStatusUpdate('cancelled'),
                       ),
                     ],
                   ],
                 ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _infoRowCreative({required IconData icon, required String text, required Color iconColor}) {
+    return Row(
+      children: [
+        Icon(icon, size: 12, color: iconColor),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Text(
+            text,
+            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: Color(0xFF374151)),
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildTaskProgressBar(_Booking booking) {
+    final completed = booking.tasks.where((t) => t['done'] == true).length;
+    final total = booking.tasks.length;
+    final pct = total > 0 ? ((completed / total) * 100).round() : 0;
+    final isComplete = completed == total && total > 0;
+
+    final Color progressColor = isComplete
+        ? const Color(0xFF10B981)
+        : pct > 50
+            ? const Color(0xFFF59E0B)
+            : const Color(0xFF3B82F6);
+    final Color progressBg = isComplete
+        ? const Color(0xFFD1FAE5)
+        : pct > 50
+            ? const Color(0xFFFEF3C7)
+            : const Color(0xFFDBEAFE);
+
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: isComplete
+              ? [const Color(0xFFF0FDF4), const Color(0xFFECFDF5), const Color(0xFFF0FDFA)]
+              : [const Color(0xFFFAFAFA), Colors.white, const Color(0xFFFAFAFA)],
+        ),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: isComplete
+              ? const Color(0xFF10B981).withOpacity(0.3)
+              : Colors.grey.shade200,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: (isComplete ? const Color(0xFF10B981) : Colors.black).withOpacity(0.05),
+            blurRadius: 12,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          // Header row with icon badge, title, and circular percentage
+          Row(
+            children: [
+              Container(
+                width: 32,
+                height: 32,
+                decoration: BoxDecoration(
+                  color: isComplete ? const Color(0xFF10B981) : const Color(0xFF1A1A1A),
+                  borderRadius: BorderRadius.circular(9),
+                  boxShadow: [
+                    BoxShadow(
+                      color: (isComplete ? const Color(0xFF10B981) : const Color(0xFF1A1A1A)).withOpacity(0.25),
+                      blurRadius: 6,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: Center(
+                  child: Icon(
+                    isComplete ? FontAwesomeIcons.checkDouble : FontAwesomeIcons.listCheck,
+                    color: Colors.white,
+                    size: 12,
+                  ),
+                ),
               ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Service Progress',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w800,
+                        color: Color(0xFF1A1A1A),
+                        letterSpacing: -0.2,
+                      ),
+                    ),
+                    Text(
+                      isComplete
+                          ? 'All tasks completed'
+                          : '${total - completed} task${total - completed != 1 ? "s" : ""} remaining',
+                      style: const TextStyle(fontSize: 10, color: Color(0xFF9CA3AF), fontWeight: FontWeight.w500),
+                    ),
+                  ],
+                ),
+              ),
+              // Circular percentage
+              SizedBox(
+                width: 38,
+                height: 38,
+                child: CustomPaint(
+                  painter: _BookingCircularProgressPainter(
+                    progress: pct / 100.0,
+                    progressColor: progressColor,
+                    bgColor: progressBg,
+                    strokeWidth: 3.0,
+                  ),
+                  child: Center(
+                    child: Text(
+                      '$pct%',
+                      style: TextStyle(
+                        fontSize: 9,
+                        fontWeight: FontWeight.w900,
+                        color: isComplete ? const Color(0xFF059669) : const Color(0xFF374151),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+
+          // Segmented progress bar
+          Row(
+            children: List.generate(total, (i) {
+              final isDone = booking.tasks[i]['done'] == true;
+              return Expanded(
+                child: Container(
+                  margin: EdgeInsets.only(right: i < total - 1 ? 3 : 0),
+                  height: 5,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(3),
+                    gradient: isDone
+                        ? LinearGradient(
+                            colors: isComplete
+                                ? [const Color(0xFF34D399), const Color(0xFF10B981)]
+                                : [const Color(0xFFFBBF24), const Color(0xFFF59E0B)],
+                          )
+                        : null,
+                    color: isDone ? null : Colors.grey.shade200,
+                    boxShadow: isDone
+                        ? [BoxShadow(color: progressColor.withOpacity(0.25), blurRadius: 4, offset: const Offset(0, 1))]
+                        : null,
+                  ),
+                ),
+              );
+            }),
+          ),
+          const SizedBox(height: 8),
+
+          // Bottom labels
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              RichText(
+                text: TextSpan(children: [
+                  TextSpan(
+                    text: '$completed',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w800,
+                      color: isComplete ? const Color(0xFF059669) : const Color(0xFF1A1A1A),
+                    ),
+                  ),
+                  TextSpan(
+                    text: '/$total tasks',
+                    style: const TextStyle(fontSize: 10, color: Color(0xFF9CA3AF)),
+                  ),
+                ]),
+              ),
+              if (isComplete)
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF10B981).withOpacity(0.12),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(FontAwesomeIcons.star, size: 8, color: Color(0xFF059669)),
+                      const SizedBox(width: 4),
+                      const Text(
+                        'Complete',
+                        style: TextStyle(fontSize: 9, fontWeight: FontWeight.w700, color: Color(0xFF059669)),
+                      ),
+                    ],
+                  ),
+                )
+              else if (booking.finalSubmission != null)
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(FontAwesomeIcons.flagCheckered, size: 9, color: Color(0xFF6366F1)),
+                    const SizedBox(width: 4),
+                    const Text(
+                      'Report submitted',
+                      style: TextStyle(fontSize: 9, fontWeight: FontWeight.w600, color: Color(0xFF4F46E5)),
+                    ),
+                  ],
+                ),
             ],
           ),
         ],
@@ -3865,72 +4338,398 @@ class _BookingCard extends StatelessWidget {
     );
   }
 
-  Widget _buildTaskProgressBar(_Booking booking) {
+  Widget _buildCreativeTaskProgressSheet(_Booking booking) {
     final completed = booking.tasks.where((t) => t['done'] == true).length;
     final total = booking.tasks.length;
-    final progress = total > 0 ? (completed / total) : 0.0;
-    final allDone = completed == total;
+    final pct = booking.taskProgress > 0 ? booking.taskProgress : (total > 0 ? ((completed / total) * 100).round() : 0);
+    final isComplete = pct == 100;
+
+    final Color progressColor = isComplete
+        ? const Color(0xFF10B981)
+        : pct > 50
+            ? const Color(0xFFF59E0B)
+            : const Color(0xFF3B82F6);
+    final Color progressBg = isComplete
+        ? const Color(0xFFD1FAE5)
+        : pct > 50
+            ? const Color(0xFFFEF3C7)
+            : const Color(0xFFDBEAFE);
 
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: allDone ? const Color(0xFFF0FDF4) : const Color(0xFFFFFBEB),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: allDone ? const Color(0xFFBBF7D0) : const Color(0xFFFDE68A)),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: isComplete
+              ? [const Color(0xFFF0FDF4), const Color(0xFFECFDF5), Colors.white]
+              : [Colors.white, const Color(0xFFFAFAFA), Colors.white],
+        ),
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(
+          color: isComplete ? const Color(0xFF10B981).withOpacity(0.2) : Colors.grey.shade100,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: (isComplete ? const Color(0xFF10B981) : Colors.black).withOpacity(0.06),
+            blurRadius: 20,
+            offset: const Offset(0, 6),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Header with icon badge, title, and circular percentage
           Row(
             children: [
-              Icon(
-                allDone ? FontAwesomeIcons.clipboardCheck : FontAwesomeIcons.clipboardList,
-                size: 12,
-                color: allDone ? const Color(0xFF16A34A) : const Color(0xFFD97706),
-              ),
-              const SizedBox(width: 6),
-              Text(
-                'Tasks: $completed/$total',
-                style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.bold,
-                  color: allDone ? const Color(0xFF166534) : const Color(0xFF92400E),
+              Container(
+                width: 42,
+                height: 42,
+                decoration: BoxDecoration(
+                  color: isComplete ? const Color(0xFF10B981) : const Color(0xFF1A1A1A),
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: (isComplete ? const Color(0xFF10B981) : const Color(0xFF1A1A1A)).withOpacity(0.3),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: Center(
+                  child: Icon(
+                    isComplete ? FontAwesomeIcons.checkDouble : FontAwesomeIcons.listCheck,
+                    color: Colors.white,
+                    size: 16,
+                  ),
                 ),
               ),
-              const Spacer(),
-              Text(
-                '${(progress * 100).round()}%',
-                style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.bold,
-                  color: allDone ? const Color(0xFF166534) : const Color(0xFF92400E),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Service Progress',
+                      style: TextStyle(
+                        fontSize: 17,
+                        fontWeight: FontWeight.w800,
+                        color: Color(0xFF1A1A1A),
+                        letterSpacing: -0.3,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      isComplete
+                          ? 'All tasks completed'
+                          : '${total - completed} task${total - completed != 1 ? "s" : ""} remaining',
+                      style: const TextStyle(fontSize: 12, color: Color(0xFF9CA3AF), fontWeight: FontWeight.w500),
+                    ),
+                  ],
+                ),
+              ),
+              // Circular percentage indicator
+              SizedBox(
+                width: 50,
+                height: 50,
+                child: CustomPaint(
+                  painter: _BookingCircularProgressPainter(
+                    progress: pct / 100.0,
+                    progressColor: progressColor,
+                    bgColor: progressBg,
+                    strokeWidth: 4.0,
+                  ),
+                  child: Center(
+                    child: Text(
+                      '$pct%',
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w900,
+                        color: isComplete ? const Color(0xFF059669) : const Color(0xFF374151),
+                      ),
+                    ),
+                  ),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 6),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(4),
-            child: LinearProgressIndicator(
-              value: progress,
-              minHeight: 5,
-              backgroundColor: allDone ? const Color(0xFFDCFCE7) : const Color(0xFFFEF3C7),
-              valueColor: AlwaysStoppedAnimation<Color>(
-                allDone ? const Color(0xFF22C55E) : const Color(0xFFF59E0B),
-              ),
-            ),
+          const SizedBox(height: 18),
+
+          // Segmented progress bar
+          Row(
+            children: List.generate(total, (i) {
+              final isDone = booking.tasks[i]['done'] == true;
+              return Expanded(
+                child: Container(
+                  margin: EdgeInsets.only(right: i < total - 1 ? 4 : 0),
+                  height: 7,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(4),
+                    gradient: isDone
+                        ? LinearGradient(
+                            colors: isComplete
+                                ? [const Color(0xFF34D399), const Color(0xFF10B981)]
+                                : [const Color(0xFFFBBF24), const Color(0xFFF59E0B)],
+                          )
+                        : null,
+                    color: isDone ? null : Colors.grey.shade200,
+                    boxShadow: isDone
+                        ? [BoxShadow(color: progressColor.withOpacity(0.3), blurRadius: 6, offset: const Offset(0, 2))]
+                        : null,
+                  ),
+                ),
+              );
+            }),
           ),
+          const SizedBox(height: 12),
+
+          // Counter + status badge
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              RichText(
+                text: TextSpan(children: [
+                  TextSpan(
+                    text: '$completed',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w800,
+                      color: isComplete ? const Color(0xFF059669) : const Color(0xFF1A1A1A),
+                    ),
+                  ),
+                  TextSpan(
+                    text: '/$total tasks',
+                    style: const TextStyle(fontSize: 12, color: Color(0xFF9CA3AF)),
+                  ),
+                ]),
+              ),
+              if (isComplete)
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF10B981).withOpacity(0.12),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(FontAwesomeIcons.star, size: 10, color: Color(0xFF059669)),
+                      const SizedBox(width: 5),
+                      const Text('Complete', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xFF059669))),
+                    ],
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(height: 18),
+
+          // Individual task items
+          ...booking.tasks.asMap().entries.map((entry) {
+            final idx = entry.key;
+            final task = entry.value;
+            final isDone = task['done'] == true;
+            final taskName = task['name']?.toString() ?? 'Task ${idx + 1}';
+            final taskDesc = task['description']?.toString() ?? '';
+            final staffNote = task['staffNote']?.toString() ?? '';
+            final imageUrl = task['imageUrl']?.toString() ?? '';
+            final completedBy = task['completedByStaffName']?.toString() ?? '';
+            final serviceName = task['serviceName']?.toString() ?? '';
+
+            return Container(
+              margin: const EdgeInsets.only(bottom: 10),
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: isDone ? const Color(0xFFF0FDF4) : Colors.grey.shade50,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: isDone
+                      ? const Color(0xFF10B981).withOpacity(0.25)
+                      : Colors.grey.shade200,
+                ),
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Checkbox circle
+                  Container(
+                    width: 28,
+                    height: 28,
+                    decoration: BoxDecoration(
+                      color: isDone ? const Color(0xFF10B981) : Colors.grey.shade200,
+                      shape: BoxShape.circle,
+                      boxShadow: isDone
+                          ? [BoxShadow(color: const Color(0xFF10B981).withOpacity(0.3), blurRadius: 6, offset: const Offset(0, 2))]
+                          : null,
+                    ),
+                    child: Center(
+                      child: isDone
+                          ? const Icon(FontAwesomeIcons.check, size: 11, color: Colors.white)
+                          : Text(
+                              '${idx + 1}',
+                              style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF9CA3AF)),
+                            ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                taskName,
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                  color: isDone ? const Color(0xFF065F46) : const Color(0xFF1A1A1A),
+                                ),
+                              ),
+                            ),
+                            if (isDone)
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFF10B981).withOpacity(0.12),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: const Text('Done', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: Color(0xFF059669))),
+                              ),
+                          ],
+                        ),
+                        if (taskDesc.isNotEmpty) ...[
+                          const SizedBox(height: 4),
+                          Text(taskDesc, style: const TextStyle(fontSize: 12, color: Color(0xFF9CA3AF), height: 1.4)),
+                        ],
+                        if (serviceName.isNotEmpty) ...[
+                          const SizedBox(height: 5),
+                          Row(
+                            children: [
+                              const Icon(FontAwesomeIcons.wrench, size: 9, color: Color(0xFF9CA3AF)),
+                              const SizedBox(width: 5),
+                              Flexible(
+                                child: Text(serviceName, style: const TextStyle(fontSize: 10, color: Color(0xFF9CA3AF)), overflow: TextOverflow.ellipsis),
+                              ),
+                            ],
+                          ),
+                        ],
+                        // Staff note
+                        if (staffNote.isNotEmpty) ...[
+                          const SizedBox(height: 8),
+                          Container(
+                            padding: const EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFEFF6FF),
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(color: const Color(0xFFDBEAFE)),
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    const Icon(FontAwesomeIcons.comment, size: 10, color: Color(0xFF3B82F6)),
+                                    const SizedBox(width: 6),
+                                    Expanded(
+                                      child: Text(staffNote, style: const TextStyle(fontSize: 12, color: Color(0xFF1D4ED8), height: 1.3)),
+                                    ),
+                                  ],
+                                ),
+                                if (completedBy.isNotEmpty) ...[
+                                  const SizedBox(height: 4),
+                                  Text('— $completedBy', style: const TextStyle(fontSize: 10, color: Color(0xFF60A5FA))),
+                                ],
+                              ],
+                            ),
+                          ),
+                        ],
+                        // Image
+                        if (imageUrl.isNotEmpty) ...[
+                          const SizedBox(height: 10),
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(10),
+                            child: Image.network(
+                              imageUrl,
+                              width: double.infinity,
+                              height: 120,
+                              fit: BoxFit.cover,
+                              errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }),
+
+          // Final submission
           if (booking.finalSubmission != null) ...[
             const SizedBox(height: 6),
-            Row(
-              children: [
-                const Icon(FontAwesomeIcons.flagCheckered, size: 10, color: Color(0xFF6366F1)),
-                const SizedBox(width: 4),
-                Text(
-                  'Final report submitted',
-                  style: const TextStyle(fontSize: 10, color: Color(0xFF4F46E5), fontWeight: FontWeight.w600),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [Color(0xFFEEF2FF), Color(0xFFF5F3FF)],
                 ),
-              ],
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: const Color(0xFFC7D2FE)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        width: 28,
+                        height: 28,
+                        decoration: const BoxDecoration(
+                          color: Color(0xFF6366F1),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Center(
+                          child: Icon(FontAwesomeIcons.flagCheckered, size: 11, color: Colors.white),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      const Text('Final Submission', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: Color(0xFF4338CA))),
+                      const Spacer(),
+                      if (booking.finalSubmission!['submittedByStaffName'] != null)
+                        Text(
+                          'by ${booking.finalSubmission!['submittedByStaffName']}',
+                          style: const TextStyle(fontSize: 10, color: Color(0xFF818CF8)),
+                        ),
+                    ],
+                  ),
+                  if ((booking.finalSubmission!['description'] ?? '').toString().isNotEmpty) ...[
+                    const SizedBox(height: 10),
+                    Text(
+                      booking.finalSubmission!['description'].toString(),
+                      style: const TextStyle(fontSize: 13, color: Color(0xFF312E81), height: 1.4),
+                    ),
+                  ],
+                  if ((booking.finalSubmission!['imageUrl'] ?? '').toString().isNotEmpty) ...[
+                    const SizedBox(height: 10),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: Image.network(
+                        booking.finalSubmission!['imageUrl'].toString(),
+                        width: double.infinity,
+                        height: 150,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
             ),
           ],
         ],
@@ -4112,200 +4911,10 @@ class _BookingCard extends StatelessWidget {
                       ),
                     ),
 
-                    // Task Progress Section (for admins)
+                    // Task Progress Section (for admins) – creative design
                     if (booking.tasks.isNotEmpty) ...[
                       const SizedBox(height: 24),
-                      Container(
-                        padding: const EdgeInsets.all(20),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(20),
-                          boxShadow: [
-                            BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4)),
-                          ],
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                const Text("Task Progress", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black87)),
-                                const Spacer(),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                                  decoration: BoxDecoration(
-                                    color: booking.taskProgress == 100 ? const Color(0xFFD1FAE5) : const Color(0xFFFEF3C7),
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  child: Text(
-                                    '${booking.taskProgress}%',
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.bold,
-                                      color: booking.taskProgress == 100 ? const Color(0xFF166534) : const Color(0xFF92400E),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 12),
-                            ClipRRect(
-                              borderRadius: BorderRadius.circular(6),
-                              child: LinearProgressIndicator(
-                                value: booking.tasks.isEmpty ? 0 : booking.tasks.where((t) => t['done'] == true).length / booking.tasks.length,
-                                minHeight: 8,
-                                backgroundColor: Colors.grey.shade200,
-                                valueColor: AlwaysStoppedAnimation<Color>(
-                                  booking.taskProgress == 100 ? const Color(0xFF22C55E) : const Color(0xFFF59E0B),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(height: 16),
-                            ...booking.tasks.asMap().entries.map((entry) {
-                              final idx = entry.key;
-                              final task = entry.value;
-                              final isDone = task['done'] == true;
-                              final taskName = task['name']?.toString() ?? 'Task ${idx + 1}';
-                              final staffNote = task['staffNote']?.toString() ?? '';
-                              final imageUrl = task['imageUrl']?.toString() ?? '';
-                              final completedBy = task['completedByStaffName']?.toString() ?? '';
-
-                              return Container(
-                                margin: const EdgeInsets.only(bottom: 10),
-                                padding: const EdgeInsets.all(12),
-                                decoration: BoxDecoration(
-                                  color: isDone ? const Color(0xFFF0FDF4) : const Color(0xFFF9FAFB),
-                                  borderRadius: BorderRadius.circular(12),
-                                  border: Border.all(color: isDone ? const Color(0xFFBBF7D0) : const Color(0xFFE5E7EB)),
-                                ),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Row(
-                                      children: [
-                                        Container(
-                                          width: 24, height: 24,
-                                          decoration: BoxDecoration(
-                                            color: isDone ? const Color(0xFF22C55E) : Colors.grey.shade300,
-                                            shape: BoxShape.circle,
-                                          ),
-                                          child: Center(
-                                            child: isDone
-                                                ? const Icon(Icons.check, color: Colors.white, size: 14)
-                                                : Text('${idx + 1}', style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
-                                          ),
-                                        ),
-                                        const SizedBox(width: 10),
-                                        Expanded(
-                                          child: Text(
-                                            taskName,
-                                            style: TextStyle(
-                                              fontSize: 13, fontWeight: FontWeight.w600,
-                                              color: isDone ? const Color(0xFF166534) : Colors.black87,
-                                              decoration: isDone ? TextDecoration.lineThrough : null,
-                                            ),
-                                          ),
-                                        ),
-                                        if (isDone)
-                                          Container(
-                                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                            decoration: BoxDecoration(color: const Color(0xFFDCFCE7), borderRadius: BorderRadius.circular(8)),
-                                            child: const Text('Done', style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: Color(0xFF166534))),
-                                          ),
-                                      ],
-                                    ),
-                                    if (staffNote.isNotEmpty) ...[
-                                      const SizedBox(height: 8),
-                                      Container(
-                                        width: double.infinity,
-                                        padding: const EdgeInsets.all(8),
-                                        decoration: BoxDecoration(
-                                          color: const Color(0xFFEFF6FF),
-                                          borderRadius: BorderRadius.circular(8),
-                                          border: Border.all(color: const Color(0xFFDBEAFE)),
-                                        ),
-                                        child: Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                          children: [
-                                            Text(staffNote, style: const TextStyle(fontSize: 11, color: Color(0xFF1E40AF))),
-                                            if (completedBy.isNotEmpty)
-                                              Text('— $completedBy', style: const TextStyle(fontSize: 9, color: Color(0xFF3B82F6))),
-                                          ],
-                                        ),
-                                      ),
-                                    ],
-                                    if (imageUrl.isNotEmpty) ...[
-                                      const SizedBox(height: 8),
-                                      ClipRRect(
-                                        borderRadius: BorderRadius.circular(8),
-                                        child: Image.network(
-                                          imageUrl,
-                                          width: double.infinity,
-                                          height: 120,
-                                          fit: BoxFit.cover,
-                                          errorBuilder: (_, __, ___) => const SizedBox.shrink(),
-                                        ),
-                                      ),
-                                    ],
-                                  ],
-                                ),
-                              );
-                            }),
-
-                            // Final submission
-                            if (booking.finalSubmission != null) ...[
-                              const SizedBox(height: 12),
-                              Container(
-                                width: double.infinity,
-                                padding: const EdgeInsets.all(14),
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFFEEF2FF),
-                                  borderRadius: BorderRadius.circular(14),
-                                  border: Border.all(color: const Color(0xFFC7D2FE)),
-                                ),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Row(
-                                      children: [
-                                        const Icon(FontAwesomeIcons.flagCheckered, size: 14, color: Color(0xFF6366F1)),
-                                        const SizedBox(width: 8),
-                                        const Text('Final Submission', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Color(0xFF4338CA))),
-                                        const Spacer(),
-                                        if (booking.finalSubmission!['submittedByStaffName'] != null)
-                                          Text(
-                                            'by ${booking.finalSubmission!['submittedByStaffName']}',
-                                            style: const TextStyle(fontSize: 10, color: Color(0xFF818CF8)),
-                                          ),
-                                      ],
-                                    ),
-                                    if ((booking.finalSubmission!['description'] ?? '').toString().isNotEmpty) ...[
-                                      const SizedBox(height: 8),
-                                      Text(
-                                        booking.finalSubmission!['description'].toString(),
-                                        style: const TextStyle(fontSize: 12, color: Color(0xFF312E81)),
-                                      ),
-                                    ],
-                                    if ((booking.finalSubmission!['imageUrl'] ?? '').toString().isNotEmpty) ...[
-                                      const SizedBox(height: 8),
-                                      ClipRRect(
-                                        borderRadius: BorderRadius.circular(10),
-                                        child: Image.network(
-                                          booking.finalSubmission!['imageUrl'].toString(),
-                                          width: double.infinity,
-                                          height: 150,
-                                          fit: BoxFit.cover,
-                                          errorBuilder: (_, __, ___) => const SizedBox.shrink(),
-                                        ),
-                                      ),
-                                    ],
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ],
-                        ),
-                      ),
+                      _buildCreativeTaskProgressSheet(booking),
                     ],
 
                     const SizedBox(height: 32),
@@ -4480,14 +5089,15 @@ class _ActionIcon extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        width: 32,
-        height: 32,
+        width: 36,
+        height: 36,
         decoration: BoxDecoration(
           color: background,
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(11),
+          border: Border.all(color: color.withOpacity(0.08)),
         ),
         child: Center(
-          child: Icon(icon, size: 14, color: color),
+          child: Icon(icon, size: 13, color: color),
         ),
       ),
     );
@@ -4514,29 +5124,85 @@ class _ActionButton extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
         decoration: BoxDecoration(
           color: background,
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(11),
+          border: Border.all(color: color.withOpacity(0.1)),
+          boxShadow: [
+            BoxShadow(
+              color: color.withOpacity(0.08),
+              blurRadius: 6,
+              offset: const Offset(0, 2),
+            ),
+          ],
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             if (icon != null) ...[
-              Icon(icon, size: 12, color: color),
+              Icon(icon, size: 11, color: color),
               const SizedBox(width: 6),
             ],
             Text(
               label,
               style: TextStyle(
                 fontSize: 12,
-                fontWeight: FontWeight.w600,
+                fontWeight: FontWeight.w700,
                 color: color,
+                letterSpacing: -0.1,
               ),
             ),
           ],
         ),
       ),
     );
+  }
+}
+
+// ─── Circular Progress Painter for Bookings Page ──────────────────────
+class _BookingCircularProgressPainter extends CustomPainter {
+  final double progress;
+  final Color progressColor;
+  final Color bgColor;
+  final double strokeWidth;
+
+  _BookingCircularProgressPainter({
+    required this.progress,
+    required this.progressColor,
+    required this.bgColor,
+    this.strokeWidth = 3.0,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height / 2);
+    final radius = (size.width - strokeWidth) / 2;
+
+    // Background circle
+    final bgPaint = Paint()
+      ..color = bgColor
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = strokeWidth;
+    canvas.drawCircle(center, radius, bgPaint);
+
+    // Progress arc
+    final progressPaint = Paint()
+      ..color = progressColor
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = strokeWidth
+      ..strokeCap = StrokeCap.round;
+    canvas.drawArc(
+      Rect.fromCircle(center: center, radius: radius),
+      -math.pi / 2,
+      2 * math.pi * progress,
+      false,
+      progressPaint,
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant _BookingCircularProgressPainter oldDelegate) {
+    return oldDelegate.progress != progress || oldDelegate.progressColor != progressColor;
   }
 }

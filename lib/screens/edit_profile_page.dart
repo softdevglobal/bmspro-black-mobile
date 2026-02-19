@@ -742,18 +742,18 @@ class _EditProfilePageState extends State<EditProfilePage>
             Expanded(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.all(16),
-                child: Column(
-                  children: [
-                    if (!_loadingProfile) _buildProfilePictureSection(),
-                    const SizedBox(height: 24),
-                    _buildPersonalInfoSection(),
-                    const SizedBox(height: 24),
-                    _buildSaveButton(),
-                    const SizedBox(height: 40),
-                  ],
-                ),
+              child: Column(
+                children: [
+                  if (!_loadingProfile) _buildProfilePictureSection(),
+                  const SizedBox(height: 24),
+                  _buildPersonalInfoSection(),
+                  const SizedBox(height: 24),
+                  _buildSaveButton(),
+                  const SizedBox(height: 40),
+                ],
               ),
             ),
+          ),
           ],
         ),
       ),
@@ -763,30 +763,38 @@ class _EditProfilePageState extends State<EditProfilePage>
   // --- Widgets ---
   Widget _buildHeader() {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-      decoration: const BoxDecoration(color: AppColors.background),
-      child: Row(
+      margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: [Color(0xFF1A1A1A), Color(0xFF2D2D2D), Color(0xFF1A1A1A)]),
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [BoxShadow(color: const Color(0xFF1A1A1A).withOpacity(0.3), blurRadius: 24, offset: const Offset(0, 8))],
+      ),
+      child: Stack(
         children: [
-          GestureDetector(
-            onTap: () => Navigator.pop(context),
-            child: const Icon(
-              FontAwesomeIcons.chevronLeft,
-              size: 18,
-              color: AppColors.text,
-            ),
-          ),
-          const Expanded(
-            child: Center(
-              child: Text(
-                'Edit Profile',
-                style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.text),
+          Positioned(top: -20, right: -20, child: Container(width: 80, height: 80, decoration: BoxDecoration(shape: BoxShape.circle, color: Colors.white.withOpacity(0.03)))),
+          Row(
+            children: [
+              GestureDetector(
+                onTap: () => Navigator.pop(context),
+                child: Container(
+                  width: 40, height: 40,
+                  decoration: BoxDecoration(color: Colors.white.withOpacity(0.1), borderRadius: BorderRadius.circular(12), border: Border.all(color: Colors.white.withOpacity(0.08))),
+                  child: const Center(child: Icon(FontAwesomeIcons.arrowLeft, size: 14, color: Colors.white)),
+                ),
               ),
-            ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text('Edit Profile', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: Colors.white, letterSpacing: -0.5)),
+                    Text('Update your personal info', style: TextStyle(fontSize: 12, color: Colors.white.withOpacity(0.5))),
+                  ],
+                ),
+              ),
+            ],
           ),
-          const SizedBox(width: 24),
         ],
       ),
     );

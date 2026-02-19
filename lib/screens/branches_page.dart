@@ -464,69 +464,113 @@ class _BranchesPageState extends State<BranchesPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(FontAwesomeIcons.arrowLeft, size: 18, color: AppColors.text),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: Text(
-          _isBranchAdmin ? 'My Branch' : 'Branches',
-          style: const TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-            color: AppColors.text,
-          ),
-        ),
-        centerTitle: true,
-        actions: [
-          // Only show Add button for salon owners
-          if (_canEdit && _ownerUid != null)
-            Padding(
-              padding: const EdgeInsets.only(right: 16),
-              child: GestureDetector(
-                onTap: _showAddBranchSheet,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                  decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [Color(0xFF10B981), Color(0xFF34D399)],
-                    ),
-                    borderRadius: BorderRadius.circular(20),
-                    boxShadow: [
-                      BoxShadow(
-                        color: const Color(0xFF10B981).withOpacity(0.3),
-                        blurRadius: 8,
-                        offset: const Offset(0, 3),
-                      ),
-                    ],
+      body: SafeArea(
+        child: Column(
+          children: [
+            // ═══════════ CREATIVE HERO HEADER ═══════════
+            Container(
+              margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [Color(0xFF1A1A1A), Color(0xFF2D2D2D), Color(0xFF1A1A1A)],
+                ),
+                borderRadius: BorderRadius.circular(24),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF1A1A1A).withOpacity(0.3),
+                    blurRadius: 24,
+                    offset: const Offset(0, 8),
                   ),
-                  child: const Row(
-                    mainAxisSize: MainAxisSize.min,
+                ],
+              ),
+              child: Stack(
+                children: [
+                  Positioned(
+                    top: -20,
+                    right: -20,
+                    child: Container(
+                      width: 80,
+                      height: 80,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Colors.white.withOpacity(0.03),
+                      ),
+                    ),
+                  ),
+                  Row(
                     children: [
-                      Icon(FontAwesomeIcons.plus, color: Colors.white, size: 12),
-                      SizedBox(width: 6),
-                      Text(
-                        'Add',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w600,
-                          fontSize: 13,
+                      GestureDetector(
+                        onTap: () => Navigator.pop(context),
+                        child: Container(
+                          width: 40, height: 40,
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: Colors.white.withOpacity(0.08)),
+                          ),
+                          child: const Center(
+                            child: Icon(FontAwesomeIcons.arrowLeft, size: 14, color: Colors.white),
+                          ),
                         ),
                       ),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              _isBranchAdmin ? 'My Branch' : 'Branches',
+                              style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: Colors.white, letterSpacing: -0.5),
+                            ),
+                            Text(
+                              '${_branches.length} location${_branches.length == 1 ? '' : 's'}',
+                              style: TextStyle(fontSize: 12, color: Colors.white.withOpacity(0.5)),
+                            ),
+                          ],
+                        ),
+                      ),
+                      if (_canEdit && _ownerUid != null)
+                        GestureDetector(
+                          onTap: _showAddBranchSheet,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                            decoration: BoxDecoration(
+                              gradient: const LinearGradient(colors: [Color(0xFF10B981), Color(0xFF059669)]),
+                              borderRadius: BorderRadius.circular(14),
+                              boxShadow: [
+                                BoxShadow(color: const Color(0xFF10B981).withOpacity(0.3), blurRadius: 8, offset: const Offset(0, 3)),
+                              ],
+                            ),
+                            child: const Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(FontAwesomeIcons.plus, color: Colors.white, size: 12),
+                                SizedBox(width: 6),
+                                Text('Add', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 12)),
+                              ],
+                            ),
+                          ),
+                        ),
                     ],
                   ),
-                ),
+                ],
               ),
             ),
-        ],
+            const SizedBox(height: 8),
+            // Body
+            Expanded(
+            child: _loading
+                ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
+                : _branches.isEmpty
+                    ? _buildEmptyState()
+                    : _buildBranchesList(),
+          ),
+          ],
+        ),
       ),
-      body: _loading
-          ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
-          : _branches.isEmpty
-              ? _buildEmptyState()
-              : _buildBranchesList(),
     );
   }
 

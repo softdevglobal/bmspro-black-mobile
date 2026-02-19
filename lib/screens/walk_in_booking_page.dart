@@ -1216,61 +1216,87 @@ class _WalkInBookingPageState extends State<WalkInBookingPage> with TickerProvid
 
   Widget _buildHeader() {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-      decoration: const BoxDecoration(
-        color: AppColors.card,
-        border: Border(bottom: BorderSide(color: AppColors.border)),
+      margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFF1A1A1A), Color(0xFF2D2D2D), Color(0xFF1A1A1A)],
+        ),
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(color: const Color(0xFF1A1A1A).withOpacity(0.3), blurRadius: 24, offset: const Offset(0, 8)),
+        ],
       ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      child: Stack(
         children: [
-          IconButton(
-            icon: const Icon(FontAwesomeIcons.xmark, color: AppColors.text, size: 20),
-            onPressed: () => Navigator.pop(context),
-          ),
-          Column(
+          Positioned(top: -20, right: -20, child: Container(width: 80, height: 80, decoration: BoxDecoration(shape: BoxShape.circle, color: Colors.white.withOpacity(0.03)))),
+          Row(
             children: [
-              Text(
-                _userRole == 'staff' ? 'Create My Booking' : 'Create Booking',
-                style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.text)),
-              const SizedBox(height: 4),
-              Text(
-                _userRole == 'staff' 
-                    ? (_currentStep == 0 
-                        ? 'Step 1: Date, Branch & Services'
-                        : _currentStep == 1 
-                            ? 'Step 2: Select Times'
-                            : 'Step 3: Customer Details')
-                    : 'Step ${_currentStep + 1} of 3',
-                style: const TextStyle(
-                    fontSize: 12, color: AppColors.muted),
+              GestureDetector(
+                onTap: () => Navigator.pop(context),
+                child: Container(
+                  width: 40, height: 40,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.white.withOpacity(0.08)),
+                  ),
+                  child: const Center(child: Icon(FontAwesomeIcons.xmark, size: 14, color: Colors.white)),
+                ),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      _userRole == 'staff' ? 'Create My Booking' : 'Create Booking',
+                      style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: Colors.white, letterSpacing: -0.5),
+                    ),
+                    Text(
+                      _userRole == 'staff' 
+                          ? (_currentStep == 0 
+                              ? 'Step 1: Date, Branch & Services'
+                              : _currentStep == 1 
+                                  ? 'Step 2: Select Times'
+                                  : 'Step 3: Customer Details')
+                          : 'Step ${_currentStep + 1} of 3',
+                      style: TextStyle(fontSize: 12, color: Colors.white.withOpacity(0.5)),
+                    ),
+                  ],
+                ),
+              ),
+              GestureDetector(
+                onTap: () {
+                  setState(() {
+                    _currentStep = 0;
+                    _selectedBranchId = null;
+                    _selectedBranchLabel = null;
+                    _selectedBranchTimezone = null;
+                    _selectedServiceIds = {};
+                    _selectedDate = null;
+                    _serviceTimeSelections = {};
+                    _serviceStaffSelections = {};
+                    _nameController.clear();
+                    _phoneController.clear();
+                    _emailController.clear();
+                    _notesController.clear();
+                  });
+                },
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: Colors.white.withOpacity(0.08)),
+                  ),
+                  child: const Text('Reset',
+                      style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 12)),
+                ),
               ),
             ],
-          ),
-          TextButton(
-            onPressed: () {
-              setState(() {
-                _currentStep = 0;
-                _selectedBranchId = null;
-                _selectedBranchLabel = null;
-                _selectedBranchTimezone = null;
-                _selectedServiceIds = {};
-                _selectedDate = null;
-                _serviceTimeSelections = {};
-                _serviceStaffSelections = {};
-                _nameController.clear();
-                _phoneController.clear();
-                _emailController.clear();
-                _notesController.clear();
-              });
-            },
-            child: const Text('Reset',
-                style: TextStyle(
-                    color: AppColors.primary,
-                    fontWeight: FontWeight.w600)),
           ),
         ],
       ),

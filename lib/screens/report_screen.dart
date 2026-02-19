@@ -587,28 +587,95 @@ class _ReportScreenState extends State<ReportScreen> {
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 12),
-                    child: Center(
-                      child: Column(
-                        children: [
-                          Text(
-                            _isBranchView ? 'Branch Summary' : 'My Summary',
-                            textAlign: TextAlign.center,
-                            style: const TextStyle(
-                              fontSize: 24,
-                              fontWeight: FontWeight.w700,
-                              color: AppColors.text,
+                  // ═══════════ CREATIVE HERO HEADER ═══════════
+                  Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [Color(0xFF1A1A1A), Color(0xFF2D2D2D), Color(0xFF1A1A1A)],
+                      ),
+                      borderRadius: BorderRadius.circular(24),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFF1A1A1A).withOpacity(0.3),
+                          blurRadius: 24,
+                          offset: const Offset(0, 8),
+                        ),
+                      ],
+                    ),
+                    child: Stack(
+                      children: [
+                        Positioned(
+                          top: -20,
+                          right: -20,
+                          child: Container(
+                            width: 80,
+                            height: 80,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: Colors.white.withOpacity(0.03),
                             ),
                           ),
-                          if (isBranchAdmin) ...[
-                            const SizedBox(height: 12),
-                            _buildViewToggle(),
+                        ),
+                        Column(
+                          children: [
+                            Row(
+                              children: [
+                                Container(
+                                  width: 44,
+                                  height: 44,
+                                  decoration: BoxDecoration(
+                                    gradient: LinearGradient(
+                                      colors: [
+                                        Colors.white.withOpacity(0.15),
+                                        Colors.white.withOpacity(0.05),
+                                      ],
+                                    ),
+                                    borderRadius: BorderRadius.circular(14),
+                                    border: Border.all(color: Colors.white.withOpacity(0.08)),
+                                  ),
+                                  child: const Center(
+                                    child: Icon(FontAwesomeIcons.chartBar, size: 16, color: Colors.white),
+                                  ),
+                                ),
+                                const SizedBox(width: 14),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        _isBranchView ? 'Branch Summary' : 'My Summary',
+                                        style: const TextStyle(
+                                          fontSize: 22,
+                                          fontWeight: FontWeight.w800,
+                                          color: Colors.white,
+                                          letterSpacing: -0.5,
+                                        ),
+                                      ),
+                                      Text(
+                                        'Performance overview',
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color: Colors.white.withOpacity(0.5),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                            if (isBranchAdmin) ...[
+                              const SizedBox(height: 12),
+                              _buildViewToggle(),
+                            ],
                           ],
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
                   ),
+                  const SizedBox(height: 12),
                   _buildTabs(),
                   const SizedBox(height: 24),
                   Container(
@@ -829,33 +896,53 @@ class _ReportScreenState extends State<ReportScreen> {
   Widget _buildSummaryHeader(String title, String subtitle) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
+        gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [AppColors.primary, AppColors.accent],
+          colors: [
+            const Color(0xFF1A1A1A).withOpacity(0.06),
+            Colors.white,
+          ],
         ),
         borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: const Color(0xFFE5E7EB).withOpacity(0.5)),
         boxShadow: [
           BoxShadow(
-            color: AppColors.primary.withOpacity(0.2),
-            blurRadius: 25,
-            offset: const Offset(0, 8),
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 16,
+            offset: const Offset(0, 6),
           ),
         ],
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
         children: [
-          Text(title,
-              style: const TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white)),
-          const SizedBox(height: 8),
-          Text(subtitle,
-              style: const TextStyle(color: Colors.white70, fontSize: 14)),
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: const Color(0xFF1A1A1A),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: const Center(
+              child: Icon(FontAwesomeIcons.calendarDay, size: 14, color: Colors.white),
+            ),
+          ),
+          const SizedBox(width: 14),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(title,
+                  style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
+                      color: Color(0xFF1A1A1A))),
+              const SizedBox(height: 2),
+              Text(subtitle,
+                  style: const TextStyle(color: Color(0xFF6B7280), fontSize: 13)),
+            ],
+          ),
         ],
       ),
     );
