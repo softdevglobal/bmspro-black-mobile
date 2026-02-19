@@ -359,33 +359,6 @@ class _LoginScreenState extends State<LoginScreen>
 
                       const SizedBox(height: 24),
 
-                      // Divider
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Divider(
-                                color: Colors.grey.shade200),
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 16),
-                            child: Text(
-                              'Secured by Firebase',
-                              style: TextStyle(
-                                color: Colors.grey.shade400,
-                                fontSize: 12,
-                              ),
-                            ),
-                          ),
-                          Expanded(
-                            child: Divider(
-                                color: Colors.grey.shade200),
-                          ),
-                        ],
-                      ),
-
-                      const SizedBox(height: 16),
-
                       // Help text
                       Center(
                         child: Text(
