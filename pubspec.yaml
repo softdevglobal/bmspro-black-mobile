@@ -84,7 +84,7 @@ flutter:
   assets:
     - assets/icons/bmsblack-icon.jpeg
 
-flutter_icons:
+flutter_launcher_icons:
   android: true
   ios: true
   image_path: "assets/icons/bmsblack-icon.jpeg"
