@@ -279,6 +279,21 @@ class _OwnerBookingsPageState extends State<OwnerBookingsPage> {
 
   Future<void> _updateBookingStatus(_Booking booking, String newStatus,
       {List<Map<String, dynamic>>? updatedServices}) async {
+    // Prevent any status changes on cancelled bookings
+    final normalizedStatus = booking.status.toLowerCase();
+    if ((normalizedStatus == 'cancelled' || normalizedStatus == 'canceled') && newStatus != 'cancelled') {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('This booking has been cancelled and cannot be updated.'),
+            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+      return;
+    }
+
     final db = FirebaseFirestore.instance;
     try {
       // Store previous status for email triggering

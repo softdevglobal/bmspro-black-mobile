@@ -101,6 +101,23 @@ class _TaskDetailsPageState extends State<TaskDetailsPage> with TickerProviderSt
         }
       }
 
+      // Prevent starting cancelled bookings
+      final bookingStatus = (_bookingData?['status']?.toString().toLowerCase() ?? '');
+      if (bookingStatus == 'cancelled' || bookingStatus == 'canceled') {
+        if (mounted) {
+          setState(() => _isLoading = false);
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('This booking has been cancelled and cannot be started.'),
+              backgroundColor: Colors.red,
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+          Navigator.of(context).pop();
+        }
+        return;
+      }
+
       // Extract service information
       _serviceName = widget.appointmentData?['serviceName']?.toString() ?? 
                     _bookingData?['serviceName']?.toString() ?? 

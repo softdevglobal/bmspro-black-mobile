@@ -51,6 +51,7 @@ class _AppointmentDetailsPageState extends State<AppointmentDetailsPage> with Ti
   // Real-time updates
   StreamSubscription<DocumentSnapshot>? _bookingSubscription;
   bool _isServiceCompleted = false;
+  bool _isCancelled = false;
   String? _currentServiceId;
   bool _isMyAppointment = false; // Track if appointment belongs to current user
 
@@ -105,8 +106,10 @@ class _AppointmentDetailsPageState extends State<AppointmentDetailsPage> with Ti
       // Check if appointment belongs to current user
       bool isMyAppointment = false;
       
-      // Check completion status
+      // Check completion and cancellation status
       bool isCompleted = false;
+      final bookingStatus = (data['status']?.toString().toLowerCase() ?? '');
+      final isCancelled = bookingStatus == 'cancelled' || bookingStatus == 'canceled';
       
       if (data['services'] is List && serviceId != null && serviceId.isNotEmpty) {
         // Multi-service booking - check specific service completion status
@@ -158,10 +161,11 @@ class _AppointmentDetailsPageState extends State<AppointmentDetailsPage> with Ti
           ? Map<String, dynamic>.from(data['finalSubmission'] as Map)
           : null;
 
-      // Update booking data and completion status
+      // Update booking data and completion/cancellation status
       setState(() {
         _bookingData = data;
         _isServiceCompleted = isCompleted;
+        _isCancelled = isCancelled;
         _isMyAppointment = isMyAppointment;
         _tasks = parsedTasks;
         _taskProgress = taskProg;
@@ -1861,8 +1865,32 @@ class _AppointmentDetailsPageState extends State<AppointmentDetailsPage> with Ti
   Widget _buildActionButtons() {
     return Column(
       children: [
-        if (_isServiceCompleted) ...[
-          // Show completed badge and view details button for completed services
+        if (_isCancelled) ...[
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
+            decoration: BoxDecoration(
+              color: const Color(0xFFFEE2E2),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: const Color(0xFFFCA5A5)),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: const [
+                Icon(FontAwesomeIcons.ban, color: Color(0xFFEF4444), size: 20),
+                SizedBox(width: 12),
+                Text(
+                  'Booking Cancelled',
+                  style: TextStyle(
+                    color: Color(0xFFEF4444),
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ] else if (_isServiceCompleted) ...[
           Container(
             width: double.infinity,
             padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
