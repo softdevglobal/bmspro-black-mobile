@@ -1091,19 +1091,21 @@ class _CalenderScreenState extends State<CalenderScreen> {
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 300),
                   decoration: BoxDecoration(
-                    color: isPastDate ? Colors.grey.shade50 : Colors.white,
+                    color: isSelected && !isPastDate
+                        ? const Color(0xFF1A1A1A)
+                        : isPastDate
+                            ? Colors.grey.shade50
+                            : Colors.white,
                     borderRadius: BorderRadius.circular(12),
                     border: isSelected && !isPastDate
-                        ? Border.all(
-                            color: primaryBranchColor ?? AppConfig.primary, width: 2)
+                        ? Border.all(color: const Color(0xFF1A1A1A), width: 2)
                         : Border.all(color: Colors.grey.shade300),
                     boxShadow: isSelected && !isPastDate
                         ? [
                             BoxShadow(
-                                color: (primaryBranchColor ?? Colors.black)
-                                    .withOpacity(0.1),
-                                blurRadius: 10,
-                                offset: const Offset(0, 4))
+                                color: const Color(0xFF1A1A1A).withOpacity(0.3),
+                                blurRadius: 12,
+                                offset: const Offset(0, 5))
                           ]
                         : null,
                   ),
@@ -1113,11 +1115,12 @@ class _CalenderScreenState extends State<CalenderScreen> {
                         child: Text(
                           '$day',
                           style: TextStyle(
-                            fontWeight: isPastDate ? FontWeight.normal : FontWeight.w600,
+                            fontWeight: isPastDate ? FontWeight.normal : FontWeight.w700,
+                            fontSize: isSelected ? 16 : 14,
                             color: isPastDate
                                 ? AppConfig.muted.withOpacity(0.4)
                                 : isSelected
-                                    ? (primaryBranchColor ?? AppConfig.primary)
+                                    ? Colors.white
                                     : (dayData?.isOffDay == true
                                         ? AppConfig.muted.withOpacity(0.5)
                                         : AppConfig.text),
