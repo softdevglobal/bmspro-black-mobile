@@ -2762,7 +2762,7 @@ class _OwnerBookingsPageState extends State<OwnerBookingsPage> {
   @override
   Widget build(BuildContext context) {
     const Color primary = Color(0xFF1A1A1A);
-    const Color background = Color(0xFFF5F5F5);
+    const Color background = Color(0xFFE4E7ED);
 
     // Aggregate stats from all bookings (not filtered by search)
     final totalCount = _bookings.length;
@@ -3164,8 +3164,11 @@ class _OwnerBookingsPageState extends State<OwnerBookingsPage> {
                           ),
                         ]
                       : filtered
-                          .map((b) => Padding(
-                                padding: const EdgeInsets.only(bottom: 20),
+                          .asMap().entries.map((entry) {
+                            final idx = entry.key;
+                            final b = entry.value;
+                            return Padding(
+                                padding: const EdgeInsets.only(bottom: 24),
                                 child: _BookingCard(
                                   booking: b,
                                   onStatusUpdate: (status) {
@@ -3184,7 +3187,8 @@ class _OwnerBookingsPageState extends State<OwnerBookingsPage> {
                                     }
                                   },
                                 ),
-                              ))
+                            );
+                          })
                           .toList(),
                 ),
               ),
@@ -3944,24 +3948,39 @@ class _BookingCard extends StatelessWidget {
     final isCancelled = booking.status == 'cancelled';
 
     return Container(
+      clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: statusBg.withOpacity(0.15),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: statusColor.withOpacity(0.12)),
+        border: Border.all(color: statusColor.withOpacity(0.3), width: 2),
         boxShadow: [
           BoxShadow(
-            color: statusColor.withOpacity(0.08),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
+            color: statusColor.withOpacity(0.12),
+            blurRadius: 18,
+            offset: const Offset(0, 6),
           ),
           BoxShadow(
-            color: Colors.black.withOpacity(0.03),
-            blurRadius: 6,
+            color: Colors.black.withOpacity(0.06),
+            blurRadius: 8,
             offset: const Offset(0, 2),
           ),
         ],
       ),
-      child: Column(
+      child: IntrinsicHeight(
+        child: Row(
+          children: [
+            Container(
+              width: 5,
+              decoration: BoxDecoration(
+                color: statusColor.withOpacity(0.7),
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(20),
+                  bottomLeft: Radius.circular(20),
+                ),
+              ),
+            ),
+            Expanded(
+              child: Column(
         children: [
           // ── Card Header ──
           Container(
@@ -3971,8 +3990,8 @@ class _BookingCard extends StatelessWidget {
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: [
-                  statusBg.withOpacity(0.3),
-                  Colors.white,
+                  statusBg.withOpacity(0.7),
+                  statusBg.withOpacity(0.25),
                 ],
               ),
               borderRadius: const BorderRadius.only(
@@ -4249,6 +4268,10 @@ class _BookingCard extends StatelessWidget {
             ),
           ),
         ],
+      ),
+            ),
+          ],
+        ),
       ),
     );
   }
