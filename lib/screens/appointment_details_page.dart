@@ -1,10 +1,12 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -1123,6 +1125,9 @@ class _AppointmentDetailsPageState extends State<AppointmentDetailsPage> with Ti
         return StatefulBuilder(
           builder: (ctx, setSheetState) {
             return Container(
+              constraints: BoxConstraints(
+                maxHeight: MediaQuery.of(ctx).size.height * 0.85,
+              ),
               padding: EdgeInsets.only(
                 bottom: MediaQuery.of(ctx).viewInsets.bottom,
               ),
@@ -1132,7 +1137,8 @@ class _AppointmentDetailsPageState extends State<AppointmentDetailsPage> with Ti
               ),
               child: Padding(
                 padding: const EdgeInsets.all(24),
-                child: Column(
+                child: SingleChildScrollView(
+                  child: Column(
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -1346,6 +1352,7 @@ class _AppointmentDetailsPageState extends State<AppointmentDetailsPage> with Ti
                     ),
                     const SizedBox(height: 8),
                   ],
+                ),
                 ),
               ),
             );
@@ -1562,6 +1569,9 @@ class _AppointmentDetailsPageState extends State<AppointmentDetailsPage> with Ti
         return StatefulBuilder(
           builder: (ctx, setSheetState) {
             return Container(
+              constraints: BoxConstraints(
+                maxHeight: MediaQuery.of(ctx).size.height * 0.85,
+              ),
               padding: EdgeInsets.only(bottom: MediaQuery.of(ctx).viewInsets.bottom),
               decoration: const BoxDecoration(
                 color: Colors.white,
@@ -1569,6 +1579,7 @@ class _AppointmentDetailsPageState extends State<AppointmentDetailsPage> with Ti
               ),
               child: Padding(
                 padding: const EdgeInsets.all(24),
+                child: SingleChildScrollView(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -1785,6 +1796,7 @@ class _AppointmentDetailsPageState extends State<AppointmentDetailsPage> with Ti
                     const SizedBox(height: 8),
                   ],
                 ),
+                ),
               ),
             );
           },
@@ -1819,11 +1831,45 @@ class _AppointmentDetailsPageState extends State<AppointmentDetailsPage> with Ti
         'updatedAt': FieldValue.serverTimestamp(),
       });
 
+      // Auto-complete the booking via the service-complete API
+      // This handles: status → Completed, customer notification, email, activity log
+      bool bookingCompleted = false;
+      try {
+        final token = await user?.getIdToken();
+        if (token != null) {
+          const apiBaseUrl = 'https://black.bmspros.com.au';
+          final Map<String, dynamic> requestBody = {};
+          if (_currentServiceId != null && _currentServiceId!.isNotEmpty) {
+            requestBody['serviceId'] = _currentServiceId;
+          }
+          final response = await http.post(
+            Uri.parse('$apiBaseUrl/api/bookings/$bookingId/service-complete'),
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer $token',
+            },
+            body: jsonEncode(requestBody),
+          ).timeout(const Duration(seconds: 15));
+
+          if (response.statusCode == 200) {
+            final responseData = jsonDecode(response.body);
+            bookingCompleted = responseData['bookingCompleted'] ?? false;
+            debugPrint('✅ Service-complete API succeeded: ${responseData['message']}');
+          } else {
+            debugPrint('⚠️ Service-complete API returned ${response.statusCode}: ${response.body}');
+          }
+        }
+      } catch (e) {
+        debugPrint('⚠️ Service-complete API call failed (final submission saved): $e');
+      }
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: const Text('Final report submitted successfully!'),
-            backgroundColor: Colors.indigo.shade600,
+            content: Text(bookingCompleted
+                ? 'Report submitted & booking marked as completed!'
+                : 'Final report submitted successfully!'),
+            backgroundColor: bookingCompleted ? Colors.green.shade600 : Colors.indigo.shade600,
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
           ),

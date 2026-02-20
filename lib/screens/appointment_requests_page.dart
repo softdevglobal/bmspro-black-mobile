@@ -337,7 +337,8 @@ class _AppointmentRequestsPageState extends State<AppointmentRequestsPage> {
             Text('Accept Service'),
           ],
         ),
-        content: Column(
+        content: SingleChildScrollView(
+          child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -464,6 +465,7 @@ class _AppointmentRequestsPageState extends State<AppointmentRequestsPage> {
               ),
             ),
           ],
+        ),
         ),
         actions: [
           TextButton(

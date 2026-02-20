@@ -1115,9 +1115,13 @@ class _OwnerBookingsPageState extends State<OwnerBookingsPage> {
         final m = Map<String, dynamic>.from(item);
         servicesToEdit.add(m);
         final sName = (m['staffName'] ?? '').toString().toLowerCase();
+        final sId = (m['staffId'] ?? '').toString();
         isLocked.add(sName.isNotEmpty &&
             !sName.contains('any staff') &&
-            !sName.contains('any available'));
+            !sName.contains('any available') &&
+            !sName.contains('not assigned') &&
+            sId.isNotEmpty &&
+            sId != 'null');
       }
     } else {
       servicesToEdit.add({
@@ -1128,9 +1132,13 @@ class _OwnerBookingsPageState extends State<OwnerBookingsPage> {
         'duration': booking.duration,
       });
       final sName = booking.staff.toLowerCase();
+      final sId = (booking.rawData['staffId'] ?? '').toString();
       isLocked.add(sName.isNotEmpty &&
           !sName.contains('any staff') &&
-          !sName.contains('any available'));
+          !sName.contains('any available') &&
+          !sName.contains('not assigned') &&
+          sId.isNotEmpty &&
+          sId != 'null');
     }
 
     // Pre-calculate available staff for each service
@@ -1160,9 +1168,13 @@ class _OwnerBookingsPageState extends State<OwnerBookingsPage> {
           for (var service in servicesToEdit) {
             final staffName =
                 (service['staffName'] ?? '').toString().toLowerCase();
+            final staffId = (service['staffId'] ?? '').toString();
             if (staffName.isEmpty ||
                 staffName.contains('any staff') ||
-                staffName.contains('any available')) {
+                staffName.contains('any available') ||
+                staffName.contains('not assigned') ||
+                staffId.isEmpty ||
+                staffId == 'null') {
               canConfirm = false;
               break;
             }
@@ -1534,6 +1546,7 @@ class _OwnerBookingsPageState extends State<OwnerBookingsPage> {
         final needsStaff = approvalStatus == 'needs_assignment' ||
             staffName.contains('any staff') ||
             staffName.contains('any available') ||
+            staffName.contains('not assigned') ||
             staffId.isEmpty ||
             staffId == 'null';
         
@@ -1551,10 +1564,14 @@ class _OwnerBookingsPageState extends State<OwnerBookingsPage> {
         'approvalStatus': 'pending',
       });
       final staffName = booking.staff.toLowerCase();
+      final sId = (booking.rawData['staffId'] ?? '').toString();
       needsAssignment.add(
         staffName.isEmpty ||
         staffName.contains('any staff') ||
-        staffName.contains('any available')
+        staffName.contains('any available') ||
+        staffName.contains('not assigned') ||
+        sId.isEmpty ||
+        sId == 'null'
       );
     }
 
@@ -3148,7 +3165,7 @@ class _OwnerBookingsPageState extends State<OwnerBookingsPage> {
                         ]
                       : filtered
                           .map((b) => Padding(
-                                padding: const EdgeInsets.only(bottom: 12),
+                                padding: const EdgeInsets.only(bottom: 20),
                                 child: _BookingCard(
                                   booking: b,
                                   onStatusUpdate: (status) {
@@ -3634,11 +3651,15 @@ class _BookingCard extends StatelessWidget {
   /// Check if booking has services that need staff assignment
   bool _hasServicesNeedingAssignment(_Booking booking) {
     if (booking.items.isEmpty) {
-      // Single service booking - check staff name
+      // Single service booking - check staff name and ID
       final staffName = booking.staff.toLowerCase();
+      final staffId = (booking.rawData['staffId'] ?? '').toString();
       return staffName.isEmpty || 
              staffName.contains('any staff') || 
-             staffName.contains('any available');
+             staffName.contains('any available') ||
+             staffName.contains('not assigned') ||
+             staffId.isEmpty ||
+             staffId == 'null';
     }
     // Multi-service booking - check each service
     for (final item in booking.items) {
@@ -3646,12 +3667,8 @@ class _BookingCard extends StatelessWidget {
       final staffId = (item['staffId'] ?? '').toString();
       final approvalStatus = (item['approvalStatus'] ?? '').toString().toLowerCase();
       
-      // Service needs assignment if:
-      // - approvalStatus is 'needs_assignment'
-      // - staffName contains 'any staff' or 'any available'
-      // - staffId is empty or null
       if (approvalStatus == 'needs_assignment') return true;
-      if (staffName.contains('any staff') || staffName.contains('any available')) return true;
+      if (staffName.contains('any staff') || staffName.contains('any available') || staffName.contains('not assigned')) return true;
       if (staffId.isEmpty || staffId == 'null') return true;
     }
     return false;
@@ -3930,16 +3947,17 @@ class _BookingCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: statusColor.withOpacity(0.12)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
-            blurRadius: 16,
-            offset: const Offset(0, 6),
+            color: statusColor.withOpacity(0.08),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
           ),
           BoxShadow(
-            color: Colors.black.withOpacity(0.02),
-            blurRadius: 4,
-            offset: const Offset(0, 1),
+            color: Colors.black.withOpacity(0.03),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
           ),
         ],
       ),
@@ -4135,98 +4153,96 @@ class _BookingCard extends StatelessWidget {
                         ),
                       ],
                     ),
-                    const Spacer(),
-                    // Actions
-                    _ActionIcon(
-                      icon: FontAwesomeIcons.eye,
-                      background: const Color(0xFFF3F4F6),
-                      color: const Color(0xFF6B7280),
-                      onTap: () => _showBookingDetails(context, booking),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Wrap(
+                        alignment: WrapAlignment.end,
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: [
+                          _ActionIcon(
+                            icon: FontAwesomeIcons.eye,
+                            background: const Color(0xFFF3F4F6),
+                            color: const Color(0xFF6B7280),
+                            onTap: () => _showBookingDetails(context, booking),
+                          ),
+                          if (booking.status == 'pending') ...[
+                            _ActionButton(
+                              label: "Send to Staff",
+                              background: const Color(0xFFFEF3C7),
+                              color: const Color(0xFFD97706),
+                              icon: FontAwesomeIcons.paperPlane,
+                              onTap: () => onStatusUpdate('confirmed'),
+                            ),
+                            _ActionIcon(
+                              icon: FontAwesomeIcons.xmark,
+                              background: const Color(0xFFFEE2E2),
+                              color: const Color(0xFFEF4444),
+                              onTap: () => onStatusUpdate('cancelled'),
+                            ),
+                          ] else if (_isAwaitingStatus(booking.status)) ...[
+                            if (_hasServicesNeedingAssignment(booking))
+                              _ActionButton(
+                                label: "Assign",
+                                background: const Color(0xFFF3E8FF),
+                                color: const Color(0xFF7C3AED),
+                                icon: FontAwesomeIcons.userPlus,
+                                onTap: () => onStatusUpdate('assign'),
+                              )
+                            else
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFEFF6FF),
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(FontAwesomeIcons.userClock, size: 11, color: const Color(0xFF3B82F6)),
+                                    const SizedBox(width: 5),
+                                    const Text('Waiting', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFF3B82F6))),
+                                  ],
+                                ),
+                              ),
+                            _ActionIcon(
+                              icon: FontAwesomeIcons.xmark,
+                              background: const Color(0xFFFEE2E2),
+                              color: const Color(0xFFEF4444),
+                              onTap: () => onStatusUpdate('cancelled'),
+                            ),
+                          ] else if (_isStaffRejectedStatus(booking.status)) ...[
+                            _ActionButton(
+                              label: "Reassign",
+                              background: const Color(0xFFEFF6FF),
+                              color: const Color(0xFF3B82F6),
+                              icon: FontAwesomeIcons.arrowsRotate,
+                              onTap: () => onStatusUpdate('reassign'),
+                            ),
+                            _ActionIcon(
+                              icon: FontAwesomeIcons.xmark,
+                              background: const Color(0xFFFEE2E2),
+                              color: const Color(0xFFEF4444),
+                              onTap: () => onStatusUpdate('cancelled'),
+                            ),
+                          ] else if (booking.status == 'confirmed') ...[
+                            _ActionButton(
+                              label: "Complete",
+                              background: const Color(0xFFECFDF5),
+                              color: const Color(0xFF059669),
+                              icon: FontAwesomeIcons.checkDouble,
+                              onTap: () => onStatusUpdate('completed'),
+                            ),
+                            _ActionIcon(
+                              icon: FontAwesomeIcons.xmark,
+                              background: const Color(0xFFFEE2E2),
+                              color: const Color(0xFFEF4444),
+                              onTap: () => onStatusUpdate('cancelled'),
+                            ),
+                          ],
+                        ],
+                      ),
                     ),
-                    if (booking.status == 'pending') ...[
-                      const SizedBox(width: 8),
-                      _ActionButton(
-                        label: "Send to Staff",
-                        background: const Color(0xFFFEF3C7),
-                        color: const Color(0xFFD97706),
-                        icon: FontAwesomeIcons.paperPlane,
-                        onTap: () => onStatusUpdate('confirmed'),
-                      ),
-                      const SizedBox(width: 8),
-                      _ActionIcon(
-                        icon: FontAwesomeIcons.xmark,
-                        background: const Color(0xFFFEE2E2),
-                        color: const Color(0xFFEF4444),
-                        onTap: () => onStatusUpdate('cancelled'),
-                      ),
-                    ] else if (_isAwaitingStatus(booking.status)) ...[
-                      if (_hasServicesNeedingAssignment(booking)) ...[
-                        const SizedBox(width: 8),
-                        _ActionButton(
-                          label: "Assign",
-                          background: const Color(0xFFF3E8FF),
-                          color: const Color(0xFF7C3AED),
-                          icon: FontAwesomeIcons.userPlus,
-                          onTap: () => onStatusUpdate('assign'),
-                        ),
-                      ] else ...[
-                        const SizedBox(width: 8),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFEFF6FF),
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(FontAwesomeIcons.userClock, size: 11, color: const Color(0xFF3B82F6)),
-                              const SizedBox(width: 5),
-                              const Text('Waiting', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFF3B82F6))),
-                            ],
-                          ),
-                        ),
-                      ],
-                      const SizedBox(width: 8),
-                      _ActionIcon(
-                        icon: FontAwesomeIcons.xmark,
-                        background: const Color(0xFFFEE2E2),
-                        color: const Color(0xFFEF4444),
-                        onTap: () => onStatusUpdate('cancelled'),
-                      ),
-                    ] else if (_isStaffRejectedStatus(booking.status)) ...[
-                      const SizedBox(width: 8),
-                      _ActionButton(
-                        label: "Reassign",
-                        background: const Color(0xFFEFF6FF),
-                        color: const Color(0xFF3B82F6),
-                        icon: FontAwesomeIcons.arrowsRotate,
-                        onTap: () => onStatusUpdate('reassign'),
-                      ),
-                      const SizedBox(width: 8),
-                      _ActionIcon(
-                        icon: FontAwesomeIcons.xmark,
-                        background: const Color(0xFFFEE2E2),
-                        color: const Color(0xFFEF4444),
-                        onTap: () => onStatusUpdate('cancelled'),
-                      ),
-                    ] else if (booking.status == 'confirmed') ...[
-                      const SizedBox(width: 8),
-                      _ActionButton(
-                        label: "Complete",
-                        background: const Color(0xFFECFDF5),
-                        color: const Color(0xFF059669),
-                        icon: FontAwesomeIcons.checkDouble,
-                        onTap: () => onStatusUpdate('completed'),
-                      ),
-                      const SizedBox(width: 8),
-                      _ActionIcon(
-                        icon: FontAwesomeIcons.xmark,
-                        background: const Color(0xFFFEE2E2),
-                        color: const Color(0xFFEF4444),
-                        onTap: () => onStatusUpdate('cancelled'),
-                      ),
-                    ],
                   ],
                 ),
               ],
@@ -5090,14 +5106,18 @@ class _BookingCard extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                name,
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black87,
+              Flexible(
+                child: Text(
+                  name,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                  ),
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
+              const SizedBox(width: 8),
               Text(
                 price,
                 style: const TextStyle(
@@ -5122,12 +5142,15 @@ class _BookingCard extends StatelessWidget {
       children: [
         Icon(icon, size: 14, color: color),
         const SizedBox(width: 8),
-        Text(
-          text,
-          style: const TextStyle(
-            fontSize: 13,
-            color: Color(0xFF6B7280),
-            fontWeight: FontWeight.w500,
+        Expanded(
+          child: Text(
+            text,
+            style: const TextStyle(
+              fontSize: 13,
+              color: Color(0xFF6B7280),
+              fontWeight: FontWeight.w500,
+            ),
+            overflow: TextOverflow.ellipsis,
           ),
         ),
       ],
