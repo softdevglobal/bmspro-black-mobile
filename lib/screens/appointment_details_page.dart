@@ -1114,7 +1114,6 @@ class _AppointmentDetailsPageState extends State<AppointmentDetailsPage> with Ti
     File? selectedImage;
     String? uploadedImageUrl;
     bool isUploading = false;
-    bool showImageError = false;
 
     await showModalBottomSheet(
       context: context,
@@ -1161,11 +1160,11 @@ class _AppointmentDetailsPageState extends State<AppointmentDetailsPage> with Ti
                     ],
                     const SizedBox(height: 20),
 
-                    // Photo capture (REQUIRED)
+                    // Photo capture (optional)
                     Row(
                       children: [
                         const Text('Photo ', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.text)),
-                        Text('(required)', style: TextStyle(fontSize: 12, color: showImageError ? Colors.red : Colors.orange.shade700, fontWeight: showImageError ? FontWeight.bold : FontWeight.normal)),
+                        Text('(optional)', style: TextStyle(fontSize: 12, color: Colors.grey.shade500)),
                       ],
                     ),
                     const SizedBox(height: 8),
@@ -1197,19 +1196,17 @@ class _AppointmentDetailsPageState extends State<AppointmentDetailsPage> with Ti
                         if (picked != null) {
                           setSheetState(() {
                             selectedImage = File(picked.path);
-                            showImageError = false;
                           });
                         }
                       },
                       child: Container(
                         width: double.infinity,
-                        height: selectedImage != null ? 200 : 120,
+                        height: selectedImage != null ? 200 : 80,
                         decoration: BoxDecoration(
-                          color: selectedImage != null ? Colors.grey.shade100 : (showImageError ? Colors.red.shade50 : Colors.grey.shade100),
+                          color: selectedImage != null ? Colors.grey.shade100 : Colors.grey.shade100,
                           borderRadius: BorderRadius.circular(16),
                           border: Border.all(
-                            color: showImageError ? Colors.red.shade400 : (selectedImage != null ? Colors.green.shade300 : Colors.grey.shade300),
-                            width: showImageError ? 2 : 1,
+                            color: selectedImage != null ? Colors.green.shade300 : Colors.grey.shade300,
                           ),
                         ),
                         child: selectedImage != null
@@ -1257,23 +1254,15 @@ class _AppointmentDetailsPageState extends State<AppointmentDetailsPage> with Ti
                                   ),
                                 ],
                               )
-                            : Column(
+                            : Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  Icon(FontAwesomeIcons.camera, color: showImageError ? Colors.red.shade400 : Colors.grey.shade400, size: 28),
-                                  const SizedBox(height: 8),
+                                  Icon(FontAwesomeIcons.camera, color: Colors.grey.shade400, size: 20),
+                                  const SizedBox(width: 10),
                                   Text(
-                                    showImageError ? 'Photo is required!' : 'Tap to capture photo',
-                                    style: TextStyle(
-                                      color: showImageError ? Colors.red.shade600 : Colors.grey.shade500,
-                                      fontSize: 13,
-                                      fontWeight: showImageError ? FontWeight.bold : FontWeight.normal,
-                                    ),
+                                    'Tap to add a photo',
+                                    style: TextStyle(color: Colors.grey.shade500, fontSize: 13),
                                   ),
-                                  if (showImageError) ...[
-                                    const SizedBox(height: 4),
-                                    Text('Please take a photo of the completed work', style: TextStyle(color: Colors.red.shade400, fontSize: 11)),
-                                  ],
                                 ],
                               ),
                       ),
@@ -1313,33 +1302,27 @@ class _AppointmentDetailsPageState extends State<AppointmentDetailsPage> with Ti
                       height: 52,
                       child: ElevatedButton.icon(
                         onPressed: isUploading ? null : () async {
-                          // Validate: photo is required
-                          if (selectedImage == null) {
+                          // Upload image only if one was selected
+                          if (selectedImage != null) {
                             setSheetState(() {
-                              showImageError = true;
+                              isUploading = true;
                             });
-                            return;
-                          }
-
-                          // Upload image
-                          setSheetState(() {
-                            isUploading = true;
-                          });
-                          uploadedImageUrl = await _uploadTaskImage(selectedImage!);
-                          if (uploadedImageUrl == null || uploadedImageUrl!.isEmpty) {
-                            setSheetState(() {
-                              isUploading = false;
-                            });
-                            if (mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: const Text('Failed to upload photo. Please try again.'),
-                                  backgroundColor: Colors.red.shade600,
-                                  behavior: SnackBarBehavior.floating,
-                                ),
-                              );
+                            uploadedImageUrl = await _uploadTaskImage(selectedImage!);
+                            if (uploadedImageUrl == null || uploadedImageUrl!.isEmpty) {
+                              setSheetState(() {
+                                isUploading = false;
+                              });
+                              if (mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: const Text('Failed to upload photo. Please try again.'),
+                                    backgroundColor: Colors.red.shade600,
+                                    behavior: SnackBarBehavior.floating,
+                                  ),
+                                );
+                              }
+                              return;
                             }
-                            return;
                           }
                           Navigator.pop(ctx, {
                             'note': noteController.text.trim(),

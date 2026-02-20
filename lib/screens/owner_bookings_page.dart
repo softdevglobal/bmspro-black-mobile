@@ -364,6 +364,15 @@ class _OwnerBookingsPageState extends State<OwnerBookingsPage> {
               services: servicesForApproval ?? updatedServices ?? [],
             );
             
+            // Notify branch admin(s) that a booking was sent to staff
+            await _notifyBranchAdminsOfStatusChange(
+              db: db,
+              bookingId: ref.id,
+              booking: booking,
+              newStatus: 'AwaitingStaffApproval',
+              content: {'type': 'booking_status_changed'},
+            );
+            
             // Audit log for sending to staff
             final currentUser = FirebaseAuth.instance.currentUser;
             if (currentUser != null && _ownerUid != null) {
@@ -468,6 +477,15 @@ class _OwnerBookingsPageState extends State<OwnerBookingsPage> {
             bookingId: booking.id,
             booking: booking,
             services: servicesForApproval ?? updatedServices ?? [],
+          );
+          
+          // Notify branch admin(s) that a booking was sent to staff
+          await _notifyBranchAdminsOfStatusChange(
+            db: db,
+            bookingId: booking.id,
+            booking: booking,
+            newStatus: 'AwaitingStaffApproval',
+            content: {'type': 'booking_status_changed'},
           );
           
           // Audit log for sending to staff
@@ -736,6 +754,7 @@ class _OwnerBookingsPageState extends State<OwnerBookingsPage> {
       // Richer details
       notifData['serviceName'] = booking.service;
       if (raw['branchName'] != null) notifData['branchName'] = raw['branchName'];
+      if (booking.branchId.isNotEmpty) notifData['branchId'] = booking.branchId;
       if (booking.date.isNotEmpty) notifData['bookingDate'] = booking.date;
       final time = (raw['time'] ?? '').toString();
       if (time.isNotEmpty) notifData['bookingTime'] = time;
@@ -781,6 +800,15 @@ class _OwnerBookingsPageState extends State<OwnerBookingsPage> {
         );
       }
       
+      // Create BRANCH ADMIN notifications for status changes
+      await _notifyBranchAdminsOfStatusChange(
+        db: db,
+        bookingId: bookingId,
+        booking: booking,
+        newStatus: newStatus,
+        content: content,
+      );
+      
       // Send email when status changes to Confirmed, Completed, or Canceled
       // This ensures emails are sent even when status is updated directly from mobile app
       // Only send if this is an actual status change (not already at target status)
@@ -802,7 +830,83 @@ class _OwnerBookingsPageState extends State<OwnerBookingsPage> {
       debugPrint("Error creating notification: $e");
     }
   }
-  
+
+  /// Notify branch admin(s) when a booking status changes at their branch
+  Future<void> _notifyBranchAdminsOfStatusChange({
+    required FirebaseFirestore db,
+    required String bookingId,
+    required _Booking booking,
+    required String newStatus,
+    required Map<String, String?> content,
+  }) async {
+    final ownerUid = _ownerUid;
+    if (ownerUid == null || booking.branchId.isEmpty) return;
+
+    try {
+      final branchAdminQuery = await db
+          .collection('users')
+          .where('ownerUid', isEqualTo: ownerUid)
+          .where('role', isEqualTo: 'branch_admin')
+          .where('branchId', isEqualTo: booking.branchId)
+          .get();
+
+      if (branchAdminQuery.docs.isEmpty) return;
+
+      final currentUserId = FirebaseAuth.instance.currentUser?.uid;
+      final raw = booking.rawData;
+      final time = (raw['time'] ?? '').toString();
+      final title = 'Booking ${_capitalise(newStatus)}';
+      final message = '${booking.customerName} — ${booking.service} on ${booking.date}${time.isNotEmpty ? ' at $time' : ''} is now ${_capitalise(newStatus)}.';
+
+      for (final adminDoc in branchAdminQuery.docs) {
+        final branchAdminUid = adminDoc.id;
+
+        // Don't notify the admin who performed the action
+        if (branchAdminUid == currentUserId) continue;
+
+        final notifData = {
+          'type': content['type'] ?? 'booking_status_changed',
+          'title': title,
+          'message': message,
+          'ownerUid': ownerUid,
+          'branchAdminUid': branchAdminUid,
+          'targetAdminUid': branchAdminUid,
+          'bookingId': bookingId,
+          'status': newStatus,
+          'branchId': booking.branchId,
+          'branchName': raw['branchName'],
+          'customerName': booking.customerName,
+          'serviceName': booking.service,
+          'bookingDate': booking.date,
+          'bookingTime': time,
+          if (raw['bookingCode'] != null) 'bookingCode': raw['bookingCode'],
+          'read': false,
+          'createdAt': FieldValue.serverTimestamp(),
+        };
+
+        final notifRef = await db.collection('notifications').add(notifData);
+
+        try {
+          await FcmPushService().sendPushNotification(
+            targetUid: branchAdminUid,
+            title: title,
+            message: message,
+            data: {
+              'notificationId': notifRef.id,
+              'type': content['type'] ?? 'booking_status_changed',
+              'bookingId': bookingId,
+            },
+          );
+          debugPrint('✅ Branch admin $branchAdminUid notified of status change to $newStatus');
+        } catch (e) {
+          debugPrint('Error sending FCM to branch admin $branchAdminUid: $e');
+        }
+      }
+    } catch (e) {
+      debugPrint('Error notifying branch admins of status change: $e');
+    }
+  }
+
   /// Send booking status email via API
   /// This is called when status changes to Confirmed, Completed, or Canceled from mobile app
   Future<void> _sendBookingStatusEmail({
