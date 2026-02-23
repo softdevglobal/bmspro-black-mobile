@@ -362,8 +362,9 @@ class _WalkInBookingPageState extends State<WalkInBookingPage> with TickerProvid
           'id': d.id,
           'name': (data['name'] ?? 'Branch').toString(),
           'address': (data['address'] ?? '').toString(),
-          'hours': data['hours'], // Include branch hours
-          'timezone': (data['timezone'] ?? 'Australia/Sydney').toString(), // Include timezone
+          'hours': data['hours'],
+          'timezone': (data['timezone'] ?? 'Australia/Sydney').toString(),
+          'bookingLimitPerDay': data['bookingLimitPerDay'],
         };
       }).toList();
 
@@ -2069,6 +2070,38 @@ class _WalkInBookingPageState extends State<WalkInBookingPage> with TickerProvid
     // Calculate current minutes based on branch's local time
     final currentMinutes = isToday ? (branchNow.hour * 60 + branchNow.minute) : -1;
     
+    // Check daily booking limit
+    final bookingLimitPerDay = selectedBranch['bookingLimitPerDay'];
+    if (bookingLimitPerDay != null && bookingLimitPerDay is int && bookingLimitPerDay > 0) {
+      final branchDateBookings = _bookings.where((b) {
+        if (b['date'] != selectedDateStr) return false;
+        if (b['branchId'] != _selectedBranchId) return false;
+        final status = (b['status']?.toString() ?? '').toLowerCase();
+        return status != 'canceled' && status != 'cancelled' && status != 'completed' && status != 'rejected';
+      }).length;
+      if (branchDateBookings >= bookingLimitPerDay) {
+        return Container(
+          padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
+          child: Column(
+            children: [
+              Icon(Icons.event_busy, color: Colors.red.shade300, size: 32),
+              const SizedBox(height: 8),
+              Text(
+                'Fully booked for this day',
+                style: TextStyle(color: Colors.red.shade600, fontWeight: FontWeight.bold, fontSize: 14),
+              ),
+              const SizedBox(height: 4),
+              const Text(
+                'Daily booking limit reached. Please select another date.',
+                style: TextStyle(color: Colors.grey, fontSize: 12),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+        );
+      }
+    }
+
     // Generate time slots using branch hours (including slots that exceed closing time for display purposes)
     final List<Map<String, dynamic>> slotsWithStatus = [];
     const interval = 30;
