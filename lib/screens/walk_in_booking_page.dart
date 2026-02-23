@@ -2071,7 +2071,11 @@ class _WalkInBookingPageState extends State<WalkInBookingPage> with TickerProvid
     
     // Generate time slots using branch hours (including slots that exceed closing time for display purposes)
     final List<Map<String, dynamic>> slotsWithStatus = [];
-    const interval = 15;
+    const interval = 30;
+    
+    // Australian booking rule: drop-off by 11:00 AM
+    const dropoffCutoffMinutes = 11 * 60; // 660
+    final dropoffEndMinutes = endMinutes < dropoffCutoffMinutes + 1 ? endMinutes : dropoffCutoffMinutes + 1;
     
     // Helper to format closing time
     String formatClosingTime() {
@@ -2080,7 +2084,7 @@ class _WalkInBookingPageState extends State<WalkInBookingPage> with TickerProvid
       return '$h:$m';
     }
     
-    for (int slotMinutes = startMinutes; slotMinutes < endMinutes; slotMinutes += interval) {
+    for (int slotMinutes = startMinutes; slotMinutes < dropoffEndMinutes; slotMinutes += interval) {
       // Skip past times if date is today
       if (isToday && slotMinutes <= currentMinutes) {
         continue;
