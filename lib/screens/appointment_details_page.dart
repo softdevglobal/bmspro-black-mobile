@@ -488,9 +488,7 @@ class _AppointmentDetailsPageState extends State<AppointmentDetailsPage> with Ti
                     _buildFadeWrapper(2, _buildTaskSection()),
                     const SizedBox(height: 24),
                   ],
-                  _buildFadeWrapper(3, _buildPointsRewards()),
-                  const SizedBox(height: 24),
-                  _buildFadeWrapper(4, _buildActionButtons()),
+                  _buildFadeWrapper(3, _buildActionButtons()),
                   const SizedBox(height: 40), // Bottom padding
                 ],
               ),
@@ -1456,24 +1454,24 @@ class _AppointmentDetailsPageState extends State<AppointmentDetailsPage> with Ti
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.indigo.shade50.withOpacity(0.5),
+        color: Colors.grey.shade100,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.indigo.shade200),
+        border: Border.all(color: Colors.grey.shade300),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(FontAwesomeIcons.flagCheckered, size: 16, color: Colors.indigo.shade600),
+              const Icon(FontAwesomeIcons.flagCheckered, size: 16, color: AppColors.primary),
               const SizedBox(width: 8),
-              Text('Final Submission', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.indigo.shade700)),
+              const Text('Final Submission', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.text)),
             ],
           ),
           const SizedBox(height: 8),
           Text(
             'All tasks completed! Submit your final report.',
-            style: TextStyle(fontSize: 12, color: Colors.indigo.shade500),
+            style: TextStyle(fontSize: 12, color: Colors.grey.shade500),
           ),
           const SizedBox(height: 12),
           SizedBox(
@@ -1483,7 +1481,7 @@ class _AppointmentDetailsPageState extends State<AppointmentDetailsPage> with Ti
               icon: const Icon(FontAwesomeIcons.paperPlane, size: 14),
               label: const Text('Submit Final Report', style: TextStyle(fontWeight: FontWeight.bold)),
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.indigo.shade600,
+                backgroundColor: AppColors.primary,
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -1503,9 +1501,9 @@ class _AppointmentDetailsPageState extends State<AppointmentDetailsPage> with Ti
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.indigo.shade50.withOpacity(0.5),
+        color: Colors.grey.shade100,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.indigo.shade200),
+        border: Border.all(color: Colors.grey.shade300),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1514,22 +1512,22 @@ class _AppointmentDetailsPageState extends State<AppointmentDetailsPage> with Ti
             children: [
               Container(
                 width: 28, height: 28,
-                decoration: BoxDecoration(
-                  color: Colors.indigo.shade500,
+                decoration: const BoxDecoration(
+                  color: AppColors.primary,
                   shape: BoxShape.circle,
                 ),
                 child: const Center(child: Icon(FontAwesomeIcons.flagCheckered, size: 12, color: Colors.white)),
               ),
               const SizedBox(width: 8),
-              Text('Final Submission', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.indigo.shade700)),
+              const Text('Final Submission', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.text)),
               const Spacer(),
               if (submittedBy.isNotEmpty)
-                Text('by $submittedBy', style: TextStyle(fontSize: 10, color: Colors.indigo.shade400)),
+                Text('by $submittedBy', style: TextStyle(fontSize: 10, color: Colors.grey.shade500)),
             ],
           ),
           if (desc.isNotEmpty) ...[
             const SizedBox(height: 12),
-            Text(desc, style: TextStyle(fontSize: 13, color: Colors.indigo.shade800, height: 1.5)),
+            Text(desc, style: const TextStyle(fontSize: 13, color: AppColors.text, height: 1.5)),
           ],
           if (imgUrl.isNotEmpty) ...[
             const SizedBox(height: 12),
@@ -1643,7 +1641,7 @@ class _AppointmentDetailsPageState extends State<AppointmentDetailsPage> with Ti
                           color: selectedImage != null ? Colors.grey.shade100 : (showImageError ? Colors.red.shade50 : Colors.grey.shade100),
                           borderRadius: BorderRadius.circular(16),
                           border: Border.all(
-                            color: showImageError ? Colors.red.shade400 : (selectedImage != null ? Colors.indigo.shade300 : Colors.grey.shade300),
+                            color: showImageError ? Colors.red.shade400 : (selectedImage != null ? Colors.grey.shade600 : Colors.grey.shade300),
                             width: showImageError ? 2 : 1,
                           ),
                         ),
@@ -1659,7 +1657,7 @@ class _AppointmentDetailsPageState extends State<AppointmentDetailsPage> with Ti
                                     child: Container(
                                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                                       decoration: BoxDecoration(
-                                        color: Colors.indigo.shade600,
+                                        color: AppColors.primary,
                                         borderRadius: BorderRadius.circular(8),
                                       ),
                                       child: const Row(
@@ -1786,7 +1784,7 @@ class _AppointmentDetailsPageState extends State<AppointmentDetailsPage> with Ti
                           style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                         ),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: isUploading ? Colors.grey.shade400 : Colors.indigo.shade600,
+                          backgroundColor: isUploading ? Colors.grey.shade400 : AppColors.primary,
                           foregroundColor: Colors.white,
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                           elevation: 2,
@@ -1869,7 +1867,7 @@ class _AppointmentDetailsPageState extends State<AppointmentDetailsPage> with Ti
             content: Text(bookingCompleted
                 ? 'Report submitted & booking marked as completed!'
                 : 'Final report submitted successfully!'),
-            backgroundColor: bookingCompleted ? Colors.green.shade600 : Colors.indigo.shade600,
+            backgroundColor: bookingCompleted ? Colors.green.shade600 : AppColors.primary,
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
           ),
@@ -1968,20 +1966,6 @@ class _AppointmentDetailsPageState extends State<AppointmentDetailsPage> with Ti
               ),
             ),
           ),
-        ] else ...[
-          // Show Start Appointment button only if it's the current user's appointment
-          if (_isMyAppointment)
-            _GradientButton(
-              text: 'Start Appointment',
-              icon: FontAwesomeIcons.play,
-              onPressed: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (_) => TaskDetailsPage(appointmentData: widget.appointmentData),
-                  ),
-                );
-              },
-            ),
         ],
         const SizedBox(height: 12),
         SizedBox(
