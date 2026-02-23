@@ -29,7 +29,7 @@ class BranchModel {
   final String? phone;
   final String? email;
   final String status;
-  final int? bookingLimitPerDay;
+  final int? capacity;
   final Map<String, dynamic>? hours;
   final List<String> serviceIds;
   final List<String> staffIds;
@@ -49,7 +49,7 @@ class BranchModel {
     this.phone,
     this.email,
     required this.status,
-    this.bookingLimitPerDay,
+    this.capacity,
     this.hours,
     this.serviceIds = const [],
     this.staffIds = const [],
@@ -74,7 +74,7 @@ class BranchModel {
       phone: data['phone'],
       email: data['email'],
       status: data['status'] ?? 'Active',
-      bookingLimitPerDay: data['bookingLimitPerDay'],
+      capacity: data['capacity'],
       hours: data['hours'] as Map<String, dynamic>?,
       serviceIds: List<String>.from(data['serviceIds'] ?? []),
       staffIds: List<String>.from(data['staffIds'] ?? []),
@@ -987,7 +987,7 @@ class _BranchFormSheetState extends State<_BranchFormSheet> {
   late TextEditingController _nameController;
   late TextEditingController _addressController;
   late TextEditingController _phoneController;
-  late TextEditingController _bookingLimitController;
+  late TextEditingController _capacityController;
 
   bool _saving = false;
   late String _status;
@@ -1010,7 +1010,7 @@ class _BranchFormSheetState extends State<_BranchFormSheet> {
     _nameController = TextEditingController(text: branch?.name ?? '');
     _addressController = TextEditingController(text: branch?.address ?? '');
     _phoneController = TextEditingController(text: branch?.phone ?? '');
-    _bookingLimitController = TextEditingController(text: branch?.bookingLimitPerDay?.toString() ?? '');
+    _capacityController = TextEditingController(text: branch?.capacity?.toString() ?? '');
     _status = branch?.status ?? 'Active';
     _selectedAdminStaffId = branch?.adminStaffId;
     
@@ -1048,7 +1048,7 @@ class _BranchFormSheetState extends State<_BranchFormSheet> {
     _nameController.dispose();
     _addressController.dispose();
     _phoneController.dispose();
-    _bookingLimitController.dispose();
+    _capacityController.dispose();
     super.dispose();
   }
 
@@ -1085,7 +1085,7 @@ class _BranchFormSheetState extends State<_BranchFormSheet> {
         'address': _addressController.text.trim(),
         'phone': _phoneController.text.trim(),
         'email': adminEmail ?? widget.branch?.email ?? '',
-        'bookingLimitPerDay': int.tryParse(_bookingLimitController.text),
+        'capacity': int.tryParse(_capacityController.text) ?? 0,
         'status': _status,
         'timezone': _timezone,
         'hours': _hours,
@@ -1419,15 +1419,14 @@ class _BranchFormSheetState extends State<_BranchFormSheet> {
                           const SizedBox(width: 16),
                           Expanded(
                             child: TextFormField(
-                              controller: _bookingLimitController,
-                              decoration: _inputDecoration('Booking Limit / Day', '10'),
+                              controller: _capacityController,
+                              decoration: _inputDecoration('Capacity', '10'),
                               keyboardType: TextInputType.number,
                               validator: (v) {
-                                if (v != null && v.isNotEmpty) {
-                                  final limit = int.tryParse(v);
-                                  if (limit == null || limit <= 0) {
-                                    return 'Must be a positive number';
-                                  }
+                                if (v == null || v.isEmpty) return 'Required';
+                                final capacity = int.tryParse(v);
+                                if (capacity == null || capacity <= 0) {
+                                  return 'Must be a positive number';
                                 }
                                 return null;
                               },
@@ -2128,9 +2127,9 @@ class _BranchPreviewSheetState extends State<_BranchPreviewSheet> {
                         const Divider(height: 20),
                         _buildDetailRow('Email', widget.branch.email!),
                       ],
-                      if (widget.branch.bookingLimitPerDay != null) ...[
+                      if (widget.branch.capacity != null) ...[
                         const Divider(height: 20),
-                        _buildDetailRow('Booking Limit / Day', '${widget.branch.bookingLimitPerDay} bookings'),
+                        _buildDetailRow('Capacity', '${widget.branch.capacity} seats'),
                       ],
                       const Divider(height: 20),
                       Row(
