@@ -12,6 +12,7 @@ import 'branches_page.dart';
 import 'salon_settings_page.dart';
 import 'audit_logs_page.dart';
 import 'subscription_page.dart';
+import 'estimates_page.dart';
 import '../widgets/animated_toggle.dart';
 import '../services/staff_check_in_service.dart';
 
@@ -272,6 +273,24 @@ class _MorePageState extends State<MorePage> {
                     },
                   ),
                 ],
+              ),
+              const SizedBox(height: 16),
+            ],
+
+            // Estimates Section - Only for workshop owners
+            if (_isWorkshopOwner) ...[
+              _buildMenuCard(
+                context,
+                icon: FontAwesomeIcons.fileInvoice,
+                title: 'Estimates',
+                subtitle: 'Manage customer estimate requests',
+                gradientColors: [const Color(0xFFF59E0B), const Color(0xFFFBBF24)],
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const EstimatesPage()),
+                  );
+                },
               ),
               const SizedBox(height: 16),
             ],

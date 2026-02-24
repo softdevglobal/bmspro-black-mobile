@@ -95,6 +95,9 @@ class NotificationItem {
     } else if (type == 'booking_engine_new_booking') {
       icon = FontAwesomeIcons.globe;
       displayType = 'task';
+    } else if (type == 'new_estimate') {
+      icon = FontAwesomeIcons.fileInvoice;
+      displayType = 'task';
     } else if (type == 'auto_clock_out') {
       icon = FontAwesomeIcons.locationCrosshairs;
       displayType = 'system';
