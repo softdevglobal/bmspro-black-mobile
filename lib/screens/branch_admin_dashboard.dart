@@ -102,6 +102,12 @@ class _BranchAdminDashboardState extends State<BranchAdminDashboard> with Ticker
   List<Map<String, dynamic>> _otherStaffAppointments = []; // Other staff's appointments in the branch
   bool _isLoadingAppointments = true;
 
+  // Weekly calendar (branch-only)
+  DateTime _calendarWeekStart = _getWeekStart(DateTime.now());
+  final List<Map<String, dynamic>> _calendarBookings = [];
+  StreamSubscription<QuerySnapshot>? _calendarBookingsSub;
+  String _calendarStaffFilter = 'all';
+
   @override
   void initState() {
     super.initState();
@@ -175,6 +181,7 @@ class _BranchAdminDashboardState extends State<BranchAdminDashboard> with Ticker
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    _calendarBookingsSub?.cancel();
     _pulseController.dispose();
     _workTimer?.cancel();
     _backgroundLocationService.stopMonitoring();
@@ -1172,6 +1179,8 @@ class _BranchAdminDashboardState extends State<BranchAdminDashboard> with Ticker
         return;
       }
 
+      _listenToCalendarBookings();
+
       // Fetch all bookings for this branch
       final now = DateTime.now();
       final thirtyDaysAgo = now.subtract(const Duration(days: 30));
@@ -1452,6 +1461,581 @@ class _BranchAdminDashboardState extends State<BranchAdminDashboard> with Ticker
     return _totalRevenue / _completedBookings;
   }
 
+  static DateTime _getWeekStart(DateTime date) {
+    final d = DateTime(date.year, date.month, date.day);
+    final diff = (d.weekday - DateTime.monday) % 7;
+    return d.subtract(Duration(days: diff));
+  }
+
+  String _normalizeDateKey(dynamic raw) {
+    if (raw == null) return '';
+    if (raw is Timestamp) {
+      final d = raw.toDate();
+      return '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
+    }
+    final s = raw.toString().trim();
+    if (s.isEmpty) return '';
+    if (s.contains('-')) {
+      final p = s.split('-');
+      if (p.length >= 3 && p[0].length == 4) {
+        return '${p[0]}-${p[1].padLeft(2, '0')}-${p[2].padLeft(2, '0')}';
+      }
+    }
+    final dt = DateTime.tryParse(s);
+    if (dt != null) {
+      return '${dt.year}-${dt.month.toString().padLeft(2, '0')}-${dt.day.toString().padLeft(2, '0')}';
+    }
+    return s;
+  }
+
+  int _calParseDuration(dynamic value) {
+    if (value is num) return value.toInt();
+    final s = (value ?? '').toString();
+    final m = RegExp(r'(\d+)').firstMatch(s);
+    if (m != null) return int.tryParse(m.group(1) ?? '') ?? 60;
+    return 60;
+  }
+
+  String _pickStaffName(Map<String, dynamic> booking, [Map<String, dynamic>? service]) {
+    final candidates = <dynamic>[
+      service?['staffName'],
+      service?['staff'],
+      service?['staffFullName'],
+      service?['assignedStaffName'],
+      service?['technicianName'],
+      booking['staffName'],
+      booking['staff'],
+      booking['staffFullName'],
+      booking['assignedStaffName'],
+      booking['technicianName'],
+    ];
+    for (final raw in candidates) {
+      final name = (raw ?? '').toString().trim();
+      if (name.isNotEmpty &&
+          !name.toLowerCase().contains('any') &&
+          name.toLowerCase() != 'unassigned' &&
+          name.toLowerCase() != 'not assigned') {
+        return name;
+      }
+    }
+    return '';
+  }
+
+  ({int hour, int minute}) _calParseTime(String raw) {
+    final input = raw.trim().toUpperCase();
+    if (input.isEmpty) return (hour: 9, minute: 0);
+    final ampm = RegExp(r'^(\d{1,2})(?::(\d{2}))?\s*([AP]M)$').firstMatch(input);
+    if (ampm != null) {
+      var h = int.tryParse(ampm.group(1) ?? '0') ?? 0;
+      final m = int.tryParse(ampm.group(2) ?? '0') ?? 0;
+      final ap = ampm.group(3) ?? 'AM';
+      if (ap == 'PM' && h < 12) h += 12;
+      if (ap == 'AM' && h == 12) h = 0;
+      return (hour: h, minute: m);
+    }
+    final hm = RegExp(r'^(\d{1,2}):(\d{2})$').firstMatch(input);
+    if (hm != null) {
+      return (
+        hour: int.tryParse(hm.group(1) ?? '9') ?? 9,
+        minute: int.tryParse(hm.group(2) ?? '0') ?? 0,
+      );
+    }
+    return (hour: 9, minute: 0);
+  }
+
+  String _calFormat12h(int hour, int minute) {
+    final safeH = ((hour % 24) + 24) % 24;
+    final suffix = safeH >= 12 ? 'PM' : 'AM';
+    final h12 = safeH % 12 == 0 ? 12 : safeH % 12;
+    return '$h12:${minute.toString().padLeft(2, '0')} $suffix';
+  }
+
+  void _goPrevWeek() {
+    setState(() => _calendarWeekStart = _calendarWeekStart.subtract(const Duration(days: 7)));
+  }
+
+  void _goNextWeek() {
+    setState(() => _calendarWeekStart = _calendarWeekStart.add(const Duration(days: 7)));
+  }
+
+  void _goThisWeek() {
+    setState(() => _calendarWeekStart = _getWeekStart(DateTime.now()));
+  }
+
+  void _listenToCalendarBookings() {
+    if (_ownerUid == null || _ownerUid!.isEmpty) return;
+    _calendarBookingsSub?.cancel();
+    Query<Map<String, dynamic>> query = FirebaseFirestore.instance
+        .collection('bookings')
+        .where('ownerUid', isEqualTo: _ownerUid);
+    if (_branchId != null && _branchId!.isNotEmpty) {
+      query = query.where('branchId', isEqualTo: _branchId);
+    }
+    _calendarBookingsSub = query.snapshots().listen((snap) {
+      final all = <Map<String, dynamic>>[];
+      for (final d in snap.docs) {
+        final data = d.data();
+        final branchName = (data['branchName'] ?? '').toString().trim();
+        if (widget.branchName.isNotEmpty &&
+            _branchId == null &&
+            branchName.toLowerCase() != widget.branchName.toLowerCase()) {
+          continue;
+        }
+        final dateKey = _normalizeDateKey(data['date']);
+        if (dateKey.isEmpty) continue;
+        final services = data['services'];
+        if (services is List && services.isNotEmpty) {
+          for (final item in services) {
+            if (item is! Map) continue;
+            final svc = Map<String, dynamic>.from(item);
+            final serviceName = (svc['serviceName'] ?? svc['name'] ?? data['serviceName'] ?? 'Service').toString();
+            final staffName = _pickStaffName(data, svc);
+            final duration = _calParseDuration(svc['duration'] ?? data['duration']);
+            all.add({
+              'id': d.id,
+              'bookingCode': data['bookingCode']?.toString() ?? '',
+              'date': dateKey,
+              'time': (svc['time'] ?? data['time'] ?? '09:00').toString(),
+              'duration': duration,
+              'status': (svc['completionStatus'] ?? data['status'] ?? '').toString(),
+              'client': (data['name'] ?? data['customerName'] ?? 'Customer').toString(),
+              'serviceName': serviceName,
+              'staffName': staffName,
+              'branchName': branchName,
+              'pickupTime': (data['pickupTime'] ?? '').toString(),
+              'price': (svc['price'] as num?) ?? (data['price'] as num?) ?? 0,
+            });
+          }
+        } else {
+          all.add({
+            'id': d.id,
+            'bookingCode': data['bookingCode']?.toString() ?? '',
+            'date': dateKey,
+            'time': (data['time'] ?? '09:00').toString(),
+            'duration': _calParseDuration(data['duration']),
+            'status': (data['status'] ?? '').toString(),
+            'client': (data['name'] ?? data['customerName'] ?? 'Customer').toString(),
+            'serviceName': (data['serviceName'] ?? 'Service').toString(),
+            'staffName': _pickStaffName(data),
+            'branchName': branchName,
+            'pickupTime': (data['pickupTime'] ?? '').toString(),
+            'price': (data['price'] as num?) ?? 0,
+          });
+        }
+      }
+      if (!mounted) return;
+      setState(() {
+        _calendarBookings
+          ..clear()
+          ..addAll(all);
+      });
+    });
+  }
+
+  Widget _buildCalendarSection() {
+    const startHour = 7;
+    const endHour = 19;
+    const slotHeight = 26.0;
+    const timeColWidth = 34.0;
+    final gridHeight = (endHour - startHour) * slotHeight;
+    final weekDates = List.generate(7, (i) => _calendarWeekStart.add(Duration(days: i)));
+    final weekSet = weekDates
+        .map((d) =>
+            '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}')
+        .toSet();
+    final staffOptions = _calendarBookings
+        .map((b) => (b['staffName'] ?? '').toString())
+        .where((s) =>
+            s.isNotEmpty &&
+            !s.toLowerCase().contains('any') &&
+            s.toLowerCase() != 'unassigned' &&
+            s.toLowerCase() != 'not assigned')
+        .toSet()
+        .toList()
+      ..sort();
+    final staffFilterValid =
+        _calendarStaffFilter == 'all' || staffOptions.contains(_calendarStaffFilter);
+    final weekBookings = _calendarBookings
+        .where((b) =>
+            weekSet.contains((b['date'] ?? '').toString()) &&
+            (!staffFilterValid ||
+                _calendarStaffFilter == 'all' ||
+                (b['staffName'] ?? '') == _calendarStaffFilter))
+        .toList();
+    final weekLabel =
+        '${weekDates.first.day}/${weekDates.first.month} - ${weekDates.last.day}/${weekDates.last.month}';
+    final today = DateTime.now();
+    final todayKey =
+        '${today.year}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}';
+    final statusColors = <String, (Color bg, Color border, Color text)>{
+      'completed': (const Color(0xFFDCEAFE), const Color(0xFF93C5FD), const Color(0xFF1D4ED8)),
+      'confirmed': (const Color(0xFFDCFCE7), const Color(0xFF86EFAC), const Color(0xFF166534)),
+    };
+
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFFFFFFFF), Color(0xFFF5F3FF), Color(0xFFECFEFF)],
+        ),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 30,
+                height: 30,
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(colors: [Color(0xFF8B5CF6), Color(0xFF06B6D4)]),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(FontAwesomeIcons.calendarWeek, size: 12, color: Colors.white),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text('Branch Calendar',
+                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+                    Text(weekLabel, style: const TextStyle(fontSize: 11, color: AppColors.muted)),
+                  ],
+                ),
+              ),
+              _calNavBtn(icon: FontAwesomeIcons.chevronLeft, onTap: _goPrevWeek),
+              const SizedBox(width: 4),
+              _calNavBtn(icon: FontAwesomeIcons.calendarDay, onTap: _goThisWeek),
+              const SizedBox(width: 4),
+              _calNavBtn(icon: FontAwesomeIcons.chevronRight, onTap: _goNextWeek),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Expanded(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: AppColors.border),
+                  ),
+                  child: Text(widget.branchName, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: AppColors.border),
+                  ),
+                  child: DropdownButtonHideUnderline(
+                    child: DropdownButton<String>(
+                      isExpanded: true,
+                      value: staffFilterValid ? _calendarStaffFilter : 'all',
+                      icon: const Icon(Icons.keyboard_arrow_down_rounded, size: 18),
+                      style: const TextStyle(fontSize: 12, color: AppColors.text, fontWeight: FontWeight.w600),
+                      items: [
+                        const DropdownMenuItem(value: 'all', child: Text('All Staff')),
+                        ...staffOptions.map((s) => DropdownMenuItem(value: s, child: Text(s))),
+                      ],
+                      onChanged: (v) => setState(() => _calendarStaffFilter = v ?? 'all'),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              const SizedBox(width: timeColWidth),
+              ...weekDates.map((d) {
+                final key =
+                    '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
+                final isToday = key == todayKey;
+                return Expanded(
+                  child: Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 1),
+                    padding: const EdgeInsets.symmetric(vertical: 4),
+                    decoration: BoxDecoration(
+                      color: isToday ? AppColors.primary : const Color(0xFFF3F4F6),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Column(
+                      children: [
+                        Text(['M', 'T', 'W', 'T', 'F', 'S', 'S'][d.weekday - 1],
+                            style: TextStyle(
+                                fontSize: 9,
+                                fontWeight: FontWeight.w700,
+                                color: isToday ? Colors.white70 : AppColors.muted)),
+                        Text('${d.day}',
+                            style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w800,
+                                color: isToday ? Colors.white : AppColors.text)),
+                      ],
+                    ),
+                  ),
+                );
+              }),
+            ],
+          ),
+          const SizedBox(height: 6),
+          SizedBox(
+            height: gridHeight,
+            child: Row(
+              children: [
+                SizedBox(
+                  width: timeColWidth,
+                  child: Stack(
+                    children: List.generate(endHour - startHour, (i) {
+                      final hour = startHour + i;
+                      final lbl = hour == 12 ? '12 PM' : hour > 12 ? '${hour - 12} PM' : '$hour AM';
+                      return Positioned(
+                        top: i * slotHeight - 5,
+                        right: 2,
+                        child: Text(lbl, style: const TextStyle(fontSize: 8, color: AppColors.muted)),
+                      );
+                    }),
+                  ),
+                ),
+                ...weekDates.map((d) {
+                  final key =
+                      '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
+                  final dayBookings = weekBookings.where((b) => (b['date'] ?? '') == key).toList();
+                  return Expanded(
+                    child: Container(
+                      margin: const EdgeInsets.symmetric(horizontal: 1),
+                      decoration: BoxDecoration(
+                        color: key == todayKey ? const Color(0xFFFEFCE8) : Colors.white,
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Stack(
+                        children: [
+                          ...List.generate(endHour - startHour, (i) {
+                            return Positioned(
+                              top: i * slotHeight,
+                              left: 0,
+                              right: 0,
+                              child: Divider(
+                                height: 1,
+                                thickness: 0.6,
+                                color: AppColors.border.withOpacity(0.65),
+                              ),
+                            );
+                          }),
+                          ...dayBookings.asMap().entries.map((entry) {
+                            final idx = entry.key;
+                            final bk = entry.value;
+                            final tm = _calParseTime((bk['time'] ?? '09:00').toString());
+                            final dur = (bk['duration'] as int?) ?? 60;
+                            final top = ((tm.hour - startHour) * slotHeight) + ((tm.minute / 60) * slotHeight);
+                            if (top < 0 || top > gridHeight - 8) return const SizedBox.shrink();
+                            final height = ((dur / 60) * slotHeight).clamp(22.0, 90.0);
+                            final endMins = tm.hour * 60 + tm.minute + dur;
+                            final eHour = endMins ~/ 60;
+                            final eMin = endMins % 60;
+                            final status = (bk['status'] ?? '').toString().toLowerCase();
+                            final palette = statusColors[status] ??
+                                (idx.isEven
+                                    ? (const Color(0xFFFCE7F3), const Color(0xFFF9A8D4), const Color(0xFF9D174D))
+                                    : (const Color(0xFFE0F2FE), const Color(0xFF7DD3FC), const Color(0xFF075985)));
+                            return Positioned(
+                              top: top + 1,
+                              left: 1.5,
+                              right: 1.5,
+                              height: height,
+                              child: GestureDetector(
+                                onTap: () => _showCalendarBookingDetails(bk),
+                                child: Container(
+                                  padding: const EdgeInsets.fromLTRB(4, 3, 4, 3),
+                                  decoration: BoxDecoration(
+                                    color: palette.$1,
+                                    border: Border.all(color: palette.$2),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text((bk['client'] ?? 'Customer').toString(),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: TextStyle(
+                                              fontSize: 8, fontWeight: FontWeight.w700, color: palette.$3)),
+                                      Text((bk['serviceName'] ?? 'Service').toString(),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: TextStyle(fontSize: 7, color: palette.$3.withOpacity(0.85))),
+                                      const Spacer(),
+                                      Text(
+                                        '${_calFormat12h(tm.hour, tm.minute)} - ${_calFormat12h(eHour, eMin)}',
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: TextStyle(
+                                            fontSize: 7, fontWeight: FontWeight.w600, color: palette.$3.withOpacity(0.9)),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            );
+                          }),
+                        ],
+                      ),
+                    ),
+                  );
+                }),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showCalendarBookingDetails(Map<String, dynamic> bk) {
+    final start = _calParseTime((bk['time'] ?? '09:00').toString());
+    final duration = (bk['duration'] as int?) ?? 60;
+    final endTotalMins = start.hour * 60 + start.minute + duration;
+    final endHour = endTotalMins ~/ 60;
+    final endMin = endTotalMins % 60;
+    final pickupRaw = (bk['pickupTime'] ?? '').toString().trim();
+    final pickup = pickupRaw.isNotEmpty
+        ? (() {
+            final p = _calParseTime(pickupRaw);
+            return _calFormat12h(p.hour, p.minute);
+          })()
+        : _calFormat12h(endHour, endMin);
+    final status = (bk['status'] ?? 'Pending').toString();
+    final bookingCode = (bk['bookingCode'] ?? '').toString();
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+        title: const Text('Booking Details',
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: double.infinity,
+              margin: const EdgeInsets.only(bottom: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF8B5CF6), Color(0xFF06B6D4)],
+                ),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Text(
+                '${(bk['serviceName'] ?? 'Service').toString()} • ${(bk['staffName'] ?? 'Unassigned').toString()}',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+            if (bookingCode.isNotEmpty) _detailRow('Booking Code', bookingCode),
+            _detailRow('Customer', (bk['client'] ?? 'Customer').toString()),
+            _detailRow('Service', (bk['serviceName'] ?? 'Service').toString()),
+            _detailRow('Date', (bk['date'] ?? '').toString()),
+            _detailRow('Time', '${_calFormat12h(start.hour, start.minute)} - ${_calFormat12h(endHour, endMin)}'),
+            _detailRow('Pick-up Time', pickup),
+            _detailRow('Duration', '$duration min'),
+            _detailRow('Staff', (bk['staffName'] ?? 'Not assigned').toString()),
+            _detailRow('Branch', (bk['branchName'] ?? widget.branchName).toString()),
+            _detailRow('Status', status),
+            _detailRow('Price', '\$${(bk['price'] as num?)?.toStringAsFixed(2) ?? '0.00'}'),
+          ],
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.of(ctx).pop(), child: const Text('Close')),
+        ],
+      ),
+    );
+  }
+
+  Widget _detailRow(String label, String value) {
+    final icon = _detailIconForLabel(label);
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 3),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 20,
+            height: 20,
+            margin: const EdgeInsets.only(right: 6, top: 1),
+            decoration: BoxDecoration(
+              color: const Color(0xFFEFF6FF),
+              borderRadius: BorderRadius.circular(6),
+            ),
+            child: Icon(icon, size: 10, color: const Color(0xFF2563EB)),
+          ),
+          SizedBox(
+            width: 74,
+            child: Text(
+              label,
+              style: const TextStyle(fontSize: 12, color: AppColors.muted, fontWeight: FontWeight.w600),
+            ),
+          ),
+          Expanded(
+            child: Text(
+              value,
+              style: const TextStyle(fontSize: 12, color: AppColors.text, fontWeight: FontWeight.w600),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  IconData _detailIconForLabel(String label) {
+    final key = label.toLowerCase();
+    if (key.contains('booking')) return FontAwesomeIcons.hashtag;
+    if (key.contains('customer')) return FontAwesomeIcons.user;
+    if (key.contains('service')) return FontAwesomeIcons.screwdriverWrench;
+    if (key.contains('date')) return FontAwesomeIcons.calendar;
+    if (key.contains('pick-up')) return FontAwesomeIcons.clockRotateLeft;
+    if (key == 'time') return FontAwesomeIcons.clock;
+    if (key.contains('duration')) return FontAwesomeIcons.hourglassHalf;
+    if (key.contains('staff')) return FontAwesomeIcons.userGroup;
+    if (key.contains('branch')) return FontAwesomeIcons.locationDot;
+    if (key.contains('status')) return FontAwesomeIcons.circleCheck;
+    if (key.contains('price')) return FontAwesomeIcons.dollarSign;
+    return FontAwesomeIcons.circleInfo;
+  }
+
+  Widget _calNavBtn({required IconData icon, required VoidCallback onTap}) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 28,
+        height: 28,
+        decoration: BoxDecoration(
+          color: const Color(0xFFF3F4F6),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: AppColors.border),
+        ),
+        child: Icon(icon, size: 11, color: AppColors.muted),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_loading) {
@@ -1483,6 +2067,8 @@ class _BranchAdminDashboardState extends State<BranchAdminDashboard> with Ticker
               _buildAppointmentsSection(),
               const SizedBox(height: 24),
               _buildOtherStaffAppointmentsSection(),
+              const SizedBox(height: 24),
+              _buildCalendarSection(),
               const SizedBox(height: 24),
               _buildKpiSection(),
               const SizedBox(height: 24),
