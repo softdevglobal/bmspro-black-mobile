@@ -72,7 +72,7 @@ class _WalkInBookingPageState extends State<WalkInBookingPage> with TickerProvid
   late Animation<double> _fadeAnimation;
 
   // Live data from Firestore (mirroring admin panel sources)
-  List<Map<String, dynamic>> _branches = []; // {id, name, address}
+  List<Map<String, dynamic>> _branches = []; // {id, name, address, bookingLimitPerDay}
   List<Map<String, dynamic>> _services = []; // {id, name, price, duration, branches, staffIds}
   List<Map<String, dynamic>> _staff = []; // {id, name, status, avatar, branchId}
   List<Map<String, dynamic>> _bookings = []; // Existing bookings for slot blocking
@@ -358,12 +358,16 @@ class _WalkInBookingPageState extends State<WalkInBookingPage> with TickerProvid
       final branches = branchesSnap.docs.map((d) {
         final data = d.data();
         debugPrint('[BranchLoad] Branch "${data['name']}" id=${d.id} timezone=${data['timezone']}');
+        final rawBookingLimit = data['bookingLimitPerDay'];
         return {
           'id': d.id,
           'name': (data['name'] ?? 'Branch').toString(),
           'address': (data['address'] ?? '').toString(),
           'hours': data['hours'], // Include branch hours
           'timezone': (data['timezone'] ?? 'Australia/Sydney').toString(), // Include timezone
+          'bookingLimitPerDay': rawBookingLimit is num
+              ? rawBookingLimit.toInt()
+              : int.tryParse(rawBookingLimit?.toString() ?? ''),
         };
       }).toList();
 
@@ -2044,6 +2048,45 @@ class _WalkInBookingPageState extends State<WalkInBookingPage> with TickerProvid
         child: const Text(
           'Branch is closed on this day',
           style: TextStyle(color: Colors.red, fontSize: 13),
+        ),
+      );
+    }
+
+    final int? bookingLimitPerDay =
+        selectedBranch['bookingLimitPerDay'] is num
+            ? (selectedBranch['bookingLimitPerDay'] as num).toInt()
+            : int.tryParse(selectedBranch['bookingLimitPerDay']?.toString() ?? '');
+
+    final String? selectedDateKey = _selectedDate != null
+        ? '${_selectedDate!.year.toString().padLeft(4, '0')}-${_selectedDate!.month.toString().padLeft(2, '0')}-${_selectedDate!.day.toString().padLeft(2, '0')}'
+        : null;
+
+    final int activeBookingsForDate =
+        selectedDateKey == null || _selectedBranchId == null
+            ? 0
+            : _bookings.where((booking) {
+                final bookingBranchId = (booking['branchId'] ?? '').toString();
+                final bookingDate = (booking['date'] ?? '').toString();
+                return bookingBranchId == _selectedBranchId && bookingDate == selectedDateKey;
+              }).length;
+
+    final bool isDailyLimitReached =
+        bookingLimitPerDay != null &&
+            bookingLimitPerDay > 0 &&
+            activeBookingsForDate >= bookingLimitPerDay;
+
+    if (isDailyLimitReached) {
+      return Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.red.shade50,
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: Colors.red.shade200),
+        ),
+        child: Text(
+          'Daily booking limit reached ($activeBookingsForDate/$bookingLimitPerDay). '
+          'Please select another date.',
+          style: const TextStyle(color: Colors.red, fontSize: 13),
         ),
       );
     }
