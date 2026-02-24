@@ -566,6 +566,27 @@ class _EstimatesPageState extends State<EstimatesPage> {
                                         overflow: TextOverflow.ellipsis,
                                         style: const TextStyle(fontSize: 13, color: AppColors.muted),
                                       ),
+                                      if (e.imageUrls.isNotEmpty) ...[
+                                        const SizedBox(height: 8),
+                                        Wrap(
+                                          spacing: 8,
+                                          runSpacing: 8,
+                                          children: e.imageUrls.asMap().entries.map((entry) {
+                                            return GestureDetector(
+                                              onTap: () => setState(() => _lightboxUrl = entry.value),
+                                              child: ClipRRect(
+                                                borderRadius: BorderRadius.circular(8),
+                                                child: SafeNetworkImage(
+                                                  imageUrl: entry.value,
+                                                  width: 64,
+                                                  height: 64,
+                                                  fit: BoxFit.cover,
+                                                ),
+                                              ),
+                                            );
+                                          }).toList(),
+                                        ),
+                                      ],
                                       const SizedBox(height: 8),
                                       Row(
                                         children: [
@@ -635,28 +656,6 @@ class _EstimatesPageState extends State<EstimatesPage> {
                                         ),
                                       ),
                                       if (isExpanded) ...[
-                                        if (e.imageUrls.isNotEmpty) ...[
-                                          const SizedBox(height: 8),
-                                          Wrap(
-                                            spacing: 8,
-                                            runSpacing: 8,
-                                            children: e.imageUrls.asMap().entries.map((entry) {
-                                              return GestureDetector(
-                                                onTap: () => setState(() => _lightboxUrl = entry.value),
-                                                child: ClipRRect(
-                                                  borderRadius: BorderRadius.circular(8),
-                                                  child: SafeNetworkImage(
-                                                    imageUrl: entry.value,
-                                                    width: 64,
-                                                    height: 64,
-                                                    fit: BoxFit.cover,
-                                                  ),
-                                                ),
-                                              );
-                                            }).toList(),
-                                          ),
-                                          const SizedBox(height: 12),
-                                        ],
                                         if (repliesLoading)
                                           const Padding(
                                             padding: EdgeInsets.all(16),
