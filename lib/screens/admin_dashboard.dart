@@ -459,6 +459,15 @@ class _AdminDashboardState extends State<AdminDashboard> {
     if (value.isEmpty) return (hour: 9, minute: 0);
     final upper = value.toUpperCase();
     final numberPart = value.replaceAll(RegExp(r'\s*(AM|PM)', caseSensitive: false), '').trim();
+    // Handle "0700" or "0930" (HHMM) format when no colon
+    if (!numberPart.contains(':')) {
+      final s = numberPart.replaceAll(RegExp(r'\D'), '');
+      if (s.length >= 4) {
+        final h = int.tryParse(s.substring(0, 2)) ?? 9;
+        final m = int.tryParse(s.substring(2, 4)) ?? 0;
+        return (hour: h, minute: m);
+      }
+    }
     final parts = numberPart.split(':');
     int h = int.tryParse(parts[0]) ?? 9;
     int m = parts.length > 1 ? int.tryParse(parts[1].replaceAll(RegExp(r'\D'), '')) ?? 0 : 0;
@@ -487,6 +496,42 @@ class _AdminDashboardState extends State<AdminDashboard> {
 
   void _goThisWeek() {
     setState(() => _calendarWeekStart = _getWeekStart(DateTime.now()));
+  }
+
+  /// Assign overlap columns to day bookings (waterfall layout) so overlapping blocks show side-by-side
+  List<Map<String, dynamic>> _assignOverlapColumns(List<Map<String, dynamic>> dayBookings) {
+    if (dayBookings.isEmpty) return [];
+    final withMins = dayBookings.map((b) {
+      final tm = _parseTime((b['time'] ?? '09:00').toString());
+      final dur = (b['duration'] as int?) ?? 60;
+      final startM = tm.hour * 60 + tm.minute;
+      final endM = startM + dur;
+      return {...b, '_startM': startM, '_endM': endM};
+    }).toList();
+    withMins.sort((a, b) {
+      final cmp = (a['_startM'] as int).compareTo(b['_startM'] as int);
+      if (cmp != 0) return cmp;
+      return (a['id']?.toString() ?? '').compareTo(b['id']?.toString() ?? '');
+    });
+    final active = <({int endM, int col})>[];
+    for (final b in withMins) {
+      final startM = b['_startM'] as int;
+      active.removeWhere((a) => a.endM <= startM);
+      active.sort((a, b) => a.endM.compareTo(b.endM));
+      final usedCols = active.map((a) => a.col).toSet();
+      int col = 0;
+      while (usedCols.contains(col)) col++;
+      b['_overlapCol'] = col;
+      active.add((endM: b['_endM'] as int, col: col));
+    }
+    final maxCol = withMins.isEmpty
+        ? 0
+        : withMins.map((b) => b['_overlapCol'] as int).reduce((a, b) => a > b ? a : b);
+    final n = maxCol + 1;
+    for (final b in withMins) {
+      b['_overlapCount'] = n;
+    }
+    return withMins;
   }
 
   Widget _buildCalendarSection() {
@@ -725,6 +770,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
                       '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
                   final dayBookings =
                       weekBookings.where((b) => (b['date'] ?? '') == key).toList();
+                  final dayBookingsWithOverlap = _assignOverlapColumns(dayBookings);
                   return Expanded(
                     child: Container(
                       margin: const EdgeInsets.symmetric(horizontal: 1),
@@ -732,95 +778,109 @@ class _AdminDashboardState extends State<AdminDashboard> {
                         color: key == todayKey ? const Color(0xFFFEFCE8) : Colors.white,
                         borderRadius: BorderRadius.circular(6),
                       ),
-                      child: Stack(
-                        children: [
-                          ...List.generate(endHour - startHour, (i) {
-                            return Positioned(
-                              top: i * slotHeight,
-                              left: 0,
-                              right: 0,
-                              child: Divider(
-                                height: 1,
-                                thickness: 0.6,
-                                color: AppColors.border.withOpacity(0.65),
-                              ),
-                            );
-                          }),
-                          ...dayBookings.asMap().entries.map((entry) {
-                            final idx = entry.key;
-                            final bk = entry.value;
-                            final tm = _parseTime((bk['time'] ?? '09:00').toString());
-                            final dur = (bk['duration'] as int?) ?? 60;
-                            final top = ((tm.hour - startHour) * slotHeight) +
-                                ((tm.minute / 60) * slotHeight);
-                            if (top < 0 || top > gridHeight - 8) return const SizedBox.shrink();
-                            final height = ((dur / 60) * slotHeight).clamp(22.0, 90.0);
-                            final endMins = tm.hour * 60 + tm.minute + dur;
-                            final endHour = endMins ~/ 60;
-                            final endMin = endMins % 60;
-                            final status = (bk['status'] ?? '').toString().toLowerCase();
-                            final palette = statusColors[status] ?? fallbackColors[idx % fallbackColors.length];
-                            return Positioned(
-                              top: top + 1,
-                              left: 1.5,
-                              right: 1.5,
-                              height: height,
-                              child: GestureDetector(
-                                onTap: () => _showCalendarBookingDetails(bk),
-                                child: Container(
-                                  padding: const EdgeInsets.fromLTRB(4, 3, 4, 3),
-                                  decoration: BoxDecoration(
-                                    color: palette.$1,
-                                    border: Border.all(color: palette.$2, width: 1.0),
-                                    borderRadius: BorderRadius.circular(8),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: palette.$2.withOpacity(0.18),
-                                        blurRadius: 8,
-                                        offset: const Offset(0, 3),
-                                      ),
-                                    ],
+                      child: LayoutBuilder(
+                        builder: (context, constraints) {
+                          final w = constraints.maxWidth;
+                          return Stack(
+                            children: [
+                              ...List.generate(endHour - startHour, (i) {
+                                return Positioned(
+                                  top: i * slotHeight,
+                                  left: 0,
+                                  right: 0,
+                                  child: Divider(
+                                    height: 1,
+                                    thickness: 0.6,
+                                    color: AppColors.border.withOpacity(0.65),
                                   ),
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        (bk['client'] ?? 'Customer').toString(),
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: TextStyle(
-                                          fontSize: 8,
-                                          fontWeight: FontWeight.w700,
-                                          color: palette.$3,
-                                        ),
+                                );
+                              }),
+                              ...dayBookingsWithOverlap.asMap().entries.map((entry) {
+                                final idx = entry.key;
+                                final bk = entry.value;
+                                final overlapCol = bk['_overlapCol'] as int? ?? 0;
+                                final overlapCount = bk['_overlapCount'] as int? ?? 1;
+                                final blockWidth = overlapCount <= 1
+                                    ? w - 3
+                                    : (w - 3 - (overlapCount - 1) * 1) / overlapCount;
+                                final left = 1.5 + overlapCol * (blockWidth + 1);
+                                final tm = _parseTime((bk['time'] ?? '09:00').toString());
+                                final dur = (bk['duration'] as int?) ?? 60;
+                                final top = ((tm.hour - startHour) * slotHeight) +
+                                    ((tm.minute / 60) * slotHeight);
+                                if (top < 0 || top > gridHeight - 8) return const SizedBox.shrink();
+                                final height = ((dur / 60) * slotHeight).clamp(22.0, 90.0);
+                                final endMins = tm.hour * 60 + tm.minute + dur;
+                                final endHour = endMins ~/ 60;
+                                final endMin = endMins % 60;
+                                final status = (bk['status'] ?? '').toString().toLowerCase();
+                                final palette = statusColors[status] ?? fallbackColors[idx % fallbackColors.length];
+                                final isCompact = overlapCount > 1 && blockWidth < 45;
+                                return Positioned(
+                                  top: top + 1,
+                                  left: left,
+                                  width: blockWidth,
+                                  height: height,
+                                  child: GestureDetector(
+                                    onTap: () => _showCalendarBookingDetails(bk),
+                                    child: Container(
+                                      padding: EdgeInsets.fromLTRB(isCompact ? 2 : 4, 3, isCompact ? 2 : 4, 3),
+                                      decoration: BoxDecoration(
+                                        color: palette.$1,
+                                        border: Border.all(color: palette.$2, width: 1.0),
+                                        borderRadius: BorderRadius.circular(8),
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: palette.$2.withOpacity(0.18),
+                                            blurRadius: 8,
+                                            offset: const Offset(0, 3),
+                                          ),
+                                        ],
                                       ),
-                                      Text(
-                                        (bk['serviceName'] ?? 'Service').toString(),
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: TextStyle(
-                                          fontSize: 7,
-                                          color: palette.$3.withOpacity(0.85),
-                                        ),
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Text(
+                                            (bk['client'] ?? 'Customer').toString(),
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                            style: TextStyle(
+                                              fontSize: isCompact ? 7 : 8,
+                                              fontWeight: FontWeight.w700,
+                                              color: palette.$3,
+                                            ),
+                                          ),
+                                          if (!isCompact)
+                                            Text(
+                                              (bk['serviceName'] ?? 'Service').toString(),
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                              style: TextStyle(
+                                                fontSize: 7,
+                                                color: palette.$3.withOpacity(0.85),
+                                              ),
+                                            ),
+                                          const Spacer(),
+                                          Text(
+                                            '${_format12h(tm.hour, tm.minute)} - ${_format12h(endHour, endMin)}',
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                            style: TextStyle(
+                                              fontSize: isCompact ? 6 : 7,
+                                              fontWeight: FontWeight.w600,
+                                              color: palette.$3.withOpacity(0.9),
+                                            ),
+                                          ),
+                                        ],
                                       ),
-                                      const Spacer(),
-                                      Text(
-                                        '${_format12h(tm.hour, tm.minute)} - ${_format12h(endHour, endMin)}',
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: TextStyle(
-                                          fontSize: 7,
-                                          fontWeight: FontWeight.w600,
-                                          color: palette.$3.withOpacity(0.9),
-                                        ),
-                                      ),
-                                    ],
+                                    ),
                                   ),
-                                ),
-                              ),
-                            );
-                          }),
-                        ],
+                                );
+                              }),
+                            ],
+                          );
+                        },
                       ),
                     ),
                   );

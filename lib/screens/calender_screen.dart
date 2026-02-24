@@ -1898,6 +1898,30 @@ class _CalenderScreenState extends State<CalenderScreen> {
     
     return 0;
   }
+
+  int _getAppointmentDurationMinutes(Appointment appt) {
+    if (appt.services.isNotEmpty) {
+      final d = appt.services.first.duration;
+      if (d > 0) return d;
+    }
+    if (appt.totalDuration > 0) return appt.totalDuration;
+    return 60;
+  }
+
+  /// Returns appointments that overlap with the given slot (slot in [start, end)).
+  List<Appointment> _getOverlappingAppointmentsAtSlot(List<Appointment> appointments, int slotMinutes) {
+    final overlapping = <Appointment>[];
+    for (final appt in appointments) {
+      final startMinutes = _parseTimeToMinutes(appt.time);
+      final durationMinutes = _getAppointmentDurationMinutes(appt);
+      final endMinutes = startMinutes + durationMinutes;
+      if (startMinutes <= slotMinutes && slotMinutes < endMinutes) {
+        overlapping.add(appt);
+      }
+    }
+    overlapping.sort((a, b) => _parseTimeToMinutes(a.time).compareTo(_parseTimeToMinutes(b.time)));
+    return overlapping;
+  }
   
   Widget _buildTimeSlotView(List<Appointment> appointments, String? branchName, {bool isBranchView = false}) {
     // Use first appointment's branch color for header, or fallback to day's branch
@@ -1915,30 +1939,7 @@ class _CalenderScreenState extends State<CalenderScreen> {
       }
     }
     
-    // Map appointments to their time slots (by minutes)
-    Map<int, Appointment?> slotAppointments = {};
-    Map<int, Appointment> occupiedSlots = {}; // Maps slot to the appointment that occupies it
-    
-    for (final appt in appointments) {
-      final apptMinutes = _parseTimeToMinutes(appt.time);
-      slotAppointments[apptMinutes] = appt;
-      
-      // Calculate duration and mark occupied slots
-      int durationMinutes = 60; // default
-      if (appt.services.isNotEmpty) {
-        durationMinutes = appt.services.first.duration;
-        if (durationMinutes <= 0) durationMinutes = 60;
-      }
-      
-      // Mark slots occupied by this appointment
-      final int startMinutes = apptMinutes;
-      final int endMinutes = apptMinutes + durationMinutes;
-      for (int m = startMinutes; m < endMinutes; m += 15) {
-        if (m != apptMinutes) {
-          occupiedSlots[m] = appt; // Track which appointment owns this slot
-        }
-      }
-    }
+    // For each slot, find all overlapping appointments (dynamic column splitting)
     
     return Container(
       decoration: BoxDecoration(
@@ -2000,7 +2001,7 @@ class _CalenderScreenState extends State<CalenderScreen> {
               ],
             ),
           ),
-          // Time slots
+          // Time slots - each slot shows all overlapping appointments side-by-side
           ListView.builder(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
@@ -2010,14 +2011,8 @@ class _CalenderScreenState extends State<CalenderScreen> {
               final slotHour = slotMinutes ~/ 60;
               final slotMinute = slotMinutes % 60;
               final timeSlotStr = '${slotHour.toString().padLeft(2, '0')}:${slotMinute.toString().padLeft(2, '0')}';
-              final appointment = slotAppointments[slotMinutes];
-              final isOccupied = occupiedSlots.containsKey(slotMinutes);
+              final overlapping = _getOverlappingAppointmentsAtSlot(appointments, slotMinutes);
               final isHourMark = slotMinute == 0;
-              
-              // Skip rendering slots that are occupied by ongoing sessions
-              if (isOccupied && appointment == null) {
-                return const SizedBox.shrink();
-              }
               
               return Container(
                 decoration: BoxDecoration(
@@ -2050,30 +2045,54 @@ class _CalenderScreenState extends State<CalenderScreen> {
                         ),
                       ),
                     ),
-                    // Appointment slot
+                    // Appointment slot - dynamic column splitting for overlaps
                     Expanded(
-                      child: appointment != null
-                          ? _buildTimeSlotAppointment(appointment, _resolveBranchTheme(appointment.branchName))
-                          : Container(
-                                  height: 44,
-                                  margin: const EdgeInsets.all(4),
-                                  decoration: BoxDecoration(
-                                    color: Colors.grey.shade50,
-                                    borderRadius: BorderRadius.circular(8),
-                                    border: Border.all(
-                                      color: Colors.grey.shade700,
-                                      style: BorderStyle.solid,
-                                    ),
+                      child: overlapping.isEmpty
+                          ? Container(
+                              height: 44,
+                              margin: const EdgeInsets.all(4),
+                              decoration: BoxDecoration(
+                                color: Colors.grey.shade50,
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(
+                                  color: Colors.grey.shade700,
+                                  style: BorderStyle.solid,
+                                ),
+                              ),
+                              child: Center(
+                                child: Text(
+                                  'Available',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    color: Colors.grey.shade400,
                                   ),
-                                  child: Center(
-                                    child: Text(
-                                      'Available',
-                                      style: TextStyle(
-                                        fontSize: 11,
-                                        color: Colors.grey.shade400,
+                                ),
+                              ),
+                            )
+                          : overlapping.length > 4
+                              ? _buildOverflowSlot(overlapping)
+                              : Row(
+                                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                                  children: overlapping.asMap().entries.map((entry) {
+                                    final i = entry.key;
+                                    final appt = entry.value;
+                                    final n = overlapping.length;
+                                    return Expanded(
+                                      child: Padding(
+                                        padding: EdgeInsets.only(
+                                          left: i == 0 ? 4 : 2,
+                                          right: i == n - 1 ? 4 : 2,
+                                          top: 4,
+                                          bottom: 4,
+                                        ),
+                                        child: _buildTimeSlotAppointmentCompact(
+                                          appt,
+                                          _resolveBranchTheme(appt.branchName),
+                                          slotMinutes: slotMinutes,
+                                        ),
                                       ),
-                                    ),
-                                  ),
+                                    );
+                                  }).toList(),
                                 ),
                     ),
                   ],
@@ -2086,15 +2105,19 @@ class _CalenderScreenState extends State<CalenderScreen> {
     );
   }
   
-  Widget _buildTimeSlotAppointment(Appointment appt, BranchTheme theme) {
+  Widget _buildTimeSlotAppointment(Appointment appt, BranchTheme theme, {double? fixedHeight}) {
     // Calculate height based on duration - minimum 52 pixels per slot (15-min intervals)
-    int durationMinutes = 60;
-    if (appt.services.isNotEmpty) {
-      durationMinutes = appt.services.first.duration;
-      if (durationMinutes <= 0) durationMinutes = 60;
+    double slotHeight;
+    if (fixedHeight != null) {
+      slotHeight = fixedHeight;
+    } else {
+      int durationMinutes = 60;
+      if (appt.services.isNotEmpty) {
+        durationMinutes = appt.services.first.duration;
+        if (durationMinutes <= 0) durationMinutes = 60;
+      }
+      slotHeight = math.max((durationMinutes / 15) * 52.0, 52.0);
     }
-    // Ensure minimum height of 52 for short appointments (based on 15-min slot intervals)
-    final slotHeight = math.max((durationMinutes / 15) * 52.0, 52.0);
     
     // Status colors
     Color statusColor;
@@ -2216,6 +2239,127 @@ class _CalenderScreenState extends State<CalenderScreen> {
         ],
       ),
     ),
+    );
+  }
+
+  /// Compact card for overlapping slots - 52px height, tooltip on hover for readability
+  Widget _buildTimeSlotAppointmentCompact(Appointment appt, BranchTheme theme, {required int slotMinutes}) {
+    final statusLower = appt.status.toLowerCase();
+    Color statusBgColor;
+    Color statusTextColor;
+    Color statusBorderColor;
+    if (statusLower == 'confirmed') {
+      statusBgColor = Colors.green.shade50;
+      statusTextColor = Colors.green.shade700;
+      statusBorderColor = Colors.green.shade100;
+    } else if (statusLower == 'pending' || statusLower.contains('awaiting') || statusLower.contains('partially')) {
+      statusBgColor = Colors.amber.shade50;
+      statusTextColor = Colors.amber.shade700;
+      statusBorderColor = Colors.amber.shade200;
+    } else if (statusLower == 'completed') {
+      statusBgColor = Colors.blue.shade50;
+      statusTextColor = Colors.blue.shade700;
+      statusBorderColor = Colors.blue.shade100;
+    } else {
+      statusBgColor = Colors.grey.shade50;
+      statusTextColor = Colors.grey.shade700;
+      statusBorderColor = Colors.grey.shade200;
+    }
+    final tooltipMsg = '${appt.service} - ${appt.client}${appt.price > 0 ? ' (AU\$${appt.price.toStringAsFixed(0)})' : ''}\nTap for full details';
+    return Tooltip(
+      message: tooltipMsg,
+      preferBelow: false,
+      child: GestureDetector(
+        onTap: () => _showBookingDetailsSheet(context, appt, theme, statusBgColor, statusTextColor, statusBorderColor),
+        child: _buildTimeSlotAppointment(appt, theme, fixedHeight: 52.0),
+      ),
+    );
+  }
+
+  /// When >4 overlaps, show a "+X more" pill that opens a modal
+  Widget _buildOverflowSlot(List<Appointment> overlapping) {
+    return GestureDetector(
+      onTap: () => _showOverflowBookingsModal(context, overlapping),
+      child: Container(
+        height: 52,
+        margin: const EdgeInsets.all(4),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: BoxDecoration(
+          color: Colors.amber.shade50,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.amber.shade200),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(FontAwesomeIcons.layerGroup, size: 16, color: Colors.amber.shade700),
+            const SizedBox(width: 8),
+            Text(
+              '+${overlapping.length} bookings',
+              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.amber.shade800),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showOverflowBookingsModal(BuildContext context, List<Appointment> overlapping) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (ctx) => DraggableScrollableSheet(
+        initialChildSize: 0.5,
+        maxChildSize: 0.9,
+        expand: false,
+        builder: (_, controller) => Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Text(
+                '${overlapping.length} overlapping bookings',
+                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+            ),
+            Expanded(
+              child: ListView.builder(
+                controller: controller,
+                itemCount: overlapping.length,
+                itemBuilder: (_, i) {
+                  final appt = overlapping[i];
+                  final theme = _resolveBranchTheme(appt.branchName);
+                  final statusLower = appt.status.toLowerCase();
+                  Color statusBgColor = Colors.grey.shade50;
+                  Color statusTextColor = Colors.grey.shade700;
+                  Color statusBorderColor = Colors.grey.shade200;
+                  if (statusLower == 'confirmed') {
+                    statusBgColor = Colors.green.shade50;
+                    statusTextColor = Colors.green.shade700;
+                    statusBorderColor = Colors.green.shade100;
+                  } else if (statusLower == 'pending' || statusLower.contains('awaiting') || statusLower.contains('partially')) {
+                    statusBgColor = Colors.amber.shade50;
+                    statusTextColor = Colors.amber.shade700;
+                    statusBorderColor = Colors.amber.shade200;
+                  } else if (statusLower == 'completed') {
+                    statusBgColor = Colors.blue.shade50;
+                    statusTextColor = Colors.blue.shade700;
+                    statusBorderColor = Colors.blue.shade100;
+                  }
+                  return ListTile(
+                    title: Text(appt.service),
+                    subtitle: Text('${appt.client} • ${appt.time}'),
+                    trailing: appt.price > 0 ? Text('AU\$${appt.price.toStringAsFixed(0)}') : null,
+                    onTap: () {
+                      Navigator.pop(ctx);
+                      _showBookingDetailsSheet(context, appt, theme, statusBgColor, statusTextColor, statusBorderColor);
+                    },
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
