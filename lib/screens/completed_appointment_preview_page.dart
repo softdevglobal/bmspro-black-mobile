@@ -1,6 +1,11 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:intl/intl.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:http/http.dart' as http;
+import 'package:path_provider/path_provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 // --- Theme & Colors ---
 class AppColors {
@@ -15,7 +20,7 @@ class AppColors {
   static const green = Color(0xFF22C55E);
 }
 
-class CompletedAppointmentPreviewPage extends StatelessWidget {
+class CompletedAppointmentPreviewPage extends StatefulWidget {
   final Map<String, dynamic>? appointmentData;
   final Map<String, dynamic>? bookingData;
   final String? serviceId;
@@ -26,6 +31,75 @@ class CompletedAppointmentPreviewPage extends StatelessWidget {
     this.bookingData,
     this.serviceId,
   });
+
+  @override
+  State<CompletedAppointmentPreviewPage> createState() =>
+      _CompletedAppointmentPreviewPageState();
+}
+
+class _CompletedAppointmentPreviewPageState
+    extends State<CompletedAppointmentPreviewPage> {
+  bool _downloading = false;
+
+  Future<void> _downloadJobReport() async {
+    final bookingId = widget.bookingData?['id'] ??
+        widget.appointmentData?['id'] ??
+        widget.appointmentData?['bookingId'];
+    if (bookingId == null) {
+      _showSnackbar('Booking ID not found');
+      return;
+    }
+
+    setState(() => _downloading = true);
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) throw Exception('Not authenticated');
+      final token = await user.getIdToken();
+
+      final apiUrl = 'https://black.bmspros.com.au/api/bookings/$bookingId/pdf';
+      final response = await http.get(
+        Uri.parse(apiUrl),
+        headers: {'Authorization': 'Bearer $token'},
+      );
+
+      if (response.statusCode != 200) {
+        throw Exception('Failed to download PDF');
+      }
+
+      final dir = await getApplicationDocumentsDirectory();
+      final bookingCode =
+          widget.bookingData?['bookingCode'] ?? bookingId.toString().substring(0, 8);
+      final file = File('${dir.path}/Job-Report-$bookingCode.pdf');
+      await file.writeAsBytes(response.bodyBytes);
+
+      if (!mounted) return;
+      _showSnackbar('Job report saved successfully!', isSuccess: true);
+
+      // Try to open the file
+      final uri = Uri.file(file.path);
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri);
+      }
+    } catch (e) {
+      debugPrint('PDF download error: $e');
+      if (mounted) {
+        _showSnackbar('Failed to download report. Please try again.');
+      }
+    } finally {
+      if (mounted) setState(() => _downloading = false);
+    }
+  }
+
+  void _showSnackbar(String message, {bool isSuccess = false}) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: isSuccess ? AppColors.green : Colors.red.shade600,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      ),
+    );
+  }
 
   String _formatTime(String time) {
     if (time.isEmpty) return '';
@@ -66,9 +140,9 @@ class CompletedAppointmentPreviewPage extends StatelessWidget {
   Widget build(BuildContext context) {
     // Get service details
     Map<String, dynamic>? serviceData;
-    if (bookingData != null && bookingData!['services'] is List && serviceId != null) {
-      for (final service in (bookingData!['services'] as List)) {
-        if (service is Map && service['id']?.toString() == serviceId) {
+    if (widget.bookingData != null && widget.bookingData!['services'] is List && widget.serviceId != null) {
+      for (final service in (widget.bookingData!['services'] as List)) {
+        if (service is Map && service['id']?.toString() == widget.serviceId) {
           serviceData = Map<String, dynamic>.from(service);
           break;
         }
@@ -76,30 +150,30 @@ class CompletedAppointmentPreviewPage extends StatelessWidget {
     }
 
     final serviceName = serviceData?['name']?.toString() ??
-        appointmentData?['serviceName']?.toString() ??
-        bookingData?['serviceName']?.toString() ??
+        widget.appointmentData?['serviceName']?.toString() ??
+        widget.bookingData?['serviceName']?.toString() ??
         'Service';
     final duration = serviceData?['duration']?.toString() ??
-        appointmentData?['duration']?.toString() ??
-        bookingData?['duration']?.toString() ??
+        widget.appointmentData?['duration']?.toString() ??
+        widget.bookingData?['duration']?.toString() ??
         '';
     final time = serviceData?['time']?.toString() ??
-        appointmentData?['time']?.toString() ??
-        bookingData?['time']?.toString() ??
+        widget.appointmentData?['time']?.toString() ??
+        widget.bookingData?['time']?.toString() ??
         '';
-    final date = appointmentData?['date']?.toString() ??
-        bookingData?['date']?.toString() ??
+    final date = widget.appointmentData?['date']?.toString() ??
+        widget.bookingData?['date']?.toString() ??
         '';
-    final clientName = bookingData?['client']?.toString() ??
-        bookingData?['clientName']?.toString() ??
-        appointmentData?['client']?.toString() ??
+    final clientName = widget.bookingData?['client']?.toString() ??
+        widget.bookingData?['clientName']?.toString() ??
+        widget.appointmentData?['client']?.toString() ??
         'Customer';
-    final branchName = bookingData?['branchName']?.toString() ?? 'Location';
-    final completedAt = serviceData?['completedAt'] ?? bookingData?['completedAt'];
+    final branchName = widget.bookingData?['branchName']?.toString() ?? 'Location';
+    final completedAt = serviceData?['completedAt'] ?? widget.bookingData?['completedAt'];
     final completedByStaffName = serviceData?['completedByStaffName'] ??
-        bookingData?['completedByStaffName'] ??
+        widget.bookingData?['completedByStaffName'] ??
         'Staff';
-    final price = serviceData?['price'] ?? bookingData?['price'];
+    final price = serviceData?['price'] ?? widget.bookingData?['price'];
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -283,10 +357,10 @@ class CompletedAppointmentPreviewPage extends StatelessWidget {
                                         color: AppColors.text,
                                       ),
                                     ),
-                                    if (bookingData?['clientEmail'] != null) ...[
+                                    if (widget.bookingData?['clientEmail'] != null) ...[
                                       const SizedBox(height: 4),
                                       Text(
-                                        bookingData!['clientEmail'].toString(),
+                                        widget.bookingData!['clientEmail'].toString(),
                                         style: const TextStyle(
                                           fontSize: 13,
                                           color: AppColors.muted,
@@ -299,6 +373,45 @@ class CompletedAppointmentPreviewPage extends StatelessWidget {
                             ],
                           ),
                         ],
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+
+                    // Download Job Report Button
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton.icon(
+                        onPressed: _downloading ? null : _downloadJobReport,
+                        icon: _downloading
+                            ? const SizedBox(
+                                width: 18,
+                                height: 18,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: Colors.white,
+                                ),
+                              )
+                            : const Icon(FontAwesomeIcons.filePdf, size: 16),
+                        label: Text(
+                          _downloading ? 'Generating Report...' : 'Download Job Report',
+                          style: const TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: -0.3,
+                          ),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primary,
+                          foregroundColor: Colors.white,
+                          disabledBackgroundColor: AppColors.primary.withOpacity(0.6),
+                          disabledForegroundColor: Colors.white70,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                          elevation: 4,
+                          shadowColor: AppColors.primary.withOpacity(0.3),
+                        ),
                       ),
                     ),
                     const SizedBox(height: 40),
