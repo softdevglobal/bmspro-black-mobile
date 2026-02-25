@@ -6,6 +6,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'profile_screen.dart' as profile_screen;
+import 'owner_bookings_page.dart';
 
 class AppColors {
   static const primary = Color(0xFF1A1A1A);
@@ -25,11 +26,14 @@ class AppColors {
 class AdminDashboard extends StatefulWidget {
   final String role;
   final String? branchName;
+  /// Called when user taps Pending request - switch to Bookings tab with pending filter
+  final VoidCallback? onNavigateToBookings;
 
   const AdminDashboard({
     super.key,
     required this.role,
     this.branchName,
+    this.onNavigateToBookings,
   });
 
   @override
@@ -60,6 +64,9 @@ class _AdminDashboardState extends State<AdminDashboard> {
   StreamSubscription<QuerySnapshot>? _calendarBookingsSub;
   String _calendarBranchFilter = 'all';
   String _calendarStaffFilter = 'all';
+
+  // Pending requests not yet assigned to staff
+  int _pendingUnassignedCount = 0;
 
   @override
   void initState() {
@@ -327,6 +334,30 @@ class _AdminDashboardState extends State<AdminDashboard> {
         .where('ownerUid', isEqualTo: ownerUid)
         .snapshots()
         .listen((snap) {
+      // Count pending bookings not yet assigned to staff
+      int pendingUnassigned = 0;
+      final seenIds = <String>{};
+      for (final d in snap.docs) {
+        final data = d.data();
+        final status = (data['status'] ?? '').toString().toLowerCase().trim();
+        final isPendingStatus = status == 'pending' ||
+            status.contains('awaiting') ||
+            status.contains('partially') ||
+            status == 'staffrejected';
+        if (!isPendingStatus || seenIds.contains(d.id)) continue;
+        final branchName = (data['branchName'] ?? '').toString();
+        if (widget.role == 'branch_admin' &&
+            widget.branchName != null &&
+            widget.branchName!.isNotEmpty &&
+            branchName.toLowerCase() != widget.branchName!.toLowerCase()) {
+          continue;
+        }
+        if (_isBookingUnassigned(data)) {
+          seenIds.add(d.id);
+          pendingUnassigned++;
+        }
+      }
+
       final next = <Map<String, dynamic>>[];
       for (final d in snap.docs) {
         final data = d.data();
@@ -388,11 +419,31 @@ class _AdminDashboardState extends State<AdminDashboard> {
 
       if (!mounted) return;
       setState(() {
+        _pendingUnassignedCount = pendingUnassigned;
         _calendarBookings
           ..clear()
           ..addAll(next);
       });
     });
+  }
+
+  bool _isBookingUnassigned(Map<String, dynamic> data) {
+    bool check(String? staffId, String? staffName) {
+      if (staffId == null || staffId.toString().trim().isEmpty || staffId == 'null') return true;
+      final sn = (staffName ?? '').toLowerCase();
+      return sn.contains('any') || sn.contains('not assigned');
+    }
+    if (check(data['staffId']?.toString(), data['staffName']?.toString())) return true;
+    final services = data['services'];
+    if (services is List) {
+      for (final s in services) {
+        if (s is Map) {
+          final m = Map<String, dynamic>.from(s);
+          if (check(m['staffId']?.toString(), m['staffName']?.toString())) return true;
+        }
+      }
+    }
+    return check(data['staffId']?.toString(), data['staffName']?.toString());
   }
 
   String _normalizeDateKey(dynamic raw) {
@@ -1073,6 +1124,93 @@ class _AdminDashboardState extends State<AdminDashboard> {
     );
   }
 
+  Widget _buildPendingRequestCard() {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () {
+          if (widget.onNavigateToBookings != null) {
+            widget.onNavigateToBookings!();
+          } else {
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) => const OwnerBookingsPage(initialStatusFilter: 'pending'),
+              ),
+            );
+          }
+        },
+        borderRadius: BorderRadius.circular(16),
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: const Color(0xFFF59E0B),
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFFF59E0B).withOpacity(0.4),
+                blurRadius: 12,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(FontAwesomeIcons.userClock, size: 20, color: Colors.white),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Pending request',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      '$_pendingUnassignedCount booking${_pendingUnassignedCount == 1 ? '' : 's'} need staff assignment',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.white.withOpacity(0.9),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                decoration: BoxDecoration(
+                  color: Colors.red,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  _pendingUnassignedCount > 9 ? '9+' : '$_pendingUnassignedCount',
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w800,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Icon(FontAwesomeIcons.chevronRight, size: 14, color: Colors.white.withOpacity(0.9)),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   void dispose() {
     _calendarBookingsSub?.cancel();
@@ -1089,6 +1227,10 @@ class _AdminDashboardState extends State<AdminDashboard> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _buildHeader(context),
+            if (_pendingUnassignedCount > 0) ...[
+              const SizedBox(height: 16),
+              _buildPendingRequestCard(),
+            ],
             const SizedBox(height: 24),
             _buildKpiSection(),
             const SizedBox(height: 24),
@@ -1163,6 +1305,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
             ),
           ),
           Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
                 children: [

@@ -807,9 +807,18 @@ class _NotificationsPageState extends State<NotificationsPage>
                              type == 'booking_status_changed' ||
                              type == 'booking_engine_new_booking' ||
                              type == 'staff_rejected') {
-                    // Navigate to bookings page for owner notifications
+                    // Navigate to bookings page - show pending for new requests
+                    final showPending = type == 'staff_booking_created' ||
+                        type == 'branch_booking_created' ||
+                        type == 'booking_needs_assignment' ||
+                        type == 'booking_engine_new_booking' ||
+                        type == 'staff_rejected';
                     Navigator.of(context).push(
-                      MaterialPageRoute(builder: (_) => const OwnerBookingsPage()),
+                      MaterialPageRoute(
+                        builder: (_) => OwnerBookingsPage(
+                          initialStatusFilter: showPending ? 'pending' : null,
+                        ),
+                      ),
                     );
                   }
                 },
@@ -850,6 +859,24 @@ class _NotificationCard extends StatefulWidget {
 class _NotificationCardState extends State<_NotificationCard>
     with SingleTickerProviderStateMixin {
   late AnimationController _pulseController;
+
+  static const _bookingTypes = {
+    'staff_booking_created',
+    'branch_booking_created',
+    'booking_needs_assignment',
+    'booking_engine_new_booking',
+    'online_booking',
+    'booking_assigned',
+    'booking_confirmed',
+    'booking_status_changed',
+    'staff_rejected',
+  };
+
+  bool _isBookingNotification(NotificationItem item) =>
+      _bookingTypes.contains(item.rawData?['type']?.toString());
+
+  String _getBranchName(NotificationItem item) =>
+      (item.rawData?['branchName'] ?? '').toString().trim();
 
   @override
   void initState() {
@@ -945,6 +972,28 @@ class _NotificationCardState extends State<_NotificationCard>
                     style:
                         const TextStyle(fontSize: 14, color: _NotifTheme.muted),
                   ),
+                  if (_isBookingNotification(widget.item) &&
+                      _getBranchName(widget.item).isNotEmpty) ...[
+                    const SizedBox(height: 6),
+                    Row(
+                      children: [
+                        Icon(
+                          FontAwesomeIcons.locationDot,
+                          size: 12,
+                          color: _NotifTheme.primary.withOpacity(0.7),
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          _getBranchName(widget.item),
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: _NotifTheme.primary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                   const SizedBox(height: 8),
                   Text(
                     widget.item.time,

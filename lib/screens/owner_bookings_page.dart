@@ -13,7 +13,10 @@ import '../services/audit_log_service.dart';
 import '../services/fcm_push_service.dart';
 
 class OwnerBookingsPage extends StatefulWidget {
-  const OwnerBookingsPage({super.key});
+  /// Optional initial status filter (e.g. 'pending' to show new requests)
+  final String? initialStatusFilter;
+
+  const OwnerBookingsPage({super.key, this.initialStatusFilter});
 
   @override
   State<OwnerBookingsPage> createState() => _OwnerBookingsPageState();
@@ -21,7 +24,7 @@ class OwnerBookingsPage extends StatefulWidget {
 
 class _OwnerBookingsPageState extends State<OwnerBookingsPage> {
   final TextEditingController _searchController = TextEditingController();
-  String _statusFilter = 'all';
+  late String _statusFilter;
 
   // Live booking data from Firestore (bookings + bookingRequests for this owner)
   List<_Booking> _bookings = [];
@@ -46,6 +49,7 @@ class _OwnerBookingsPageState extends State<OwnerBookingsPage> {
   @override
   void initState() {
     super.initState();
+    _statusFilter = widget.initialStatusFilter ?? 'all';
     _loadUserContextAndListen();
   }
   
@@ -3587,6 +3591,9 @@ class _BookingCard extends StatelessWidget {
 
   const _BookingCard({required this.booking, required this.onStatusUpdate});
 
+  String _getBranchName(_Booking booking) =>
+      (booking.rawData['branchName'] ?? '').toString().trim();
+
   String _getInitials(String name) {
     if (name.isEmpty) return '?';
     final parts = name.trim().split(RegExp(r'\s+'));
@@ -4127,6 +4134,14 @@ class _BookingCard extends StatelessWidget {
                         text: booking.dateTime,
                         iconColor: const Color(0xFF6B7280),
                       ),
+                      if (_getBranchName(booking).isNotEmpty) ...[
+                        const SizedBox(height: 8),
+                        _infoRowCreative(
+                          icon: FontAwesomeIcons.locationDot,
+                          text: _getBranchName(booking),
+                          iconColor: const Color(0xFF6B7280),
+                        ),
+                      ],
                     ],
                   ),
                 ),

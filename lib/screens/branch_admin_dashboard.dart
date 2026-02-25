@@ -38,8 +38,13 @@ class AppColors {
 
 class BranchAdminDashboard extends StatefulWidget {
   final String branchName;
+  final VoidCallback? onNavigateToBookings;
 
-  const BranchAdminDashboard({super.key, required this.branchName});
+  const BranchAdminDashboard({
+    super.key,
+    required this.branchName,
+    this.onNavigateToBookings,
+  });
 
   @override
   State<BranchAdminDashboard> createState() => _BranchAdminDashboardState();

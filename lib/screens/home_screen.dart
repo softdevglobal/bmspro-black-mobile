@@ -115,6 +115,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin, 
   int _pendingRequestsCount = 0;
   StreamSubscription<QuerySnapshot>? _pendingRequestsSub;
 
+  // When set, OwnerBookingsPage opens with this filter (e.g. 'pending')
+  String? _bookingsInitialFilter;
+
   @override
   void initState() {
     super.initState();
@@ -1285,10 +1288,21 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin, 
           : _buildTabBody(),
       bottomNavigationBar: AppBottomNav(
         currentIndex: _navIndex,
-        onChanged: (index) => setState(() => _navIndex = index),
+        onChanged: (index) => setState(() {
+          _navIndex = index;
+          // Clear pending filter when user taps nav (so Bookings shows "all" by default)
+          _bookingsInitialFilter = null;
+        }),
         icons: icons,
       ),
     );
+  }
+
+  void _navigateToBookingsWithPendingFilter() {
+    setState(() {
+      _navIndex = 2; // Bookings tab
+      _bookingsInitialFilter = 'pending';
+    });
   }
 
   Widget _buildHomeTab() {
@@ -1297,10 +1311,12 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin, 
       return AdminDashboard(
         role: _userRole!,
         branchName: _branchName,
+        onNavigateToBookings: _navigateToBookingsWithPendingFilter,
       );
     } else if (_userRole == 'branch_admin') {
       return BranchAdminDashboard(
         branchName: _branchName ?? 'Branch',
+        onNavigateToBookings: _navigateToBookingsWithPendingFilter,
       );
     }
     // Default to Staff Dashboard
@@ -1459,7 +1475,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin, 
         case 1:
           return const CalenderScreen();
         case 2:
-          return const OwnerBookingsPage(); // Booking page (3rd)
+          return OwnerBookingsPage(
+            initialStatusFilter: _bookingsInitialFilter,
+          );
         case 3:
           return const ClientsScreen();
         case 4:
