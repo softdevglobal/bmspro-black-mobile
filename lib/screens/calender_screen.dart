@@ -2071,28 +2071,27 @@ class _CalenderScreenState extends State<CalenderScreen> {
                             )
                           : overlapping.length > 4
                               ? _buildOverflowSlot(overlapping)
-                              : Row(
-                                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                                  children: overlapping.asMap().entries.map((entry) {
-                                    final i = entry.key;
-                                    final appt = entry.value;
-                                    final n = overlapping.length;
-                                    return Expanded(
-                                      child: Padding(
-                                        padding: EdgeInsets.only(
-                                          left: i == 0 ? 4 : 2,
-                                          right: i == n - 1 ? 4 : 2,
-                                          top: 4,
-                                          bottom: 4,
-                                        ),
+                              : SizedBox(
+                                  height: 60,
+                                  child: Stack(
+                                    clipBehavior: Clip.none,
+                                    children: overlapping.asMap().entries.map((entry) {
+                                      final i = entry.key;
+                                      final appt = entry.value;
+                                      const stackOffset = 10.0;
+                                      return Positioned(
+                                        left: 4 + i * stackOffset,
+                                        top: 4,
+                                        right: 4,
+                                        bottom: 4,
                                         child: _buildTimeSlotAppointmentCompact(
                                           appt,
                                           _resolveBranchTheme(appt.branchName),
                                           slotMinutes: slotMinutes,
                                         ),
-                                      ),
-                                    );
-                                  }).toList(),
+                                      );
+                                    }).toList(),
+                                  ),
                                 ),
                     ),
                   ],

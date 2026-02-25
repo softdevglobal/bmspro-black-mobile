@@ -2061,13 +2061,23 @@ class _WalkInBookingPageState extends State<WalkInBookingPage> with TickerProvid
         ? '${_selectedDate!.year.toString().padLeft(4, '0')}-${_selectedDate!.month.toString().padLeft(2, '0')}-${_selectedDate!.day.toString().padLeft(2, '0')}'
         : null;
 
+    // Count toward daily limit: exclude only cancelled and staff-rejected.
+    // Completed bookings count (they used that day's capacity per country rules).
     final int activeBookingsForDate =
         selectedDateKey == null || _selectedBranchId == null
             ? 0
             : _bookings.where((booking) {
                 final bookingBranchId = (booking['branchId'] ?? '').toString();
                 final bookingDate = (booking['date'] ?? '').toString();
-                return bookingBranchId == _selectedBranchId && bookingDate == selectedDateKey;
+                if (bookingBranchId != _selectedBranchId || bookingDate != selectedDateKey) {
+                  return false;
+                }
+                final status = (booking['status'] ?? '').toString().toLowerCase().replaceAll(RegExp(r'[\s_-]'), '');
+                // Exclude only cancelled and staff-rejected (slot was never used)
+                if (status == 'canceled' || status == 'cancelled' || status == 'staffrejected') {
+                  return false;
+                }
+                return true;
               }).length;
 
     final bool isDailyLimitReached =

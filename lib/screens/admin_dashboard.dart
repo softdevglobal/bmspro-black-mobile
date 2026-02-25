@@ -851,10 +851,11 @@ class _AdminDashboardState extends State<AdminDashboard> {
                                 final bk = entry.value;
                                 final overlapCol = bk['_overlapCol'] as int? ?? 0;
                                 final overlapCount = bk['_overlapCount'] as int? ?? 1;
-                                final blockWidth = overlapCount <= 1
-                                    ? w - 3
-                                    : (w - 3 - (overlapCount - 1) * 1) / overlapCount;
-                                final left = 1.5 + overlapCol * (blockWidth + 1);
+                                const stackOffset = 8.0;
+                                final blockWidth = w - 3;
+                                final left = overlapCount <= 1
+                                    ? 1.5
+                                    : 1.5 + overlapCol * stackOffset;
                                 final tm = _parseTime((bk['time'] ?? '09:00').toString());
                                 final dur = (bk['duration'] as int?) ?? 60;
                                 final top = ((tm.hour - startHour) * slotHeight) +
@@ -866,7 +867,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
                                 final endMin = endMins % 60;
                                 final status = (bk['status'] ?? '').toString().toLowerCase();
                                 final palette = statusColors[status] ?? fallbackColors[idx % fallbackColors.length];
-                                final isCompact = overlapCount > 1 && blockWidth < 45;
+                                final isCompact = overlapCount > 1;
                                 return Positioned(
                                   top: top + 1,
                                   left: left,
