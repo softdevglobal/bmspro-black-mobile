@@ -68,6 +68,9 @@ class _AdminDashboardState extends State<AdminDashboard> {
   // Pending requests not yet assigned to staff
   int _pendingUnassignedCount = 0;
 
+  final ScrollController _calScrollController = ScrollController();
+  DateTime? _lastCalScrollWeek;
+
   @override
   void initState() {
     super.initState();
@@ -392,6 +395,9 @@ class _AdminDashboardState extends State<AdminDashboard> {
               'pickupTime': (data['pickupTime'] ?? data['pickUpTime'] ?? '').toString(),
               'duration': _parseDuration(svc['duration'] ?? data['duration']),
               'client': (data['client'] ?? data['clientName'] ?? 'Customer').toString(),
+              'clientPhone': (data['clientPhone'] ?? '').toString(),
+              'clientEmail': (data['clientEmail'] ?? '').toString(),
+              'notes': (data['notes'] ?? '').toString(),
               'serviceName': serviceName,
               'status': (svc['completionStatus'] ?? data['status'] ?? 'Pending').toString(),
               'price': _parsePrice(svc['price'] ?? data['price']),
@@ -408,6 +414,9 @@ class _AdminDashboardState extends State<AdminDashboard> {
             'pickupTime': (data['pickupTime'] ?? data['pickUpTime'] ?? '').toString(),
             'duration': _parseDuration(data['duration']),
             'client': (data['client'] ?? data['clientName'] ?? 'Customer').toString(),
+            'clientPhone': (data['clientPhone'] ?? '').toString(),
+            'clientEmail': (data['clientEmail'] ?? '').toString(),
+            'notes': (data['notes'] ?? '').toString(),
             'serviceName': (data['serviceName'] ?? 'Service').toString(),
             'status': (data['status'] ?? 'Pending').toString(),
             'price': _parsePrice(data['price']),
@@ -585,11 +594,17 @@ class _AdminDashboardState extends State<AdminDashboard> {
     return withMins;
   }
 
+  static const _slotPalette = [
+    0xFF3B82F6, 0xFF6366F1, 0xFF8B5CF6, 0xFFA855F7, 0xFFD946EF, 0xFFEC4899,
+    0xFF14B8A6, 0xFF10B981, 0xFF22C55E, 0xFF84CC16, 0xFFEAB308, 0xFFF59E0B,
+    0xFFEF4444, 0xFFF97316, 0xFF0EA5E9, 0xFF06B6D4,
+  ];
+
   Widget _buildCalendarSection() {
     const startHour = 7;
     const endHour = 19; // exclusive
-    const slotHeight = 26.0;
-    const timeColWidth = 34.0;
+    const slotHeight = 44.0; // compact like web (52px)
+    const timeColWidth = 40.0;
     final gridHeight = (endHour - startHour) * slotHeight;
     final weekDates = List.generate(7, (i) => _calendarWeekStart.add(Duration(days: i)));
     final today = DateTime.now();
@@ -634,17 +649,6 @@ class _AdminDashboardState extends State<AdminDashboard> {
       final staffOk = !staffFilterValid || _calendarStaffFilter == 'all' || staffName == _calendarStaffFilter;
       return branchOk && staffOk;
     }).toList();
-
-    final statusColors = <String, (Color bg, Color border, Color text)>{
-      'completed': (const Color(0xFFDCEAFE), const Color(0xFF93C5FD), const Color(0xFF1D4ED8)),
-      'confirmed': (const Color(0xFFDCFCE7), const Color(0xFF86EFAC), const Color(0xFF166534)),
-    };
-    final fallbackColors = [
-      (const Color(0xFFE0F2FE), const Color(0xFF7DD3FC), const Color(0xFF075985)),
-      (const Color(0xFFFEF3C7), const Color(0xFFFCD34D), const Color(0xFF92400E)),
-      (const Color(0xFFEDE9FE), const Color(0xFFC4B5FD), const Color(0xFF5B21B6)),
-      (const Color(0xFFFCE7F3), const Color(0xFFF9A8D4), const Color(0xFF9D174D)),
-    ];
 
     return Container(
       padding: const EdgeInsets.all(12),
@@ -692,8 +696,6 @@ class _AdminDashboardState extends State<AdminDashboard> {
                 ),
               ),
               _calNavBtn(icon: FontAwesomeIcons.chevronLeft, onTap: _goPrevWeek),
-              const SizedBox(width: 4),
-              _calNavBtn(icon: FontAwesomeIcons.calendarDay, onTap: _goThisWeek),
               const SizedBox(width: 4),
               _calNavBtn(icon: FontAwesomeIcons.chevronRight, onTap: _goNextWeek),
             ],
@@ -750,123 +752,232 @@ class _AdminDashboardState extends State<AdminDashboard> {
                   ),
                 ),
               ),
+              if (_calendarBranchFilter != 'all' || _calendarStaffFilter != 'all')
+                GestureDetector(
+                  onTap: () => setState(() {
+                    _calendarBranchFilter = 'all';
+                    _calendarStaffFilter = 'all';
+                  }),
+                  child: Padding(
+                    padding: const EdgeInsets.only(left: 8),
+                    child: Text('Clear', style: TextStyle(fontSize: 12, color: AppColors.muted, fontWeight: FontWeight.w600)),
+                  ),
+                ),
             ],
           ),
           const SizedBox(height: 10),
-          Row(
-            children: [
-              const SizedBox(width: timeColWidth),
-              ...weekDates.map((d) {
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final isMobile = constraints.maxWidth < 600;
+              final dayWidth = isMobile ? constraints.maxWidth * 0.48 : null;
+              final dayHeaderBuilder = (DateTime d) {
                 final key =
                     '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
                 final isToday = key == todayKey;
-                return Expanded(
-                  child: Container(
-                    margin: const EdgeInsets.symmetric(horizontal: 1),
-                    padding: const EdgeInsets.symmetric(vertical: 4),
-                    decoration: BoxDecoration(
-                      color: isToday ? AppColors.primary : const Color(0xFFF3F4F6),
-                      borderRadius: BorderRadius.circular(8),
+                return Container(
+                  width: dayWidth,
+                  margin: const EdgeInsets.symmetric(horizontal: 1),
+                  padding: const EdgeInsets.symmetric(vertical: 4),
+                  decoration: BoxDecoration(
+                    color: isToday ? AppColors.primary : const Color(0xFFF3F4F6),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Column(
+                    children: [
+                      Text(
+                        ['M', 'T', 'W', 'T', 'F', 'S', 'S'][d.weekday - 1],
+                        style: TextStyle(
+                          fontSize: 9,
+                          fontWeight: FontWeight.w700,
+                          color: isToday ? Colors.white70 : AppColors.muted,
+                        ),
+                      ),
+                      Text(
+                        '${d.day}',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w800,
+                          color: isToday ? Colors.white : AppColors.text,
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              };
+              if (isMobile) {
+                final weekKey = _calendarWeekStart.millisecondsSinceEpoch;
+                if (_lastCalScrollWeek == null || _lastCalScrollWeek!.millisecondsSinceEpoch != weekKey) {
+                  _lastCalScrollWeek = _calendarWeekStart;
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    if (!mounted || !_calScrollController.hasClients) return;
+                    final todayIdx = weekDates.indexWhere((d) =>
+                        '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}' == todayKey);
+                    if (todayIdx >= 0 && dayWidth != null) {
+                      final offset = (todayIdx * (dayWidth! + 2)).clamp(0.0, _calScrollController.position.maxScrollExtent);
+                      _calScrollController.jumpTo(offset);
+                    }
+                  });
+                }
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    SizedBox(
+                      height: gridHeight + 52,
+                      child: SingleChildScrollView(
+                        controller: _calScrollController,
+                        scrollDirection: Axis.horizontal,
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const SizedBox(width: timeColWidth, height: 42),
+                                SizedBox(
+                                  width: timeColWidth,
+                                  height: gridHeight,
+                                  child: Stack(
+                                    children: List.generate(endHour - startHour, (i) {
+                                      final hour = startHour + i;
+                                      final lbl = hour == 12 ? '12 PM' : hour > 12 ? '${hour - 12} PM' : '$hour AM';
+                                      return Positioned(
+                                        top: i * slotHeight - 5,
+                                        right: 2,
+                                        child: Text(lbl, style: const TextStyle(fontSize: 8, color: AppColors.muted)),
+                                      );
+                                    }),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            ...weekDates.map((d) => Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    dayHeaderBuilder(d),
+                                    const SizedBox(height: 6),
+                                    SizedBox(
+                                      width: dayWidth,
+                                      height: gridHeight,
+                                      child: _buildDayColumn(d, weekBookings, weekSet, todayKey, startHour, endHour, slotHeight, gridHeight, dayWidth ?? 0),
+                                    ),
+                                  ],
+                                )),
+                          ],
+                        ),
+                      ),
                     ),
-                    child: Column(
+                  ],
+                );
+              }
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      const SizedBox(width: timeColWidth),
+                      ...weekDates.map((d) => Expanded(child: dayHeaderBuilder(d))),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  SizedBox(
+                    height: gridHeight,
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          ['M', 'T', 'W', 'T', 'F', 'S', 'S'][d.weekday - 1],
-                          style: TextStyle(
-                            fontSize: 9,
-                            fontWeight: FontWeight.w700,
-                            color: isToday ? Colors.white70 : AppColors.muted,
+                        SizedBox(
+                          width: timeColWidth,
+                          child: Stack(
+                            children: List.generate(endHour - startHour, (i) {
+                              final hour = startHour + i;
+                              final lbl = hour == 12 ? '12 PM' : hour > 12 ? '${hour - 12} PM' : '$hour AM';
+                              return Positioned(
+                                top: i * slotHeight - 5,
+                                right: 2,
+                                child: Text(lbl, style: const TextStyle(fontSize: 8, color: AppColors.muted)),
+                              );
+                            }),
                           ),
                         ),
-                        Text(
-                          '${d.day}',
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w800,
-                            color: isToday ? Colors.white : AppColors.text,
-                          ),
-                        ),
+                        ...weekDates.map((d) => Expanded(
+                              child: _buildDayColumn(d, weekBookings, weekSet, todayKey, startHour, endHour, slotHeight, gridHeight, 0),
+                            )),
                       ],
                     ),
                   ),
+                ],
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDayColumn(
+    DateTime d,
+    List<Map<String, dynamic>> weekBookings,
+    Set<String> weekSet,
+    String todayKey,
+    int startHour,
+    int endHour,
+    double slotHeight,
+    double gridHeight, [
+    double fixedWidth = 0,
+  ]) {
+    final key =
+        '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
+    final dayBookings =
+        weekBookings.where((b) => (b['date'] ?? '') == key).toList();
+    final dayBookingsWithOverlap = _assignOverlapColumns(dayBookings);
+    final useFixedWidth = fixedWidth > 0;
+    return Container(
+      width: useFixedWidth ? fixedWidth : null,
+      margin: const EdgeInsets.symmetric(horizontal: 1),
+      decoration: BoxDecoration(
+        color: key == todayKey ? const Color(0xFFFEFCE8) : Colors.white,
+        borderRadius: BorderRadius.circular(6),
+      ),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final w = constraints.maxWidth;
+          return Stack(
+            children: [
+              ...List.generate(endHour - startHour, (i) {
+                return Positioned(
+                  top: i * slotHeight,
+                  left: 0,
+                  right: 0,
+                  child: Divider(
+                    height: 1,
+                    thickness: 0.6,
+                    color: AppColors.border.withOpacity(0.65),
+                  ),
                 );
               }),
-            ],
-          ),
-          const SizedBox(height: 6),
-          SizedBox(
-            height: gridHeight,
-            child: Row(
-              children: [
-                SizedBox(
-                  width: timeColWidth,
-                  child: Stack(
-                    children: List.generate(endHour - startHour, (i) {
-                      final hour = startHour + i;
-                      final lbl = hour == 12
-                          ? '12 PM'
-                          : hour > 12
-                              ? '${hour - 12} PM'
-                              : '$hour AM';
-                      return Positioned(
-                        top: i * slotHeight - 5,
-                        right: 2,
-                        child: Text(lbl, style: const TextStyle(fontSize: 8, color: AppColors.muted)),
-                      );
-                    }),
-                  ),
-                ),
-                ...weekDates.map((d) {
-                  final key =
-                      '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
-                  final dayBookings =
-                      weekBookings.where((b) => (b['date'] ?? '') == key).toList();
-                  final dayBookingsWithOverlap = _assignOverlapColumns(dayBookings);
-                  return Expanded(
-                    child: Container(
-                      margin: const EdgeInsets.symmetric(horizontal: 1),
-                      decoration: BoxDecoration(
-                        color: key == todayKey ? const Color(0xFFFEFCE8) : Colors.white,
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      child: LayoutBuilder(
-                        builder: (context, constraints) {
-                          final w = constraints.maxWidth;
-                          return Stack(
-                            children: [
-                              ...List.generate(endHour - startHour, (i) {
-                                return Positioned(
-                                  top: i * slotHeight,
-                                  left: 0,
-                                  right: 0,
-                                  child: Divider(
-                                    height: 1,
-                                    thickness: 0.6,
-                                    color: AppColors.border.withOpacity(0.65),
-                                  ),
-                                );
-                              }),
-                              ...dayBookingsWithOverlap.asMap().entries.map((entry) {
-                                final idx = entry.key;
-                                final bk = entry.value;
+              ...dayBookingsWithOverlap.asMap().entries.map((entry) {
+                final bk = entry.value;
                                 final overlapCol = bk['_overlapCol'] as int? ?? 0;
                                 final overlapCount = bk['_overlapCount'] as int? ?? 1;
-                                const stackOffset = 8.0;
-                                final blockWidth = w - 3;
-                                final left = overlapCount <= 1
-                                    ? 1.5
-                                    : 1.5 + overlapCol * stackOffset;
+                                final gapPct = overlapCount > 1 ? (8 / overlapCount).clamp(0.0, 1.0) : 0.0;
+                                final widthPct = overlapCount > 1 ? (100.0 / overlapCount) - gapPct : 100.0;
+                                final leftPct = overlapCount > 1 ? overlapCol * (100.0 / overlapCount) + (gapPct / 2) : 0.0;
+                                final blockWidth = (widthPct / 100) * (w - 3);
+                                final left = 1.5 + (leftPct / 100) * (w - 3);
                                 final tm = _parseTime((bk['time'] ?? '09:00').toString());
                                 final dur = (bk['duration'] as int?) ?? 60;
                                 final top = ((tm.hour - startHour) * slotHeight) +
                                     ((tm.minute / 60) * slotHeight);
                                 if (top < 0 || top > gridHeight - 8) return const SizedBox.shrink();
-                                final height = ((dur / 60) * slotHeight).clamp(22.0, 90.0);
+                                final height = ((dur / 60) * slotHeight).clamp(24.0, 120.0);
                                 final endMins = tm.hour * 60 + tm.minute + dur;
-                                final endHour = endMins ~/ 60;
+                                final endH = endMins ~/ 60;
                                 final endMin = endMins % 60;
-                                final status = (bk['status'] ?? '').toString().toLowerCase();
-                                final palette = statusColors[status] ?? fallbackColors[idx % fallbackColors.length];
+                                final colorIdx = overlapCount > 1
+                                    ? overlapCol % _slotPalette.length
+                                    : ((bk['staffName'] ?? '').toString() + (bk['client'] ?? '').toString() + (bk['id'] ?? '').toString())
+                                        .codeUnits.fold<int>(0, (a, c) => a + c).abs() % _slotPalette.length;
+                                final blockColor = Color(_slotPalette[colorIdx]);
                                 final isCompact = overlapCount > 1;
                                 return Positioned(
                                   top: top + 1,
@@ -878,14 +989,14 @@ class _AdminDashboardState extends State<AdminDashboard> {
                                     child: Container(
                                       padding: EdgeInsets.fromLTRB(isCompact ? 2 : 4, 3, isCompact ? 2 : 4, 3),
                                       decoration: BoxDecoration(
-                                        color: palette.$1,
-                                        border: Border.all(color: palette.$2, width: 1.0),
+                                        color: blockColor,
+                                        border: Border.all(color: Colors.white.withOpacity(0.3), width: 1.0),
                                         borderRadius: BorderRadius.circular(8),
                                         boxShadow: [
                                           BoxShadow(
-                                            color: palette.$2.withOpacity(0.18),
-                                            blurRadius: 8,
-                                            offset: const Offset(0, 3),
+                                            color: Colors.black.withOpacity(0.08),
+                                            blurRadius: 4,
+                                            offset: const Offset(0, 2),
                                           ),
                                         ],
                                       ),
@@ -894,34 +1005,29 @@ class _AdminDashboardState extends State<AdminDashboard> {
                                         mainAxisSize: MainAxisSize.min,
                                         children: [
                                           Text(
-                                            (bk['client'] ?? 'Customer').toString(),
+                                            overlapCount > 4
+                                                ? (() {
+                                                    final init = ((bk['client'] ?? '?').toString().split(' ').map((s) => s.isNotEmpty ? s[0] : '').join()).toUpperCase();
+                                                    return init.length >= 2 ? init.substring(0, 2) : init;
+                                                  })()
+                                                : (bk['client'] ?? '—').toString(),
                                             maxLines: 1,
                                             overflow: TextOverflow.ellipsis,
                                             style: TextStyle(
-                                              fontSize: isCompact ? 7 : 8,
+                                              fontSize: isCompact ? 7 : 9,
                                               fontWeight: FontWeight.w700,
-                                              color: palette.$3,
+                                              color: Colors.white,
                                             ),
                                           ),
-                                          if (!isCompact)
-                                            Text(
-                                              (bk['serviceName'] ?? 'Service').toString(),
-                                              maxLines: 1,
-                                              overflow: TextOverflow.ellipsis,
-                                              style: TextStyle(
-                                                fontSize: 7,
-                                                color: palette.$3.withOpacity(0.85),
-                                              ),
-                                            ),
                                           const Spacer(),
                                           Text(
-                                            '${_format12h(tm.hour, tm.minute)} - ${_format12h(endHour, endMin)}',
+                                            _format12h(tm.hour, tm.minute),
                                             maxLines: 1,
                                             overflow: TextOverflow.ellipsis,
                                             style: TextStyle(
                                               fontSize: isCompact ? 6 : 7,
                                               fontWeight: FontWeight.w600,
-                                              color: palette.$3.withOpacity(0.9),
+                                              color: Colors.white.withOpacity(0.95),
                                             ),
                                           ),
                                         ],
@@ -934,15 +1040,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
                           );
                         },
                       ),
-                    ),
-                  );
-                }),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
+                    );
   }
 
   void _showCalendarBookingDetails(Map<String, dynamic> bk) {
@@ -1035,6 +1133,12 @@ class _AdminDashboardState extends State<AdminDashboard> {
             _detailRow('Duration', '$duration min'),
             _detailRow('Staff', (bk['staffName'] ?? 'Not assigned').toString()),
             _detailRow('Branch', (bk['branchName'] ?? 'No branch').toString()),
+            if ((bk['clientPhone'] ?? '').toString().trim().isNotEmpty)
+              _detailRow('Phone', (bk['clientPhone'] ?? '').toString()),
+            if ((bk['clientEmail'] ?? '').toString().trim().isNotEmpty)
+              _detailRow('Email', (bk['clientEmail'] ?? '').toString()),
+            if ((bk['notes'] ?? '').toString().trim().isNotEmpty)
+              _detailRow('Notes', (bk['notes'] ?? '').toString()),
             _detailRow('Status', status),
             _detailRow('Price', '\$${(bk['price'] as num?)?.toStringAsFixed(2) ?? '0.00'}'),
           ],
@@ -1104,6 +1208,9 @@ class _AdminDashboardState extends State<AdminDashboard> {
     if (key.contains('duration')) return FontAwesomeIcons.hourglassHalf;
     if (key.contains('staff')) return FontAwesomeIcons.userGroup;
     if (key.contains('branch')) return FontAwesomeIcons.locationDot;
+    if (key.contains('phone')) return FontAwesomeIcons.phone;
+    if (key.contains('email')) return FontAwesomeIcons.envelope;
+    if (key.contains('notes')) return FontAwesomeIcons.noteSticky;
     if (key.contains('status')) return FontAwesomeIcons.circleCheck;
     if (key.contains('price')) return FontAwesomeIcons.dollarSign;
     return FontAwesomeIcons.circleInfo;
@@ -1214,6 +1321,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
 
   @override
   void dispose() {
+    _calScrollController.dispose();
     _calendarBookingsSub?.cancel();
     super.dispose();
   }
