@@ -66,6 +66,10 @@ class _WalkInBookingPageState extends State<WalkInBookingPage> with TickerProvid
   final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _vehicleNumberController = TextEditingController();
+  final TextEditingController _vehicleBodyTypeController = TextEditingController();
+  final TextEditingController _vehicleColourController = TextEditingController();
+  final TextEditingController _vehicleVinChassisController = TextEditingController();
+  final TextEditingController _vehicleEngineNumberController = TextEditingController();
   final TextEditingController _notesController = TextEditingController();
 
   // Animation Controllers
@@ -122,6 +126,10 @@ class _WalkInBookingPageState extends State<WalkInBookingPage> with TickerProvid
     _phoneController.dispose();
     _emailController.dispose();
     _vehicleNumberController.dispose();
+    _vehicleBodyTypeController.dispose();
+    _vehicleColourController.dispose();
+    _vehicleVinChassisController.dispose();
+    _vehicleEngineNumberController.dispose();
     _notesController.dispose();
     _fadeController.dispose();
     super.dispose();
@@ -696,6 +704,10 @@ class _WalkInBookingPageState extends State<WalkInBookingPage> with TickerProvid
       'clientEmail': email.isNotEmpty ? email : null,
       'clientPhone': phone.isNotEmpty ? phone : null,
       'vehicleNumber': vehicleNumber.isNotEmpty ? vehicleNumber : null,
+      'vehicleBodyType': _vehicleBodyTypeController.text.trim().isNotEmpty ? _vehicleBodyTypeController.text.trim() : null,
+      'vehicleColour': _vehicleColourController.text.trim().isNotEmpty ? _vehicleColourController.text.trim() : null,
+      'vehicleVinChassis': _vehicleVinChassisController.text.trim().isNotEmpty ? _vehicleVinChassisController.text.trim() : null,
+      'vehicleEngineNumber': _vehicleEngineNumberController.text.trim().isNotEmpty ? _vehicleEngineNumberController.text.trim() : null,
       'createdAt': FieldValue.serverTimestamp(),
       'customerUid': null, // Walk-in customers don't have UID
       'date': dateStr, // Local date for backward compatibility
@@ -1291,6 +1303,10 @@ class _WalkInBookingPageState extends State<WalkInBookingPage> with TickerProvid
                     _phoneController.clear();
                     _emailController.clear();
                     _vehicleNumberController.clear();
+                    _vehicleBodyTypeController.clear();
+                    _vehicleColourController.clear();
+                    _vehicleVinChassisController.clear();
+                    _vehicleEngineNumberController.clear();
                     _notesController.clear();
                   });
                 },
@@ -1347,7 +1363,31 @@ class _WalkInBookingPageState extends State<WalkInBookingPage> with TickerProvid
           const SizedBox(height: 12),
           TextField(
             controller: _vehicleNumberController,
-            decoration: _inputDecoration("Vehicle Number *", "e.g. ABC 123"),
+            decoration: _inputDecoration("Registration number *", "e.g. ABC 123"),
+            style: const TextStyle(color: AppColors.text),
+          ),
+          const SizedBox(height: 12),
+          TextField(
+            controller: _vehicleBodyTypeController,
+            decoration: _inputDecoration("Body type (optional)", "e.g. Sedan, SUV"),
+            style: const TextStyle(color: AppColors.text),
+          ),
+          const SizedBox(height: 12),
+          TextField(
+            controller: _vehicleColourController,
+            decoration: _inputDecoration("Colour (optional)", "e.g. White, Black"),
+            style: const TextStyle(color: AppColors.text),
+          ),
+          const SizedBox(height: 12),
+          TextField(
+            controller: _vehicleVinChassisController,
+            decoration: _inputDecoration("VIN/Chassis (optional)", "e.g. 1HGBH41JXMN109186"),
+            style: const TextStyle(color: AppColors.text),
+          ),
+          const SizedBox(height: 12),
+          TextField(
+            controller: _vehicleEngineNumberController,
+            decoration: _inputDecoration("Engine number (optional)", "e.g. ABC123456"),
             style: const TextStyle(color: AppColors.text),
           ),
           const SizedBox(height: 12),
@@ -3598,7 +3638,11 @@ class _WalkInBookingPageState extends State<WalkInBookingPage> with TickerProvid
           ),
           _summaryRow('Email', _emailController.text.isNotEmpty ? _emailController.text : 'Not entered'),
           _summaryRow('Phone', _phoneController.text.isNotEmpty ? _phoneController.text : 'Not entered'),
-          if (_vehicleNumberController.text.isNotEmpty) _summaryRow('Vehicle Number', _vehicleNumberController.text),
+          if (_vehicleNumberController.text.isNotEmpty) _summaryRow('Registration', _vehicleNumberController.text),
+          if (_vehicleBodyTypeController.text.isNotEmpty) _summaryRow('Body type', _vehicleBodyTypeController.text),
+          if (_vehicleColourController.text.isNotEmpty) _summaryRow('Colour', _vehicleColourController.text),
+          if (_vehicleVinChassisController.text.isNotEmpty) _summaryRow('VIN/Chassis', _vehicleVinChassisController.text),
+          if (_vehicleEngineNumberController.text.isNotEmpty) _summaryRow('Engine number', _vehicleEngineNumberController.text),
           if (_notesController.text.isNotEmpty) ...[
             const SizedBox(height: 8),
             const Text('Notes:', style: TextStyle(fontSize: 12, color: AppColors.muted)),

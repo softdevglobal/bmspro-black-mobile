@@ -20,6 +20,7 @@ class AppColors {
   static const redLight = Color(0xFFFEE2E2);
   static const blueLight = Color(0xFFF0F9FF);
   static const greenLight = Color(0xFFF0FDF4);
+  static const chipBg = Color(0xFFF3F4F6);
 }
 
 class ClientProfilePage extends StatefulWidget {
@@ -40,6 +41,10 @@ class _ClientProfilePageState extends State<ClientProfilePage> with TickerProvid
   bool _loadingHistory = false;
   List<_ClientBooking> _history = [];
 
+  // Vehicle details
+  bool _loadingVehicles = false;
+  List<_ClientVehicle> _vehicles = [];
+
   @override
   void initState() {
     super.initState();
@@ -48,7 +53,7 @@ class _ClientProfilePageState extends State<ClientProfilePage> with TickerProvid
       vsync: this,
       duration: const Duration(milliseconds: 800),
     );
-    for (int i = 0; i < 5; i++) {
+    for (int i = 0; i < 6; i++) {
       final start = i * 0.1;
       final end = start + 0.4;
       _fadeAnimations.add(
@@ -66,6 +71,7 @@ class _ClientProfilePageState extends State<ClientProfilePage> with TickerProvid
     )..repeat(reverse: true);
 
     _loadHistory();
+    _loadVehicles();
   }
 
   @override
@@ -211,6 +217,98 @@ class _ClientProfilePageState extends State<ClientProfilePage> with TickerProvid
     }
   }
 
+  Future<void> _loadVehicles() async {
+    try {
+      setState(() {
+        _loadingVehicles = true;
+      });
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) {
+        setState(() {
+          _loadingVehicles = false;
+          _vehicles = [];
+        });
+        return;
+      }
+      final client = widget.client;
+      final db = FirebaseFirestore.instance;
+      final ownerUid = user.uid;
+
+      String? customerId;
+      final email = client.email.trim().toLowerCase();
+      final phone = client.phone.trim();
+
+      if (email.isEmpty && phone.isEmpty) {
+        if (!mounted) return;
+        setState(() {
+          _loadingVehicles = false;
+          _vehicles = [];
+        });
+        return;
+      }
+
+      final custSnap = await db
+          .collection('customers')
+          .where('ownerUid', isEqualTo: ownerUid)
+          .get();
+
+      for (final d in custSnap.docs) {
+        final data = d.data();
+        final dEmail = (data['email'] ?? '').toString().trim().toLowerCase();
+        final dPhone = (data['phone'] ?? '').toString().trim();
+        if ((email.isNotEmpty && dEmail == email) ||
+            (phone.isNotEmpty && dPhone == phone)) {
+          customerId = d.id;
+          break;
+        }
+      }
+
+      if (customerId == null || customerId.isEmpty) {
+        if (!mounted) return;
+        setState(() {
+          _loadingVehicles = false;
+          _vehicles = [];
+        });
+        return;
+      }
+
+      final vehiclesSnap = await db
+          .collection('customers')
+          .doc(customerId)
+          .collection('vehicles')
+          .get();
+
+      final list = vehiclesSnap.docs.map((d) {
+        final data = d.data();
+        return _ClientVehicle(
+          id: d.id,
+          registrationNumber: (data['registrationNumber'] ?? data['vehicleNumber'] ?? '').toString(),
+          make: (data['make'] ?? '').toString(),
+          model: (data['model'] ?? '').toString(),
+          year: (data['year'] ?? '').toString(),
+          mileage: (data['mileage'] ?? '').toString(),
+          bodyType: (data['bodyType'] ?? '').toString(),
+          colour: (data['colour'] ?? '').toString(),
+          vinChassis: (data['vinChassis'] ?? '').toString(),
+          engineNumber: (data['engineNumber'] ?? '').toString(),
+        );
+      }).toList();
+
+      if (!mounted) return;
+      setState(() {
+        _vehicles = list;
+        _loadingVehicles = false;
+      });
+    } catch (e) {
+      debugPrint('Error loading client vehicles: $e');
+      if (!mounted) return;
+      setState(() {
+        _loadingVehicles = false;
+        _vehicles = [];
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final client = widget.client;
@@ -232,7 +330,9 @@ class _ClientProfilePageState extends State<ClientProfilePage> with TickerProvid
                   const SizedBox(height: 24),
                   _buildFadeWrapper(2, _buildFormulasSection()),
                   const SizedBox(height: 24),
-                  _buildFadeWrapper(3, _buildHistorySection()),
+                  _buildFadeWrapper(3, _buildVehiclesSection()),
+                  const SizedBox(height: 24),
+                  _buildFadeWrapper(4, _buildHistorySection()),
                   const SizedBox(height: 40),
                 ],
               ),
@@ -293,6 +393,11 @@ class _ClientProfilePageState extends State<ClientProfilePage> with TickerProvid
         ],
       ),
     );
+  }
+
+  String _vehicleDisplay(_ClientVehicle v) {
+    final parts = [v.registrationNumber, v.make, v.model, v.year].where((s) => s.isNotEmpty).toList();
+    return parts.isEmpty ? '—' : parts.join(' ');
   }
 
   String _getInitials(String name) {
@@ -563,6 +668,143 @@ class _ClientProfilePageState extends State<ClientProfilePage> with TickerProvid
               ),
             ),
           ),
+        ],
+      ),
+    );
+  }
+
+  // --- Vehicle Details Section ---
+  Widget _buildVehiclesSection() {
+    final client = widget.client;
+
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: _cardDecoration(),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(FontAwesomeIcons.car, size: 18, color: AppColors.primary),
+              const SizedBox(width: 10),
+              const Text(
+                'Vehicle Details',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.text,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          if (_loadingVehicles)
+            const Center(
+              child: Padding(
+                padding: EdgeInsets.symmetric(vertical: 16),
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+                ),
+              ),
+            )
+          else if (_vehicles.isEmpty)
+            const Text(
+              'No vehicles on file for this client.',
+              style: TextStyle(
+                fontSize: 12,
+                color: AppColors.muted,
+                height: 1.5,
+              ),
+            )
+          else
+            Column(
+              children: _vehicles
+                  .map(
+                    (v) => Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: Container(
+                        padding: const EdgeInsets.all(14),
+                        decoration: BoxDecoration(
+                          color: AppColors.background,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                const Icon(FontAwesomeIcons.idCard, size: 12, color: AppColors.muted),
+                                const SizedBox(width: 8),
+                                Text(
+                                  _vehicleDisplay(v),
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.w600,
+                                    color: AppColors.text,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            if (v.bodyType.isNotEmpty || v.colour.isNotEmpty || v.mileage.isNotEmpty) ...[
+                              const SizedBox(height: 8),
+                              Wrap(
+                                spacing: 8,
+                                runSpacing: 4,
+                                children: [
+                                  if (v.bodyType.isNotEmpty)
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                      decoration: BoxDecoration(
+                                        color: AppColors.chipBg,
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      child: Text(
+                                        v.bodyType,
+                                        style: const TextStyle(fontSize: 11, color: AppColors.muted),
+                                      ),
+                                    ),
+                                  if (v.colour.isNotEmpty)
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                      decoration: BoxDecoration(
+                                        color: AppColors.chipBg,
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      child: Text(
+                                        v.colour,
+                                        style: const TextStyle(fontSize: 11, color: AppColors.muted),
+                                      ),
+                                    ),
+                                  if (v.mileage.isNotEmpty)
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                      decoration: BoxDecoration(
+                                        color: AppColors.chipBg,
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      child: Text(
+                                        v.mileage,
+                                        style: const TextStyle(fontSize: 11, color: AppColors.muted),
+                                      ),
+                                    ),
+                                ],
+                              ),
+                            ],
+                            if (v.vinChassis.isNotEmpty) ...[
+                              const SizedBox(height: 6),
+                              Text(
+                                'VIN: ${v.vinChassis}',
+                                style: const TextStyle(fontSize: 11, color: AppColors.muted),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+                    ),
+                  )
+                  .toList(),
+            ),
         ],
       ),
     );
@@ -889,6 +1131,32 @@ class _ClientBooking {
     required this.durationLabel,
     required this.statusLabel,
     required this.priceLabel,
+  });
+}
+
+class _ClientVehicle {
+  final String id;
+  final String registrationNumber;
+  final String make;
+  final String model;
+  final String year;
+  final String mileage;
+  final String bodyType;
+  final String colour;
+  final String vinChassis;
+  final String engineNumber;
+
+  _ClientVehicle({
+    required this.id,
+    required this.registrationNumber,
+    required this.make,
+    required this.model,
+    required this.year,
+    required this.mileage,
+    required this.bodyType,
+    required this.colour,
+    required this.vinChassis,
+    required this.engineNumber,
   });
 }
 
