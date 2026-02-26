@@ -36,6 +36,7 @@ class Estimate {
   final String vehicleModel;
   final String vehicleYear;
   final String rego;
+  final String mileage;
   final String description;
   final List<String> imageUrls;
   final String status;
@@ -56,6 +57,7 @@ class Estimate {
     required this.vehicleModel,
     required this.vehicleYear,
     required this.rego,
+    this.mileage = '',
     required this.description,
     this.imageUrls = const [],
     required this.status,
@@ -79,6 +81,7 @@ class Estimate {
       vehicleModel: (d['vehicleModel'] ?? '').toString(),
       vehicleYear: (d['vehicleYear'] ?? '').toString(),
       rego: (d['rego'] ?? '').toString(),
+      mileage: (d['mileage'] ?? '').toString(),
       description: (d['description'] ?? '').toString(),
       imageUrls: (d['imageUrls'] is List)
           ? (d['imageUrls'] as List).map((e) => e.toString()).toList()
@@ -553,6 +556,11 @@ class _EstimatesPageState extends State<EstimatesPage> {
                                               if (e.rego.isNotEmpty)
                                                 Text(
                                                   ' (${e.rego})',
+                                                  style: const TextStyle(fontSize: 12, color: AppColors.muted),
+                                                ),
+                                              if (e.mileage.isNotEmpty)
+                                                Text(
+                                                  ' • ${e.mileage}',
                                                   style: const TextStyle(fontSize: 12, color: AppColors.muted),
                                                 ),
                                             ],
