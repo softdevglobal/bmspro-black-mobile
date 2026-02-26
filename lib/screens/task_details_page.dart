@@ -44,6 +44,7 @@ class _TaskDetailsPageState extends State<TaskDetailsPage> with TickerProviderSt
   bool _isNotesExpanded = false;
   bool _isFinishing = false;
   bool _isLoading = true;
+  final TextEditingController _mileageController = TextEditingController();
 
   // Appointment Data
   Map<String, dynamic>? _bookingData;
@@ -190,6 +191,12 @@ class _TaskDetailsPageState extends State<TaskDetailsPage> with TickerProviderSt
                       _bookingData?['notes']?.toString() ?? 
                       'No special notes available.';
 
+      // Pre-fill mileage if already set (strip " km" suffix for editing)
+      final existingMileage = _bookingData?['mileage']?.toString().trim() ?? '';
+      if (existingMileage.isNotEmpty) {
+        _mileageController.text = existingMileage.replaceAll(RegExp(r'\s*km\s*$', caseSensitive: false), '').trim();
+      }
+
       // Try to find customer in customers collection for additional info
       // (user is already defined above on line 141)
       if (user != null) {
@@ -290,6 +297,7 @@ class _TaskDetailsPageState extends State<TaskDetailsPage> with TickerProviderSt
   @override
   void dispose() {
     _stopwatchTimer?.cancel();
+    _mileageController.dispose();
     _pulseController.dispose();
     super.dispose();
   }
@@ -352,6 +360,12 @@ class _TaskDetailsPageState extends State<TaskDetailsPage> with TickerProviderSt
           // If this is a multi-service booking, specify which service to complete
           if (_currentServiceId != null && _assignedServices.length > 1) {
             requestBody['serviceId'] = _currentServiceId;
+          }
+          
+          // Include optional mileage (staff can add before completing)
+          final mileageVal = _mileageController.text.trim().replaceAll(RegExp(r'\D'), '');
+          if (mileageVal.isNotEmpty) {
+            requestBody['mileage'] = '$mileageVal km';
           }
           
           debugPrint('Calling service-complete API: $uri');
@@ -503,6 +517,10 @@ class _TaskDetailsPageState extends State<TaskDetailsPage> with TickerProviderSt
       'updatedAt': FieldValue.serverTimestamp(),
       'durationElapsed': _elapsedSeconds,
     };
+    final mileageVal = _mileageController.text.trim().replaceAll(RegExp(r'\D'), '');
+    if (mileageVal.isNotEmpty) {
+      updates['mileage'] = '$mileageVal km';
+    }
     
     // Check if it's a multi-service booking
     if (_bookingData?['services'] is List && (_bookingData!['services'] as List).isNotEmpty) {
@@ -782,6 +800,50 @@ class _TaskDetailsPageState extends State<TaskDetailsPage> with TickerProviderSt
           _infoRow('Service Type', _serviceType.isNotEmpty ? _serviceType : _serviceName),
           const SizedBox(height: 12),
           const Divider(color: AppColors.border),
+          // Optional mileage - staff can add before/during the job
+          Row(
+            children: [
+              const Icon(FontAwesomeIcons.gaugeSimpleHigh, color: AppColors.muted, size: 14),
+              const SizedBox(width: 8),
+              Expanded(
+                child: TextField(
+                  controller: _mileageController,
+                  keyboardType: TextInputType.number,
+                  decoration: InputDecoration(
+                    hintText: 'Mileage (optional) e.g. 45000',
+                    hintStyle: GoogleFonts.inter(fontSize: 13, color: AppColors.muted),
+                    isDense: true,
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: const BorderSide(color: AppColors.border),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: const BorderSide(color: AppColors.border),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+                    ),
+                  ),
+                  style: GoogleFonts.inter(fontSize: 14, color: AppColors.text),
+                  onChanged: (v) {
+                    final digits = v.replaceAll(RegExp(r'\D'), '');
+                    if (v != digits) {
+                      _mileageController.value = TextEditingValue(
+                        text: digits,
+                        selection: TextSelection.collapsed(offset: digits.length),
+                      );
+                    }
+                  },
+                ),
+              ),
+              const SizedBox(width: 8),
+              Text('km', style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w500, color: AppColors.muted)),
+            ],
+          ),
+          const SizedBox(height: 16),
           InkWell(
             onTap: () => setState(() => _isNotesExpanded = !_isNotesExpanded),
             child: Padding(
