@@ -65,6 +65,7 @@ class _WalkInBookingPageState extends State<WalkInBookingPage> with TickerProvid
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _vehicleNumberController = TextEditingController();
   final TextEditingController _notesController = TextEditingController();
 
   // Animation Controllers
@@ -120,6 +121,7 @@ class _WalkInBookingPageState extends State<WalkInBookingPage> with TickerProvid
     _nameController.dispose();
     _phoneController.dispose();
     _emailController.dispose();
+    _vehicleNumberController.dispose();
     _notesController.dispose();
     _fadeController.dispose();
     super.dispose();
@@ -588,6 +590,7 @@ class _WalkInBookingPageState extends State<WalkInBookingPage> with TickerProvid
     final clientName = _nameController.text.trim();
     final email = _emailController.text.trim();
     final phone = _phoneController.text.trim();
+    final vehicleNumber = _vehicleNumberController.text.trim();
     final notes = _notesController.text.trim();
 
     // Build services array with per-service time and staff
@@ -692,6 +695,7 @@ class _WalkInBookingPageState extends State<WalkInBookingPage> with TickerProvid
       'client': clientName,
       'clientEmail': email.isNotEmpty ? email : null,
       'clientPhone': phone.isNotEmpty ? phone : null,
+      'vehicleNumber': vehicleNumber.isNotEmpty ? vehicleNumber : null,
       'createdAt': FieldValue.serverTimestamp(),
       'customerUid': null, // Walk-in customers don't have UID
       'date': dateStr, // Local date for backward compatibility
@@ -1286,6 +1290,7 @@ class _WalkInBookingPageState extends State<WalkInBookingPage> with TickerProvid
                     _nameController.clear();
                     _phoneController.clear();
                     _emailController.clear();
+                    _vehicleNumberController.clear();
                     _notesController.clear();
                   });
                 },
@@ -1339,7 +1344,13 @@ class _WalkInBookingPageState extends State<WalkInBookingPage> with TickerProvid
             style: const TextStyle(color: AppColors.text),
             onChanged: (_) => setState(() {}), // Trigger rebuild for validation
           ),
-            const SizedBox(height: 12),
+          const SizedBox(height: 12),
+          TextField(
+            controller: _vehicleNumberController,
+            decoration: _inputDecoration("Vehicle Number *", "e.g. ABC 123"),
+            style: const TextStyle(color: AppColors.text),
+          ),
+          const SizedBox(height: 12),
           TextField(
             controller: _notesController,
             maxLines: 3,
@@ -2844,10 +2855,11 @@ class _WalkInBookingPageState extends State<WalkInBookingPage> with TickerProvid
       }
     } else {
       primaryLabel = 'Confirm Booking';
-      // Require name, email, and phone
+      // Require name, email, phone, and vehicle number
       final hasRequiredFields = _nameController.text.trim().isNotEmpty && 
                                 _emailController.text.trim().isNotEmpty &&
-                                _phoneController.text.trim().isNotEmpty;
+                                _phoneController.text.trim().isNotEmpty &&
+                                _vehicleNumberController.text.trim().isNotEmpty;
       if (!_isProcessing && hasRequiredFields) {
         onPrimary = _confirmBooking;
       }
@@ -3586,6 +3598,7 @@ class _WalkInBookingPageState extends State<WalkInBookingPage> with TickerProvid
           ),
           _summaryRow('Email', _emailController.text.isNotEmpty ? _emailController.text : 'Not entered'),
           _summaryRow('Phone', _phoneController.text.isNotEmpty ? _phoneController.text : 'Not entered'),
+          if (_vehicleNumberController.text.isNotEmpty) _summaryRow('Vehicle Number', _vehicleNumberController.text),
           if (_notesController.text.isNotEmpty) ...[
             const SizedBox(height: 8),
             const Text('Notes:', style: TextStyle(fontSize: 12, color: AppColors.muted)),

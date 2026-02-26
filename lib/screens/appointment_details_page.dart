@@ -593,6 +593,7 @@ class _AppointmentDetailsPageState extends State<AppointmentDetailsPage> with Ti
     final customerPhone = _customerData?['phone']?.toString() ?? 
                          _bookingData?['phone']?.toString() ?? 
                          _bookingData?['clientPhone']?.toString() ?? '';
+    final vehicleNumber = _bookingData?['vehicleNumber']?.toString() ?? '';
     final visits = (_customerData?['visits'] ?? 0) as int;
     final loyaltyStatus = _getLoyaltyStatus(visits);
     final initials = _getInitials(customerName);
@@ -637,6 +638,13 @@ class _AppointmentDetailsPageState extends State<AppointmentDetailsPage> with Ti
                       const SizedBox(height: 4),
                       Text(
                         customerPhone,
+                        style: const TextStyle(fontSize: 14, color: AppColors.muted),
+                      ),
+                    ],
+                    if (vehicleNumber.isNotEmpty) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        'Vehicle: $vehicleNumber',
                         style: const TextStyle(fontSize: 14, color: AppColors.muted),
                       ),
                     ],

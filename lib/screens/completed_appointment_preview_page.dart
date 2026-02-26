@@ -367,6 +367,17 @@ class _CompletedAppointmentPreviewPageState
                                         ),
                                       ),
                                     ],
+                                    if (widget.bookingData?['vehicleNumber'] != null &&
+                                        widget.bookingData!['vehicleNumber'].toString().trim().isNotEmpty) ...[
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        'Vehicle: ${widget.bookingData!['vehicleNumber']}',
+                                        style: const TextStyle(
+                                          fontSize: 13,
+                                          color: AppColors.muted,
+                                        ),
+                                      ),
+                                    ],
                                   ],
                                 ),
                               ),

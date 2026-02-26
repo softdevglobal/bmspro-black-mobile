@@ -1137,6 +1137,8 @@ class _AdminDashboardState extends State<AdminDashboard> {
               _detailRow('Phone', (bk['clientPhone'] ?? '').toString()),
             if ((bk['clientEmail'] ?? '').toString().trim().isNotEmpty)
               _detailRow('Email', (bk['clientEmail'] ?? '').toString()),
+            if ((bk['vehicleNumber'] ?? '').toString().trim().isNotEmpty)
+              _detailRow('Vehicle Number', (bk['vehicleNumber'] ?? '').toString()),
             if ((bk['notes'] ?? '').toString().trim().isNotEmpty)
               _detailRow('Notes', (bk['notes'] ?? '').toString()),
             _detailRow('Status', status),
