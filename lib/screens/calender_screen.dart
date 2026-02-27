@@ -79,7 +79,9 @@ class Appointment {
   final List<BookingTask> tasks;
   final int taskProgress;
   final Map<String, dynamic>? finalSubmission;
-  
+  final String vehicleMake;
+  final String vehicleModel;
+
   Appointment({
     required this.time,
     required this.client,
@@ -104,6 +106,8 @@ class Appointment {
     this.tasks = const [],
     this.taskProgress = 0,
     this.finalSubmission,
+    this.vehicleMake = '',
+    this.vehicleModel = '',
   });
 }
 
@@ -589,6 +593,8 @@ class _CalenderScreenState extends State<CalenderScreen> {
               tasks: bookingTasks,
               taskProgress: bookingTaskProgress,
               finalSubmission: bookingFinalSubmission,
+              vehicleMake: (data['vehicleMake'] ?? '').toString(),
+              vehicleModel: (data['vehicleModel'] ?? '').toString(),
             );
 
             addAppointmentToDay(appt);
@@ -634,6 +640,8 @@ class _CalenderScreenState extends State<CalenderScreen> {
           tasks: bookingTasks,
           taskProgress: bookingTaskProgress,
           finalSubmission: bookingFinalSubmission,
+          vehicleMake: (data['vehicleMake'] ?? '').toString(),
+          vehicleModel: (data['vehicleModel'] ?? '').toString(),
         );
 
         addAppointmentToDay(appt);
@@ -2647,6 +2655,20 @@ class _CalenderScreenState extends State<CalenderScreen> {
                                             const SizedBox(width: 6),
                                             Flexible(
                                               child: Text(appt.email, style: TextStyle(fontSize: 12, color: AppConfig.muted), overflow: TextOverflow.ellipsis),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    if (appt.vehicleMake.isNotEmpty || appt.vehicleModel.isNotEmpty)
+                                      Padding(
+                                        padding: const EdgeInsets.only(top: 3),
+                                        child: Row(
+                                          children: [
+                                            Icon(FontAwesomeIcons.car, size: 10, color: AppConfig.muted),
+                                            const SizedBox(width: 6),
+                                            Text(
+                                              [appt.vehicleMake, appt.vehicleModel].where((s) => s.isNotEmpty).join(' '),
+                                              style: TextStyle(fontSize: 12, color: AppConfig.muted),
                                             ),
                                           ],
                                         ),

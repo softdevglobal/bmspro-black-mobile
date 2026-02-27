@@ -395,14 +395,17 @@ class _AdminDashboardState extends State<AdminDashboard> {
               'pickupTime': (data['pickupTime'] ?? data['pickUpTime'] ?? '').toString(),
               'duration': _parseDuration(svc['duration'] ?? data['duration']),
               'client': (data['client'] ?? data['clientName'] ?? 'Customer').toString(),
-              'clientPhone': (data['clientPhone'] ?? '').toString(),
-              'clientEmail': (data['clientEmail'] ?? '').toString(),
+              'clientPhone': (data['clientPhone'] ?? data['phone'] ?? '').toString(),
+              'clientEmail': (data['clientEmail'] ?? data['email'] ?? '').toString(),
               'notes': (data['notes'] ?? '').toString(),
               'serviceName': serviceName,
               'status': (svc['completionStatus'] ?? data['status'] ?? 'Pending').toString(),
               'price': _parsePrice(svc['price'] ?? data['price']),
               'staffName': _pickStaffName(data, svc),
               'branchName': branchName,
+              'vehicleMake': (data['vehicleMake'] ?? '').toString(),
+              'vehicleModel': (data['vehicleModel'] ?? '').toString(),
+              'vehicleNumber': (data['vehicleNumber'] ?? data['vehicleRegistration'] ?? '').toString(),
             });
           }
         } else {
@@ -414,14 +417,17 @@ class _AdminDashboardState extends State<AdminDashboard> {
             'pickupTime': (data['pickupTime'] ?? data['pickUpTime'] ?? '').toString(),
             'duration': _parseDuration(data['duration']),
             'client': (data['client'] ?? data['clientName'] ?? 'Customer').toString(),
-            'clientPhone': (data['clientPhone'] ?? '').toString(),
-            'clientEmail': (data['clientEmail'] ?? '').toString(),
+            'clientPhone': (data['clientPhone'] ?? data['phone'] ?? '').toString(),
+            'clientEmail': (data['clientEmail'] ?? data['email'] ?? '').toString(),
             'notes': (data['notes'] ?? '').toString(),
             'serviceName': (data['serviceName'] ?? 'Service').toString(),
             'status': (data['status'] ?? 'Pending').toString(),
             'price': _parsePrice(data['price']),
             'staffName': _pickStaffName(data),
             'branchName': branchName,
+            'vehicleMake': (data['vehicleMake'] ?? '').toString(),
+            'vehicleModel': (data['vehicleModel'] ?? '').toString(),
+            'vehicleNumber': (data['vehicleNumber'] ?? data['vehicleRegistration'] ?? '').toString(),
           });
         }
       }
@@ -1139,6 +1145,12 @@ class _AdminDashboardState extends State<AdminDashboard> {
               _detailRow('Email', (bk['clientEmail'] ?? '').toString()),
             if ((bk['vehicleNumber'] ?? '').toString().trim().isNotEmpty)
               _detailRow('Vehicle Number', (bk['vehicleNumber'] ?? '').toString()),
+            if (() {
+              final make = (bk['vehicleMake'] ?? '').toString().trim();
+              final model = (bk['vehicleModel'] ?? '').toString().trim();
+              return make.isNotEmpty || model.isNotEmpty;
+            }())
+              _detailRow('Make & Model', [bk['vehicleMake'], bk['vehicleModel']].where((v) => v != null && v.toString().trim().isNotEmpty).map((v) => v.toString().trim()).join(' ')),
             if ((bk['notes'] ?? '').toString().trim().isNotEmpty)
               _detailRow('Notes', (bk['notes'] ?? '').toString()),
             _detailRow('Status', status),
@@ -1212,6 +1224,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
     if (key.contains('branch')) return FontAwesomeIcons.locationDot;
     if (key.contains('phone')) return FontAwesomeIcons.phone;
     if (key.contains('email')) return FontAwesomeIcons.envelope;
+    if (key.contains('vehicle') || key.contains('make')) return FontAwesomeIcons.car;
     if (key.contains('notes')) return FontAwesomeIcons.noteSticky;
     if (key.contains('status')) return FontAwesomeIcons.circleCheck;
     if (key.contains('price')) return FontAwesomeIcons.dollarSign;

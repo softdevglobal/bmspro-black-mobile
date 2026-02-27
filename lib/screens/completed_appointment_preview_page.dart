@@ -367,22 +367,40 @@ class _CompletedAppointmentPreviewPageState
                                         ),
                                       ),
                                     ],
-                                    if (widget.bookingData?['vehicleNumber'] != null &&
-                                        widget.bookingData!['vehicleNumber'].toString().trim().isNotEmpty) ...[
-                                      const SizedBox(height: 4),
-                                      Text(
-                                        'Vehicle: ${widget.bookingData!['vehicleNumber']}',
-                                        style: const TextStyle(
-                                          fontSize: 13,
-                                          color: AppColors.muted,
-                                        ),
-                                      ),
-                                    ],
                                   ],
                                 ),
                               ),
                             ],
                           ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+
+                    // Vehicle Details Card
+                    Container(
+                      padding: const EdgeInsets.all(24),
+                      decoration: _cardDecoration(),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Vehicle Details',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.text,
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          _vehicleDetailRow('Make', widget.bookingData?['vehicleMake']),
+                          _vehicleDetailRow('Model', widget.bookingData?['vehicleModel']),
+                          _vehicleDetailRow('Body Type', widget.bookingData?['vehicleBodyType']),
+                          _vehicleDetailRow('Colour', widget.bookingData?['vehicleColour']),
+                          _vehicleDetailRow('Registration', widget.bookingData?['vehicleNumber']),
+                          _vehicleDetailRow('VIN / Chassis', widget.bookingData?['vehicleVinChassis']),
+                          _vehicleDetailRow('Engine No.', widget.bookingData?['vehicleEngineNumber']),
+                          _vehicleDetailRow('Mileage', widget.bookingData?['mileage']),
                         ],
                       ),
                     ),
@@ -501,6 +519,32 @@ class _CompletedAppointmentPreviewPageState
           ],
         ),
       ],
+    );
+  }
+
+  Widget _vehicleDetailRow(String label, dynamic value) {
+    final v = (value ?? '').toString().trim();
+    final display = v.isEmpty ? 'N/A' : v;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 100,
+            child: Text(
+              label,
+              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.muted),
+            ),
+          ),
+          Expanded(
+            child: Text(
+              display,
+              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: AppColors.text),
+            ),
+          ),
+        ],
+      ),
     );
   }
 

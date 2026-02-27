@@ -643,14 +643,12 @@ class _WalkInBookingPageState extends State<WalkInBookingPage> with TickerProvid
         serviceData['approvalStatus'] = 'accepted';
         serviceData['staffAuthUid'] = staffId; // Store auth UID for calendar matching
       } else if (_userRole == 'workshop_owner' || _userRole == 'branch_admin') {
-        // Owner/Admin bookings: set approval status based on staff assignment
-        // Services with valid staff get "pending" approval status
-        // Services without staff (Any Available) get "needs_assignment" status
+        // Owner/Admin bookings: owner holds authority - when staff assigned, auto-accept (no staff approval)
         final hasStaff = staffId != null && 
                         staffId != 'null' && 
                         staffId != 'any' &&
                         !staffId.toLowerCase().contains('any');
-        serviceData['approvalStatus'] = hasStaff ? 'pending' : 'needs_assignment';
+        serviceData['approvalStatus'] = hasStaff ? 'accepted' : 'needs_assignment';
       }
       // For other roles, leave approvalStatus unset (will be handled by backend)
       
@@ -724,12 +722,13 @@ class _WalkInBookingPageState extends State<WalkInBookingPage> with TickerProvid
       if (_userRole == 'staff' && mainStaffId != null) 'staffAuthUid': mainStaffId, // Store auth UID for calendar matching
       // Determine booking status:
       // - staff: Confirmed (all services auto-accepted)
-      // - workshop_owner/branch_admin: AwaitingStaffApproval (skip Pending, go directly to staff approval)
+      // - workshop_owner/branch_admin with all staff assigned: Confirmed (owner holds authority, no staff approval)
+      // - workshop_owner/branch_admin with some unassigned: Pending
       // - Other roles: Pending
       'status': _userRole == 'staff' 
           ? 'Confirmed' 
           : (_userRole == 'workshop_owner' || _userRole == 'branch_admin')
-              ? 'AwaitingStaffApproval'
+              ? (servicesArray.every((s) => (s['approvalStatus'] ?? '').toString() == 'accepted') ? 'Confirmed' : 'Pending')
               : 'Pending',
       'time': mainTimeStr, // Local time for backward compatibility
       'updatedAt': FieldValue.serverTimestamp(),

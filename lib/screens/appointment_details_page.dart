@@ -10,7 +10,6 @@ import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'task_details_page.dart';
 import 'completed_appointment_preview_page.dart';
 import '../utils/timezone_helper.dart';
 
@@ -56,6 +55,7 @@ class _AppointmentDetailsPageState extends State<AppointmentDetailsPage> with Ti
   bool _isCancelled = false;
   String? _currentServiceId;
   bool _isMyAppointment = false; // Track if appointment belongs to current user
+  bool _isBranchAdmin = false; // Branch admin can also record mileage
 
   // Task management state
   List<Map<String, dynamic>> _tasks = [];
@@ -64,6 +64,32 @@ class _AppointmentDetailsPageState extends State<AppointmentDetailsPage> with Ti
   bool _isUpdatingTask = false;
   final ImagePicker _imagePicker = ImagePicker();
 
+  // Service timer (when mileage recorded)
+  Timer? _serviceTimer;
+  int _elapsedSeconds = 0;
+
+  void _startServiceTimer() {
+    _serviceTimer?.cancel();
+    // Calculate initial elapsed from mileageRecordedAt or appointment time
+    final recordedAt = _bookingData?['mileageRecordedAt']?.toString();
+    if (recordedAt != null && recordedAt.isNotEmpty) {
+      try {
+        final start = DateTime.parse(recordedAt);
+        _elapsedSeconds = DateTime.now().difference(start).inSeconds;
+      } catch (_) {}
+    }
+    _serviceTimer = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (mounted) setState(() => _elapsedSeconds++);
+    });
+  }
+
+  String _formatElapsedTime(int totalSeconds) {
+    final hrs = (totalSeconds ~/ 3600).toString().padLeft(2, '0');
+    final mins = ((totalSeconds % 3600) ~/ 60).toString().padLeft(2, '0');
+    final secs = (totalSeconds % 60).toString().padLeft(2, '0');
+    return '$hrs:$mins:$secs';
+  }
+
   @override
   void initState() {
     super.initState();
@@ -71,8 +97,8 @@ class _AppointmentDetailsPageState extends State<AppointmentDetailsPage> with Ti
       vsync: this,
       duration: const Duration(milliseconds: 800),
     );
-    // Staggered animations for sections (5 sections: customer, info, tasks, points, actions)
-    for (int i = 0; i < 5; i++) {
+    // Staggered animations for sections (6 sections: customer, vehicle, info, tasks, points, actions)
+    for (int i = 0; i < 6; i++) {
       final start = i * 0.1;
       final end = start + 0.4;
       _fadeAnimations.add(
@@ -173,6 +199,15 @@ class _AppointmentDetailsPageState extends State<AppointmentDetailsPage> with Ti
         _taskProgress = taskProg;
         _finalSubmission = finalSub;
       });
+      // Start service timer when mileage is recorded (if not already running)
+      final mileage = (data['mileage'] ?? '').toString().trim();
+      if (mileage.isNotEmpty && _serviceTimer == null && !isCompleted) {
+        _startServiceTimer();
+      }
+      if (isCompleted) {
+        _serviceTimer?.cancel();
+        _serviceTimer = null;
+      }
     });
   }
 
@@ -291,7 +326,7 @@ class _AppointmentDetailsPageState extends State<AppointmentDetailsPage> with Ti
           };
         }
 
-        // Load staff points
+        // Load staff points and check if branch admin
         final userDoc = await FirebaseFirestore.instance
             .collection('users')
             .doc(user.uid)
@@ -299,6 +334,12 @@ class _AppointmentDetailsPageState extends State<AppointmentDetailsPage> with Ti
         if (userDoc.exists) {
           final userData = userDoc.data();
           _staffPoints = (userData?['staffPoints'] ?? 0) as int;
+          final role = (userData?['role'] ?? '').toString().toLowerCase();
+          final userBranchId = (userData?['branchId'] ?? '').toString();
+          final bookingBranchId = (_bookingData?['branchId'] ?? '').toString();
+          if (role == 'branch_admin' && userBranchId.isNotEmpty && bookingBranchId.isNotEmpty && userBranchId == bookingBranchId) {
+            _isBranchAdmin = true;
+          }
         }
       }
 
@@ -385,11 +426,16 @@ class _AppointmentDetailsPageState extends State<AppointmentDetailsPage> with Ti
       setState(() {
         _isLoading = false;
       });
+      final mileage = (_bookingData?['mileage'] ?? '').toString().trim();
+      if (mileage.isNotEmpty && _serviceTimer == null) {
+        _startServiceTimer();
+      }
     }
   }
 
   @override
   void dispose() {
+    _serviceTimer?.cancel();
     _bookingSubscription?.cancel();
     _fadeController.dispose();
     super.dispose();
@@ -482,13 +528,19 @@ class _AppointmentDetailsPageState extends State<AppointmentDetailsPage> with Ti
                 children: [
                   _buildFadeWrapper(0, _buildCustomerCard()),
                   const SizedBox(height: 24),
-                  _buildFadeWrapper(1, _buildAppointmentInfo()),
+                  _buildFadeWrapper(1, _buildVehicleDetailsCard()),
                   const SizedBox(height: 24),
+                  _buildFadeWrapper(2, _buildAppointmentInfo()),
+                  const SizedBox(height: 24),
+                  if ((_isMyAppointment || _isBranchAdmin) && !_isServiceCompleted && !_isCancelled)
+                    _buildFadeWrapper(3, _buildStartServiceSection()),
+                  if ((_isMyAppointment || _isBranchAdmin) && !_isServiceCompleted && !_isCancelled)
+                    const SizedBox(height: 24),
                   if (_tasks.isNotEmpty) ...[
-                    _buildFadeWrapper(2, _buildTaskSection()),
+                    _buildFadeWrapper(4, _buildTaskSection()),
                     const SizedBox(height: 24),
                   ],
-                  _buildFadeWrapper(3, _buildActionButtons()),
+                  _buildFadeWrapper(5, _buildActionButtons()),
                   const SizedBox(height: 40), // Bottom padding
                 ],
               ),
@@ -593,7 +645,6 @@ class _AppointmentDetailsPageState extends State<AppointmentDetailsPage> with Ti
     final customerPhone = _customerData?['phone']?.toString() ?? 
                          _bookingData?['phone']?.toString() ?? 
                          _bookingData?['clientPhone']?.toString() ?? '';
-    final vehicleNumber = _bookingData?['vehicleNumber']?.toString() ?? '';
     final visits = (_customerData?['visits'] ?? 0) as int;
     final loyaltyStatus = _getLoyaltyStatus(visits);
     final initials = _getInitials(customerName);
@@ -641,13 +692,6 @@ class _AppointmentDetailsPageState extends State<AppointmentDetailsPage> with Ti
                         style: const TextStyle(fontSize: 14, color: AppColors.muted),
                       ),
                     ],
-                    if (vehicleNumber.isNotEmpty) ...[
-                      const SizedBox(height: 4),
-                      Text(
-                        'Vehicle: $vehicleNumber',
-                        style: const TextStyle(fontSize: 14, color: AppColors.muted),
-                      ),
-                    ],
                     const SizedBox(height: 4),
                     Row(
                       children: [
@@ -666,6 +710,90 @@ class _AppointmentDetailsPageState extends State<AppointmentDetailsPage> with Ti
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildVehicleDetailsCard() {
+    final data = _bookingData ?? widget.appointmentData ?? {};
+    String _val(String key) => (data[key] ?? '').toString().trim();
+    final make = _val('vehicleMake');
+    final model = _val('vehicleModel');
+    final bodyType = _val('vehicleBodyType');
+    final colour = _val('vehicleColour');
+    final rego = _val('vehicleNumber');
+    final vin = _val('vehicleVinChassis');
+    final engine = _val('vehicleEngineNumber');
+    final mileage = _val('mileage');
+    final hasAny = make.isNotEmpty || model.isNotEmpty || bodyType.isNotEmpty ||
+        colour.isNotEmpty || rego.isNotEmpty || vin.isNotEmpty || engine.isNotEmpty || mileage.isNotEmpty;
+
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.primary.withOpacity(0.06),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(FontAwesomeIcons.car, size: 18, color: AppColors.primary.withOpacity(0.7)),
+              const SizedBox(width: 10),
+              const Text(
+                'Vehicle Details',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.text),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          if (hasAny)
+            Wrap(
+              spacing: 16,
+              runSpacing: 12,
+              children: [
+                _vehicleDetailChip('Make', make),
+                _vehicleDetailChip('Model', model),
+                _vehicleDetailChip('Body Type', bodyType),
+                _vehicleDetailChip('Colour', colour),
+                _vehicleDetailChip('Registration', rego),
+                _vehicleDetailChip('VIN / Chassis', vin),
+                _vehicleDetailChip('Engine No.', engine),
+                _vehicleDetailChip('Mileage', mileage),
+              ],
+            )
+          else
+            Text(
+              'N/A',
+              style: TextStyle(fontSize: 14, color: AppColors.muted),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _vehicleDetailChip(String label, String value) {
+    final display = value.isEmpty ? 'N/A' : value;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: AppColors.muted),
+        ),
+        const SizedBox(height: 2),
+        Text(
+          display,
+          style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: AppColors.text),
+        ),
+      ],
     );
   }
 
@@ -852,6 +980,253 @@ class _AppointmentDetailsPageState extends State<AppointmentDetailsPage> with Ti
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  // ─── Start Service Section (above tasks) ─────────────────────────────────
+  Widget _buildStartServiceSection() {
+    final mileage = (_bookingData?['mileage'] ?? '').toString().trim();
+    final mileageRecorded = mileage.isNotEmpty;
+
+    if (mileageRecorded) {
+      // Show mileage + timer (no Start button)
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        decoration: BoxDecoration(
+          color: Colors.green.shade50,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.green.shade200),
+        ),
+        child: Row(
+          children: [
+            Icon(FontAwesomeIcons.gaugeHigh, color: Colors.green.shade700, size: 16),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text(
+                    'Vehicle mileage',
+                    style: TextStyle(fontSize: 11, color: AppColors.muted, fontWeight: FontWeight.w500),
+                  ),
+                  const SizedBox(height: 1),
+                  Text(
+                    mileage,
+                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.green.shade800),
+                  ),
+                ],
+              ),
+            ),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(FontAwesomeIcons.clock, color: Colors.green.shade600, size: 12),
+                const SizedBox(width: 6),
+                Text(
+                  _formatElapsedTime(_elapsedSeconds),
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.green.shade800,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      );
+    }
+
+    // Mileage not recorded: show Start Service button
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SizedBox(
+          width: double.infinity,
+          child: ElevatedButton.icon(
+            onPressed: _showStartServicePopup,
+            icon: const Icon(FontAwesomeIcons.play, size: 16, color: Colors.white),
+            label: const Text('Start Service', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            ),
+          ),
+        ),
+        const SizedBox(height: 12),
+        Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: Colors.orange.shade50,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: Colors.orange.shade200),
+          ),
+          child: Row(
+            children: [
+              Icon(FontAwesomeIcons.gaugeHigh, color: Colors.orange.shade700, size: 16),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  'Vehicle mileage must be recorded before starting. Tap Start Service to record.',
+                  style: TextStyle(fontSize: 12, color: Colors.orange.shade800),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Future<void> _showStartServicePopup() async {
+    final mileageController = TextEditingController(
+      text: (_bookingData?['mileage'] ?? '').toString().replaceAll(RegExp(r'\s*km\s*$', caseSensitive: false), '').trim(),
+    );
+    bool isSaving = false;
+
+    await showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setModalState) => Container(
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(ctx).viewInsets.bottom,
+            left: 20,
+            right: 20,
+            top: 20,
+          ),
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade300,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+              const Text(
+                'Record Vehicle Mileage',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: AppColors.text),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Enter the vehicle mileage (km) before starting the service. Required for both branch admin and staff.',
+                style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
+              ),
+              const SizedBox(height: 20),
+              TextField(
+                controller: mileageController,
+                keyboardType: TextInputType.number,
+                decoration: InputDecoration(
+                  hintText: 'e.g. 45000',
+                  labelText: 'Mileage (km)',
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                  filled: true,
+                  fillColor: Colors.grey.shade50,
+                ),
+                onChanged: (v) {
+                  final digits = v.replaceAll(RegExp(r'\D'), '');
+                  if (v != digits) {
+                    mileageController.value = TextEditingValue(
+                      text: digits,
+                      selection: TextSelection.collapsed(offset: digits.length),
+                    );
+                  }
+                },
+              ),
+              const SizedBox(height: 24),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: isSaving
+                      ? null
+                      : () async {
+                          final mileageVal = mileageController.text.trim().replaceAll(RegExp(r'\D'), '');
+                          if (mileageVal.isEmpty) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Please enter vehicle mileage.'),
+                                backgroundColor: Colors.orange,
+                                behavior: SnackBarBehavior.floating,
+                              ),
+                            );
+                            return;
+                          }
+                          setModalState(() => isSaving = true);
+                          final bookingId = widget.appointmentData?['id'] ?? _bookingData?['id'];
+                          if (bookingId != null) {
+                            try {
+                              final user = FirebaseAuth.instance.currentUser;
+                              await FirebaseFirestore.instance.collection('bookings').doc(bookingId.toString()).update({
+                                'mileage': '$mileageVal km',
+                                'mileageRecordedAt': DateTime.now().toIso8601String(),
+                                'mileageRecordedBy': user?.uid ?? '',
+                                'mileageRecordedByStaffName': user?.displayName ?? user?.email?.split('@').first ?? 'Staff',
+                                'updatedAt': FieldValue.serverTimestamp(),
+                              });
+                              if (mounted) {
+                                Navigator.pop(ctx);
+                                _bookingData = Map<String, dynamic>.from(_bookingData ?? {})
+                                  ..['mileage'] = '$mileageVal km'
+                                  ..['mileageRecordedAt'] = DateTime.now().toIso8601String();
+                                if (_serviceTimer == null) _startServiceTimer();
+                                setState(() {});
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text('Mileage recorded. You can now add task-wise photos below.'),
+                                    backgroundColor: AppColors.green,
+                                    behavior: SnackBarBehavior.floating,
+                                  ),
+                                );
+                              }
+                            } catch (e) {
+                              setModalState(() => isSaving = false);
+                              if (mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text('Failed to save: $e'),
+                                    backgroundColor: Colors.red,
+                                    behavior: SnackBarBehavior.floating,
+                                  ),
+                                );
+                              }
+                            }
+                          } else {
+                            Navigator.pop(ctx);
+                          }
+                        },
+                  icon: isSaving
+                      ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                      : const Icon(FontAwesomeIcons.check, size: 16),
+                  label: Text(isSaving ? 'Saving...' : 'Save mileage & continue'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+            ],
+          ),
+        ),
       ),
     );
   }

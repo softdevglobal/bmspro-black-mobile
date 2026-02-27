@@ -1157,6 +1157,44 @@ class _AppointmentRequestsPageState extends State<AppointmentRequestsPage> {
                   ),
                 ],
 
+                // Vehicle Details (always show - N/A for missing)
+                ...[
+                  const SizedBox(height: 12),
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withOpacity(0.04),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: AppColors.primary.withOpacity(0.08)),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Icon(FontAwesomeIcons.car, size: 14, color: AppColors.primary.withOpacity(0.7)),
+                            const SizedBox(width: 8),
+                            const Text(
+                              'Vehicle',
+                              style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.text),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        _vehicleDetailRow(request.rawData, 'Make', 'vehicleMake'),
+                        _vehicleDetailRow(request.rawData, 'Model', 'vehicleModel'),
+                        _vehicleDetailRow(request.rawData, 'Body Type', 'vehicleBodyType'),
+                        _vehicleDetailRow(request.rawData, 'Colour', 'vehicleColour'),
+                        _vehicleDetailRow(request.rawData, 'Registration', 'vehicleNumber'),
+                        _vehicleDetailRow(request.rawData, 'VIN / Chassis', 'vehicleVinChassis'),
+                        _vehicleDetailRow(request.rawData, 'Engine No.', 'vehicleEngineNumber'),
+                        _vehicleDetailRow(request.rawData, 'Mileage', 'mileage'),
+                      ],
+                    ),
+                  ),
+                ],
+
                 // Notes
                 if (request.notes != null &&
                     request.notes!.isNotEmpty) ...[
@@ -1293,6 +1331,32 @@ class _AppointmentRequestsPageState extends State<AppointmentRequestsPage> {
                   ),
                 ),
               ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _vehicleDetailRow(Map<String, dynamic> data, String label, String key) {
+    final v = (data[key] ?? '').toString().trim();
+    final display = v.isEmpty ? 'N/A' : v;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 4),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 85,
+            child: Text(
+              '$label:',
+              style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.muted),
+            ),
+          ),
+          Expanded(
+            child: Text(
+              display,
+              style: TextStyle(fontSize: 12, color: v.isEmpty ? AppColors.muted : AppColors.text),
             ),
           ),
         ],

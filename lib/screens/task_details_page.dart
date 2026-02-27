@@ -44,6 +44,7 @@ class _TaskDetailsPageState extends State<TaskDetailsPage> with TickerProviderSt
   bool _isNotesExpanded = false;
   bool _isFinishing = false;
   bool _isLoading = true;
+  bool _mileageSaved = false; // True when mileage has been recorded (required before start)
   final TextEditingController _mileageController = TextEditingController();
 
   // Appointment Data
@@ -269,9 +270,15 @@ class _TaskDetailsPageState extends State<TaskDetailsPage> with TickerProviderSt
     }
 
     if (mounted) {
-      setState(() => _isLoading = false);
-      // Auto-start stopwatch on load
-      _startStopwatch();
+      final hasMileage = _mileageController.text.trim().replaceAll(RegExp(r'\D'), '').isNotEmpty;
+      setState(() {
+        _isLoading = false;
+        _mileageSaved = hasMileage;
+      });
+      // Auto-start stopwatch only if mileage already recorded (or no booking)
+      if (widget.appointmentData == null || _mileageSaved) {
+        _startStopwatch();
+      }
     }
   }
 
@@ -593,6 +600,8 @@ class _TaskDetailsPageState extends State<TaskDetailsPage> with TickerProviderSt
                 padding: const EdgeInsets.all(16),
               child: Column(
                 children: [
+                  _buildMileageGateSection(),
+                  const SizedBox(height: 24),
                   _buildServiceHeader(),
                   const SizedBox(height: 24),
                   _buildCustomerInfo(),
@@ -643,6 +652,159 @@ class _TaskDetailsPageState extends State<TaskDetailsPage> with TickerProviderSt
                 ),
               ),
             ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _saveMileageAndStart() async {
+    final mileageVal = _mileageController.text.trim().replaceAll(RegExp(r'\D'), '');
+    if (mileageVal.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please enter vehicle mileage (km) before starting the service.'),
+          backgroundColor: Colors.orange,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
+    final bookingId = widget.appointmentData?['id'] as String?;
+    if (bookingId != null) {
+      try {
+        final user = FirebaseAuth.instance.currentUser;
+        await FirebaseFirestore.instance.collection('bookings').doc(bookingId).update({
+          'mileage': '$mileageVal km',
+          'mileageRecordedAt': DateTime.now().toIso8601String(),
+          'mileageRecordedBy': user?.uid ?? '',
+          'mileageRecordedByStaffName': user?.displayName ?? user?.email?.split('@').first ?? 'Staff',
+          'updatedAt': FieldValue.serverTimestamp(),
+        });
+      } catch (e) {
+        debugPrint('Error saving mileage: $e');
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Failed to save mileage: $e'),
+              backgroundColor: Colors.red,
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
+        return;
+      }
+    }
+    if (mounted) {
+      setState(() => _mileageSaved = true);
+      _startStopwatch();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Mileage recorded. You can now start the service.'),
+          backgroundColor: AppColors.green,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
+  }
+
+  Widget _buildMileageGateSection() {
+    if (widget.appointmentData == null) return const SizedBox.shrink();
+    if (_mileageSaved) {
+      final mileageVal = _mileageController.text.trim().replaceAll(RegExp(r'\D'), '');
+      return Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.green.shade50,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.green.shade200),
+        ),
+        child: Row(
+          children: [
+            Icon(FontAwesomeIcons.gaugeHigh, color: Colors.green.shade700, size: 18),
+            const SizedBox(width: 12),
+            Text(
+              mileageVal.isEmpty
+                  ? 'Vehicle mileage: ${_bookingData?['mileage'] ?? '—'}'
+                  : 'Vehicle mileage: $mileageVal km',
+              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.green.shade800),
+            ),
+          ],
+        ),
+      );
+    }
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.orange.shade50,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.orange.shade200),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(FontAwesomeIcons.triangleExclamation, color: Colors.orange.shade700, size: 18),
+              const SizedBox(width: 10),
+              Text(
+                'Vehicle mileage required before starting',
+                style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: Colors.orange.shade900),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Both branch admin and staff must record the vehicle mileage before starting the service.',
+            style: TextStyle(fontSize: 12, color: Colors.orange.shade800),
+          ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: _mileageController,
+                  keyboardType: TextInputType.number,
+                  decoration: InputDecoration(
+                    hintText: 'e.g. 45000',
+                    hintStyle: GoogleFonts.inter(fontSize: 13, color: AppColors.muted),
+                    isDense: true,
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                    filled: true,
+                    fillColor: Colors.white,
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                    enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: Colors.orange.shade300)),
+                  ),
+                  style: GoogleFonts.inter(fontSize: 14, color: AppColors.text),
+                  onChanged: (v) {
+                    final digits = v.replaceAll(RegExp(r'\D'), '');
+                    if (v != digits) {
+                      _mileageController.value = TextEditingValue(
+                        text: digits,
+                        selection: TextSelection.collapsed(offset: digits.length),
+                      );
+                    }
+                  },
+                ),
+              ),
+              const SizedBox(width: 8),
+              Text('km', style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.text)),
+            ],
+          ),
+          const SizedBox(height: 12),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed: _saveMileageAndStart,
+              icon: const Icon(FontAwesomeIcons.check, size: 14),
+              label: const Text('Save mileage & start service'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.orange.shade600,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              ),
+            ),
           ),
         ],
       ),
@@ -744,7 +906,15 @@ class _TaskDetailsPageState extends State<TaskDetailsPage> with TickerProviderSt
               ),
               // --- Stopwatch Component ---
               GestureDetector(
-                onTap: _toggleStopwatch,
+                onTap: _mileageSaved ? _toggleStopwatch : () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Enter vehicle mileage above to start the service.'),
+                      backgroundColor: Colors.orange,
+                      behavior: SnackBarBehavior.floating,
+                    ),
+                  );
+                },
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 300),
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -798,51 +968,6 @@ class _TaskDetailsPageState extends State<TaskDetailsPage> with TickerProviderSt
           _infoRow('Name', _customerName),
           const SizedBox(height: 12),
           _infoRow('Service Type', _serviceType.isNotEmpty ? _serviceType : _serviceName),
-          const SizedBox(height: 12),
-          const Divider(color: AppColors.border),
-          // Optional mileage - staff can add before/during the job
-          Row(
-            children: [
-              const Icon(FontAwesomeIcons.gaugeSimpleHigh, color: AppColors.muted, size: 14),
-              const SizedBox(width: 8),
-              Expanded(
-                child: TextField(
-                  controller: _mileageController,
-                  keyboardType: TextInputType.number,
-                  decoration: InputDecoration(
-                    hintText: 'Mileage (optional) e.g. 45000',
-                    hintStyle: GoogleFonts.inter(fontSize: 13, color: AppColors.muted),
-                    isDense: true,
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10),
-                      borderSide: const BorderSide(color: AppColors.border),
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10),
-                      borderSide: const BorderSide(color: AppColors.border),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10),
-                      borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
-                    ),
-                  ),
-                  style: GoogleFonts.inter(fontSize: 14, color: AppColors.text),
-                  onChanged: (v) {
-                    final digits = v.replaceAll(RegExp(r'\D'), '');
-                    if (v != digits) {
-                      _mileageController.value = TextEditingValue(
-                        text: digits,
-                        selection: TextSelection.collapsed(offset: digits.length),
-                      );
-                    }
-                  },
-                ),
-              ),
-              const SizedBox(width: 8),
-              Text('km', style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w500, color: AppColors.muted)),
-            ],
-          ),
           const SizedBox(height: 16),
           InkWell(
             onTap: () => setState(() => _isNotesExpanded = !_isNotesExpanded),
@@ -892,8 +1017,8 @@ class _TaskDetailsPageState extends State<TaskDetailsPage> with TickerProviderSt
         ? 'All Services Completed' 
         : (isMultiServiceBooking ? 'Complete "$_serviceName"' : 'Complete Service');
     
-    // Button is enabled if not all services are completed
-    final bool canComplete = !allServicesCompleted;
+    // Button is enabled if not all services are completed AND mileage is recorded
+    final bool canComplete = !allServicesCompleted && _mileageSaved;
     
     return Column(
       children: [
@@ -1041,13 +1166,13 @@ class _TaskDetailsPageState extends State<TaskDetailsPage> with TickerProviderSt
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(FontAwesomeIcons.check, size: 14, color: Colors.green),
+              Icon(FontAwesomeIcons.check, size: 14, color: _mileageSaved ? Colors.green : Colors.orange),
               const SizedBox(width: 8),
               Text(
-                isMultiServiceBooking 
-                    ? 'Tap to complete this service'
-                    : 'Tap to complete service',
-                style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w500, color: Colors.green),
+                !_mileageSaved
+                    ? 'Enter vehicle mileage above to complete'
+                    : (isMultiServiceBooking ? 'Tap to complete this service' : 'Tap to complete service'),
+                style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w500, color: _mileageSaved ? Colors.green : Colors.orange),
               ),
             ],
           ),

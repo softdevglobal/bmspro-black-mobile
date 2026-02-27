@@ -1609,6 +1609,12 @@ class _BranchAdminDashboardState extends State<BranchAdminDashboard> with Ticker
               'branchName': branchName,
               'pickupTime': (data['pickupTime'] ?? '').toString(),
               'price': (svc['price'] as num?) ?? (data['price'] as num?) ?? 0,
+              'vehicleMake': (data['vehicleMake'] ?? '').toString(),
+              'vehicleModel': (data['vehicleModel'] ?? '').toString(),
+              'clientPhone': (data['phone'] ?? data['clientPhone'] ?? '').toString(),
+              'clientEmail': (data['email'] ?? data['clientEmail'] ?? '').toString(),
+              'vehicleNumber': (data['vehicleNumber'] ?? data['vehicleRegistration'] ?? '').toString(),
+              'notes': (data['notes'] ?? '').toString(),
             });
           }
         } else {
@@ -1625,6 +1631,12 @@ class _BranchAdminDashboardState extends State<BranchAdminDashboard> with Ticker
             'branchName': branchName,
             'pickupTime': (data['pickupTime'] ?? '').toString(),
             'price': (data['price'] as num?) ?? 0,
+            'vehicleMake': (data['vehicleMake'] ?? '').toString(),
+            'vehicleModel': (data['vehicleModel'] ?? '').toString(),
+            'clientPhone': (data['phone'] ?? data['clientPhone'] ?? '').toString(),
+            'clientEmail': (data['email'] ?? data['clientEmail'] ?? '').toString(),
+            'vehicleNumber': (data['vehicleNumber'] ?? data['vehicleRegistration'] ?? '').toString(),
+            'notes': (data['notes'] ?? '').toString(),
           });
         }
       }
@@ -1963,6 +1975,20 @@ class _BranchAdminDashboardState extends State<BranchAdminDashboard> with Ticker
             _detailRow('Duration', '$duration min'),
             _detailRow('Staff', (bk['staffName'] ?? 'Not assigned').toString()),
             _detailRow('Branch', (bk['branchName'] ?? widget.branchName).toString()),
+            if ((bk['clientPhone'] ?? '').toString().trim().isNotEmpty)
+              _detailRow('Phone', (bk['clientPhone'] ?? '').toString()),
+            if ((bk['clientEmail'] ?? '').toString().trim().isNotEmpty)
+              _detailRow('Email', (bk['clientEmail'] ?? '').toString()),
+            if ((bk['vehicleNumber'] ?? '').toString().trim().isNotEmpty)
+              _detailRow('Vehicle Number', (bk['vehicleNumber'] ?? '').toString()),
+            if (() {
+              final make = (bk['vehicleMake'] ?? '').toString().trim();
+              final model = (bk['vehicleModel'] ?? '').toString().trim();
+              return make.isNotEmpty || model.isNotEmpty;
+            }())
+              _detailRow('Make & Model', [bk['vehicleMake'], bk['vehicleModel']].where((v) => v != null && v.toString().trim().isNotEmpty).map((v) => v.toString().trim()).join(' ')),
+            if ((bk['notes'] ?? '').toString().trim().isNotEmpty)
+              _detailRow('Notes', (bk['notes'] ?? '').toString()),
             _detailRow('Status', status),
             _detailRow('Price', '\$${(bk['price'] as num?)?.toStringAsFixed(2) ?? '0.00'}'),
           ],
@@ -2020,6 +2046,10 @@ class _BranchAdminDashboardState extends State<BranchAdminDashboard> with Ticker
     if (key.contains('duration')) return FontAwesomeIcons.hourglassHalf;
     if (key.contains('staff')) return FontAwesomeIcons.userGroup;
     if (key.contains('branch')) return FontAwesomeIcons.locationDot;
+    if (key.contains('phone')) return FontAwesomeIcons.phone;
+    if (key.contains('email')) return FontAwesomeIcons.envelope;
+    if (key.contains('vehicle') || key.contains('make')) return FontAwesomeIcons.car;
+    if (key.contains('notes')) return FontAwesomeIcons.noteSticky;
     if (key.contains('status')) return FontAwesomeIcons.circleCheck;
     if (key.contains('price')) return FontAwesomeIcons.dollarSign;
     return FontAwesomeIcons.circleInfo;
